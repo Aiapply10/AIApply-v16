@@ -48,6 +48,7 @@ export const resumeAPI = {
   download: (id, format) => api.get(`/resumes/${id}/download/${format}`, {
     responseType: 'blob',
   }),
+  delete: (id) => api.delete(`/resumes/${id}`),
 };
 
 // Cover Letter API

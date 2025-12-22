@@ -446,6 +446,16 @@ async def get_resume(resume_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Resume not found")
     return resume
 
+@api_router.delete("/resumes/{resume_id}")
+async def delete_resume(resume_id: str, request: Request):
+    user = await get_current_user(request)
+    result = await db.resumes.delete_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return {"message": "Resume deleted successfully"}
+
 @api_router.post("/resumes/tailor")
 async def tailor_resume(data: TailorResumeRequest, request: Request):
     user = await get_current_user(request)

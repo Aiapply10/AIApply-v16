@@ -154,6 +154,20 @@ export function ResumesPage() {
     }
   };
 
+  const handleDelete = async (resumeId) => {
+    if (!window.confirm('Are you sure you want to delete this resume? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await resumeAPI.delete(resumeId);
+      toast.success('Resume deleted successfully');
+      loadData();
+    } catch (error) {
+      toast.error('Failed to delete resume');
+    }
+  };
+
   const handleGenerateCoverLetter = async () => {
     if (!selectedResume || !coverLetterForm.job_title || !coverLetterForm.company_name) {
       toast.error('Please fill in all required fields');
@@ -334,6 +348,16 @@ export function ResumesPage() {
                     >
                       <Download className="w-4 h-4 mr-1" />
                       PDF
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDelete(resume.resume_id)}
+                      data-testid={`delete-${resume.resume_id}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
                     </Button>
                   </div>
                 </CardContent>
