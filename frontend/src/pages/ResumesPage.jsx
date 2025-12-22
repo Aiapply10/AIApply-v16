@@ -160,10 +160,11 @@ export function ResumesPage() {
     }
     
     try {
-      await resumeAPI.delete(resumeId);
+      await resumeAPI.remove(resumeId);
       toast.success('Resume deleted successfully');
       loadData();
     } catch (error) {
+      console.error('Delete error:', error);
       toast.error('Failed to delete resume');
     }
   };
