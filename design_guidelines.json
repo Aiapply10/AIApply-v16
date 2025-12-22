@@ -1,0 +1,173 @@
+{
+  "identity": {
+    "name": "AI Resume Tailor",
+    "archetype": "Swiss & High-Contrast",
+    "vibe": "Empowering, Efficient, Smart, Reliable",
+    "primary_audience": "Job Seekers & Recruiters"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Outfit, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "imports": [
+      "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    ],
+    "usage_rules": {
+      "headings": "Use 'Outfit' for all H1-H3. Weight: 600 or 700. Tracking: -0.02em.",
+      "body": "Use 'Manrope' for all body text. Weight: 400 (regular) or 500 (medium).",
+      "buttons": "Use 'Manrope' Weight: 600.",
+      "data_display": "Use 'JetBrains Mono' for code snippets or technical skills lists."
+    }
+  },
+  "colors": {
+    "theme_strategy": "Swiss High-Contrast with Tech Accents",
+    "palette": {
+      "light": {
+        "background": "0 0% 100%",
+        "foreground": "222 47% 11%",
+        "card": "0 0% 100%",
+        "card_foreground": "222 47% 11%",
+        "popover": "0 0% 100%",
+        "popover_foreground": "222 47% 11%",
+        "primary": "221 83% 53%",
+        "primary_foreground": "210 40% 98%",
+        "secondary": "210 40% 96.1%",
+        "secondary_foreground": "222 47% 11%",
+        "muted": "210 40% 96.1%",
+        "muted_foreground": "215.4 16.3% 46.9%",
+        "accent": "210 40% 96.1%",
+        "accent_foreground": "222 47% 11%",
+        "destructive": "0 84.2% 60.2%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "214.3 31.8% 91.4%",
+        "input": "214.3 31.8% 91.4%",
+        "ring": "221 83% 53%"
+      },
+      "dark": {
+        "background": "222 47% 11%",
+        "foreground": "210 40% 98%",
+        "card": "222 47% 11%",
+        "card_foreground": "210 40% 98%",
+        "popover": "222 47% 11%",
+        "popover_foreground": "210 40% 98%",
+        "primary": "217 91% 60%",
+        "primary_foreground": "222 47% 11%",
+        "secondary": "217.2 32.6% 17.5%",
+        "secondary_foreground": "210 40% 98%",
+        "muted": "217.2 32.6% 17.5%",
+        "muted_foreground": "215 20.2% 65.1%",
+        "accent": "217.2 32.6% 17.5%",
+        "accent_foreground": "210 40% 98%",
+        "destructive": "0 62.8% 30.6%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "217.2 32.6% 17.5%",
+        "input": "217.2 32.6% 17.5%",
+        "ring": "224.3 76.3% 48%"
+      }
+    },
+    "usage_rules": {
+      "primary_action": "Use 'bg-primary' for main CTAs (Apply, Save, Upload).",
+      "ai_features": "Use a gradient of 'from-violet-600 to-indigo-600' for AI-related buttons or badges.",
+      "status_success": "text-green-600 bg-green-50 border-green-200",
+      "status_pending": "text-amber-600 bg-amber-50 border-amber-200",
+      "status_error": "text-red-600 bg-red-50 border-red-200"
+    }
+  },
+  "layout_strategies": {
+    "marketing_page": {
+      "grid_type": "Mode A: The Tetris Grid",
+      "spacing": "Generous (p-8 to p-24)",
+      "hero_style": "Split Screen: Left Typography (Bold), Right Visual (Image + Floating Cards)",
+      "features_style": "Bento Grid with 'Glassmorphism' cards"
+    },
+    "dashboard": {
+      "grid_type": "Mode B: The Control Room Grid",
+      "structure": "Sidebar (Fixed Left) + Topbar + Main Content Area",
+      "card_style": "Flat, 1px border (border-border), no shadow (or very subtle shadow-sm)",
+      "density": "High. Use 'gap-4' for dashboard widgets."
+    },
+    "resume_editor": {
+      "structure": "Split Pane (Resizable if possible, else 50/50)",
+      "left_pane": "Input Forms / Chat Interface (Scrollable)",
+      "right_pane": "Live Preview (Sticky/Fixed)",
+      "mobile_behavior": "Tabs to switch between Edit/Preview"
+    }
+  },
+  "components": {
+    "buttons": {
+      "default": "h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      "ghost": "hover:bg-accent hover:text-accent-foreground",
+      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+    },
+    "cards": {
+      "base": "rounded-lg border border-border bg-card text-card-foreground shadow-sm",
+      "hover_effect": "hover:border-primary/50 transition-colors duration-300"
+    },
+    "inputs": {
+      "style": "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "visual_assets": {
+    "images": [
+      {
+        "category": "hero_main",
+        "url": "https://images.unsplash.com/photo-1544813813-2c73bec209ca?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Smiling professional working on laptop - Use for Hero Section Right Side",
+        "alt": "Professional using AI resume builder"
+      },
+      {
+        "category": "team_about",
+        "url": "https://images.unsplash.com/photo-1758691736975-9f7f643d178e?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Diverse team meeting - Use for About Us or 'For Companies' section",
+        "alt": "Recruitment team analyzing candidates"
+      },
+      {
+        "category": "testimonial_1",
+        "url": "https://images.unsplash.com/photo-1748207904153-a45c1ea3eaed?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Man in modern kitchen - Use for Candidate Testimonial",
+        "alt": "Successful job seeker"
+      },
+      {
+        "category": "testimonial_2",
+        "url": "https://images.unsplash.com/photo-1758873269317-51888e824b28?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Team collaborating - Use for Recruiter Testimonial",
+        "alt": "Hiring manager"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "preferred_icons": {
+        "resume": "FileText",
+        "ai_magic": "Sparkles",
+        "job_search": "Briefcase",
+        "apply": "Send",
+        "dashboard": "LayoutDashboard",
+        "settings": "Settings",
+        "user": "User",
+        "check": "CheckCircle2"
+      }
+    }
+  },
+  "universal_guidelines": {
+    "spacing": "Use generous padding. Minimum 'p-6' for cards. 'py-20' for landing page sections.",
+    "contrast": "Ensure text contrast is WCAG AA compliant. Use 'text-slate-600' for secondary text on white backgrounds, never lighter.",
+    "interaction": "All interactive elements must have a hover state and active state. Use 'transition-all duration-200'.",
+    "testing": "Add 'data-testid' to all buttons, inputs, and links.",
+    "anti_patterns": [
+      "Do not use generic 'Inter' font for headings.",
+      "Do not use full-screen gradients.",
+      "Do not center text in long paragraphs (left align for readability).",
+      "Do not use 'alert' or native browser prompts."
+    ]
+  },
+  "instructions_to_main_agent": {
+    "setup": "1. Update 'index.css' with the provided color variables. 2. Add font imports to 'index.css' or 'index.html'. 3. Configure 'tailwind.config.js' to extend the font family.",
+    "implementation_order": "1. Landing Page (Hero -> Features -> CTA). 2. Auth Pages. 3. Dashboard Layout (Sidebar + Header). 4. Resume Builder (Complex State).",
+    "state_management": "Use React Context or Zustand for managing the 'Resume State' across the builder steps.",
+    "mocking": "Mock the AI response with a 2-second delay and a realistic JSON response structure for the resume data."
+  }
+}
