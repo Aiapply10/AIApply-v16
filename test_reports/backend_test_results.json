@@ -1,0 +1,72 @@
+{
+  "total_tests": 10,
+  "passed_tests": 10,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "GET /api/",
+      "success": true,
+      "details": "API message: AI Resume Tailor API",
+      "error": ""
+    },
+    {
+      "test": "GET /api/technologies",
+      "success": true,
+      "details": "Found 5 primary technologies",
+      "error": ""
+    },
+    {
+      "test": "POST /api/auth/register",
+      "success": true,
+      "details": "User created with ID: user_3f4d36a62f10",
+      "error": ""
+    },
+    {
+      "test": "POST /api/auth/login",
+      "success": true,
+      "details": "Login successful",
+      "error": ""
+    },
+    {
+      "test": "GET /api/auth/me",
+      "success": true,
+      "details": "Retrieved user: Test User",
+      "error": ""
+    },
+    {
+      "test": "GET /api/resumes",
+      "success": true,
+      "details": "Found 0 resumes",
+      "error": ""
+    },
+    {
+      "test": "GET /api/job-portals",
+      "success": true,
+      "details": "Found 0 job portals",
+      "error": ""
+    },
+    {
+      "test": "GET /api/applications",
+      "success": true,
+      "details": "Found 0 applications",
+      "error": ""
+    },
+    {
+      "test": "GET /api/emails",
+      "success": true,
+      "details": "Found 0 emails",
+      "error": ""
+    },
+    {
+      "test": "GET /api/reports/candidate",
+      "success": true,
+      "details": "Total applications: 0",
+      "error": ""
+    }
+  ],
+  "test_user": {
+    "email": "test.user.1766443443@example.com",
+    "user_id": "user_3f4d36a62f10"
+  }
+}
