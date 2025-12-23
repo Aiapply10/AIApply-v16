@@ -631,6 +631,146 @@ export function LiveJobsPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* AI Tailor Resume Dialog */}
+        <Dialog open={showTailorDialog} onOpenChange={setShowTailorDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileEdit className="w-5 h-5 text-violet-500" />
+                AI Resume Tailor
+              </DialogTitle>
+              <DialogDescription>
+                Optimize your resume for: <span className="font-semibold text-foreground">{selectedJob?.title}</span> at {selectedJob?.company}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {/* Resume Selection */}
+              <div className="space-y-2">
+                <Label>Select Resume to Tailor *</Label>
+                <Select
+                  value={tailorForm.resume_id}
+                  onValueChange={(value) => setTailorForm({ ...tailorForm, resume_id: value })}
+                >
+                  <SelectTrigger data-testid="tailor-resume-select">
+                    <SelectValue placeholder="Choose a resume to tailor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {resumes.map((resume) => (
+                      <SelectItem key={resume.resume_id} value={resume.resume_id}>
+                        {resume.file_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {resumes.length === 0 && (
+                  <p className="text-sm text-destructive">
+                    No resumes uploaded. Please upload a resume first from the My Resumes page.
+                  </p>
+                )}
+              </div>
+
+              {/* Job Details Preview */}
+              <div className="bg-muted/50 p-4 rounded-lg border">
+                <h4 className="font-medium mb-2 text-sm">Job Requirements Preview</h4>
+                <p className="text-sm text-muted-foreground line-clamp-4">
+                  {selectedJob?.description || selectedJob?.full_description || 'No description available'}
+                </p>
+                {selectedJob?.required_skills?.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {selectedJob.required_skills.slice(0, 5).map((skill, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tailor Button */}
+              {!tailoredContent && (
+                <Button
+                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                  onClick={handleTailorResume}
+                  disabled={isTailoring || !tailorForm.resume_id}
+                  data-testid="tailor-resume-btn"
+                >
+                  {isTailoring ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Tailoring your resume with AI...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Tailor Resume with AI
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {/* Tailored Content Display */}
+              {tailoredContent && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-violet-500" />
+                      Tailored Resume Preview
+                    </h4>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadTailoredResume('pdf')}
+                      >
+                        Download PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadTailoredResume('docx')}
+                      >
+                        Download Word
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border max-h-[300px] overflow-y-auto">
+                    <pre className="text-sm whitespace-pre-wrap font-sans text-foreground">
+                      {tailoredContent}
+                    </pre>
+                  </div>
+                  <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg">
+                    <p className="text-sm text-green-600 dark:text-green-400">
+                      ✓ Your resume has been tailored and saved. You can now use it to apply for this position!
+                    </p>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setShowTailorDialog(false);
+                      setShowApplyDialog(true);
+                      setApplicationForm({ ...applicationForm, resume_id: tailorForm.resume_id });
+                    }}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Continue to Apply
+                  </Button>
+                </div>
+              )}
+
+              {/* Close button if not tailored yet */}
+              {!tailoredContent && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowTailorDialog(false)}
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
