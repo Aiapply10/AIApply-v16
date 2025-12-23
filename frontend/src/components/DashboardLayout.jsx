@@ -91,7 +91,7 @@ export function DashboardLayout({ children }) {
               <path d="M2 12l10 5 10-5"/>
             </svg>
           </div>
-          <span className="font-heading font-semibold text-lg text-gradient-neon">CareerQuest</span>
+          <span className="font-heading font-semibold text-lg bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -133,7 +133,7 @@ export function DashboardLayout({ children }) {
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
-              <span className="font-heading font-bold text-xl text-gradient-neon">CareerQuest</span>
+              <span className="font-heading font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
             </Link>
           </div>
 

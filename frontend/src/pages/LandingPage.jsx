@@ -116,7 +116,7 @@ export function LandingPage() {
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
-              <span className="font-heading font-bold text-xl text-gradient-neon">CareerQuest</span>
+              <span className="font-heading font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-muted-foreground hover:text-white transition-colors relative group">
@@ -378,7 +378,7 @@ export function LandingPage() {
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
-              <span className="font-heading font-bold text-xl">CareerQuest</span>
+              <span className="font-heading font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               © 2024 CareerQuest. All rights reserved. Made with AI magic.
