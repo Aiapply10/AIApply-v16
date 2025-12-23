@@ -230,12 +230,20 @@ export function LiveJobsPage() {
                 </h3>
                 <p className="text-muted-foreground">{job.company}</p>
               </div>
-              {showMatchedTech && job.matched_technology && (
-                <Badge className="shrink-0 gradient-ai text-white">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {job.matched_technology}
-                </Badge>
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {showMatchedTech && job.matched_technology && (
+                  <Badge className="gradient-ai text-white">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {job.matched_technology}
+                  </Badge>
+                )}
+                {job.source && (
+                  <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
+                    <Globe className="w-3 h-3 mr-1" />
+                    {job.source}
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {/* Meta Info */}
