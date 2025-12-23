@@ -381,14 +381,14 @@ export function LiveJobsPage() {
                 <div className="space-y-2">
                   <Label>Employment Type</Label>
                   <Select
-                    value={searchForm.employment_type}
-                    onValueChange={(value) => setSearchForm({ ...searchForm, employment_type: value })}
+                    value={searchForm.employment_type || "all"}
+                    onValueChange={(value) => setSearchForm({ ...searchForm, employment_type: value === "all" ? "" : value })}
                   >
                     <SelectTrigger data-testid="job-search-type">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="FULLTIME">Full Time</SelectItem>
                       <SelectItem value="PARTTIME">Part Time</SelectItem>
                       <SelectItem value="CONTRACTOR">Contract</SelectItem>
