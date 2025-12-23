@@ -109,10 +109,14 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl gradient-neon flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-shadow">
-                <FileText className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-all group-hover:scale-105 duration-300">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
               </div>
-              <span className="font-heading font-bold text-xl text-gradient-neon">ResumeAI</span>
+              <span className="font-heading font-bold text-xl text-gradient-neon">CareerQuest</span>
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-muted-foreground hover:text-white transition-colors relative group">
@@ -366,14 +370,18 @@ export function LandingPage() {
       <footer className="relative py-12 px-6 lg:px-8 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-neon flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-all group-hover:scale-105 duration-300">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
               </div>
-              <span className="font-heading font-bold text-xl">ResumeAI</span>
-            </div>
+              <span className="font-heading font-bold text-xl">CareerQuest</span>
+            </Link>
             <p className="text-sm text-muted-foreground">
-              © 2024 ResumeAI. All rights reserved. Made with AI magic.
+              © 2024 CareerQuest. All rights reserved. Made with AI magic.
             </p>
           </div>
         </div>
