@@ -339,7 +339,21 @@ export function LiveJobsPage() {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              <Button 
+                size="sm"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                onClick={() => {
+                  setSelectedJob(job);
+                  setTailorForm({ resume_id: '' });
+                  setTailoredContent('');
+                  setShowTailorDialog(true);
+                }}
+                data-testid={`tailor-${job.job_id}`}
+              >
+                <FileEdit className="w-4 h-4 mr-1" />
+                AI Tailor Resume
+              </Button>
               <Button 
                 size="sm"
                 onClick={() => {
