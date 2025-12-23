@@ -83,12 +83,16 @@ export function DashboardLayout({ children }) {
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-neon flex items-center justify-center">
-            <FileText className="w-4 h-4 text-white" />
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
           </div>
-          <span className="font-heading font-semibold text-lg text-gradient-neon">ResumeAI</span>
-        </div>
+          <span className="font-heading font-semibold text-lg text-gradient-neon">CareerQuest</span>
+        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="hover:bg-white/10" data-testid="user-menu-mobile">
@@ -121,11 +125,15 @@ export function DashboardLayout({ children }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
-            <Link to="/dashboard" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl gradient-neon flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-shadow group-hover:scale-105 duration-300">
-                <FileText className="w-5 h-5 text-white" />
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-shadow group-hover:scale-105 duration-300">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
               </div>
-              <span className="font-heading font-bold text-xl text-gradient-neon">ResumeAI</span>
+              <span className="font-heading font-bold text-xl text-gradient-neon">CareerQuest</span>
             </Link>
           </div>
 

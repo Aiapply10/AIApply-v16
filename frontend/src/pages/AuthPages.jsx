@@ -69,12 +69,16 @@ export function LoginPage() {
             Back to home
           </Link>
           
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl gradient-neon flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <FileText className="w-6 h-6 text-white" />
+          <Link to="/" className="flex items-center gap-3 mb-8 group">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-105 transition-transform">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
             </div>
-            <span className="font-heading font-bold text-2xl text-gradient-neon">ResumeAI</span>
-          </div>
+            <span className="font-heading font-bold text-2xl text-gradient-neon">CareerQuest</span>
+          </Link>
 
           <h1 className="font-heading text-4xl font-bold mb-2">Welcome back</h1>
           <p className="text-muted-foreground mb-8">Sign in to your account to continue</p>
@@ -272,12 +276,16 @@ export function RegisterPage() {
             Back to home
           </Link>
           
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl gradient-neon flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <FileText className="w-6 h-6 text-white" />
+          <Link to="/" className="flex items-center gap-3 mb-8 group">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-105 transition-transform">
+              <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
             </div>
-            <span className="font-heading font-bold text-2xl text-gradient-neon">ResumeAI</span>
-          </div>
+            <span className="font-heading font-bold text-2xl text-gradient-neon">CareerQuest</span>
+          </Link>
 
           <h1 className="font-heading text-4xl font-bold mb-2">Create your account</h1>
           <p className="text-muted-foreground mb-8">Start your job search journey today</p>
