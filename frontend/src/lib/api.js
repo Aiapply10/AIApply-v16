@@ -85,6 +85,16 @@ export const reportAPI = {
   getAllCandidates: (skip, limit) => api.get('/reports/admin/candidates', { params: { skip, limit } }),
 };
 
+// Live Jobs API (JSearch)
+export const liveJobsAPI = {
+  search: (query, location, employmentType, page = 1) => 
+    api.get('/live-jobs/search', { 
+      params: { query, location, employment_type: employmentType, page } 
+    }),
+  getRecommendations: () => api.get('/live-jobs/recommendations'),
+  getDetails: (jobId) => api.get(`/live-jobs/${jobId}`),
+};
+
 // Technologies API
 export const technologiesAPI = {
   getAll: () => api.get('/technologies'),
