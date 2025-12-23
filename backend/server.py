@@ -1027,6 +1027,13 @@ async def search_live_jobs(
     """
     user = await get_current_user(request)
     
+    # Get API keys at request time
+    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
+    rapidapi_host = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
+    
+    if not rapidapi_key:
+        raise HTTPException(status_code=500, detail="JSearch API key not configured")
+    
     # Build search query from user's technologies if not provided
     if not query:
         technologies = []
@@ -1055,8 +1062,8 @@ async def search_live_jobs(
                 "https://jsearch.p.rapidapi.com/search",
                 params=params,
                 headers={
-                    "X-RapidAPI-Key": RAPIDAPI_KEY,
-                    "X-RapidAPI-Host": RAPIDAPI_HOST
+                    "X-RapidAPI-Key": rapidapi_key,
+                    "X-RapidAPI-Host": rapidapi_host
                 }
             )
             
