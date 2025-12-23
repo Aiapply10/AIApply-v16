@@ -478,13 +478,21 @@ export function AdminPortalsPage() {
       <div className="space-y-8" data-testid="admin-portals">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-3xl font-bold">Job Portals</h1>
-            <p className="text-muted-foreground mt-1">Manage job portal links for candidates</p>
+            <h1 className="font-heading text-3xl font-bold">Job Portals Management</h1>
+            <p className="text-muted-foreground mt-1">Manually add and manage job portal links for candidates</p>
           </div>
           <Button onClick={() => { resetForm(); setShowDialog(true); }} data-testid="add-portal-btn">
             <Plus className="w-4 h-4 mr-2" />
-            Add Portal
+            Add Portal Link
           </Button>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+          <p className="text-sm text-amber-400">
+            <strong>Manual Entry Mode:</strong> Add job portal links manually. Each portal will be visible to candidates 
+            filtered by their primary technology. A web crawler for automated discovery is planned for future release.
+          </p>
         </div>
 
         <Card>
