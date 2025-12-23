@@ -110,13 +110,19 @@
         @apply bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500;
     }
     
-    /* Text Gradients */
+    /* Text Gradients - Extended for longer text */
     .text-gradient-neon {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-purple-400 to-fuchsia-400;
+        background: linear-gradient(90deg, #a78bfa 0%, #c084fc 25%, #e879f9 50%, #f0abfc 75%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     .text-gradient-cyber {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400;
+        background: linear-gradient(90deg, #22d3ee 0%, #38bdf8 25%, #60a5fa 50%, #818cf8 75%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
     
     /* Glassmorphism */
