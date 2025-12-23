@@ -720,7 +720,7 @@ export function LiveJobsPage() {
               {/* Tailored Content Display */}
               {tailoredContent && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <h4 className="font-medium flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-violet-500" />
                       Tailored Resume Preview
@@ -742,10 +742,25 @@ export function LiveJobsPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-slate-900 p-4 rounded-lg border border-slate-700 max-h-[300px] overflow-y-auto shadow-inner">
-                    <pre className="text-sm whitespace-pre-wrap font-sans text-slate-100 leading-relaxed">
-                      {tailoredContent}
-                    </pre>
+                  <div className="bg-slate-950 p-5 rounded-lg border border-slate-700 max-h-[350px] overflow-y-auto shadow-inner">
+                    <div className="text-sm text-slate-200 leading-relaxed space-y-2">
+                      {tailoredContent.split('\n').map((line, index) => {
+                        // Format headers (lines that start with uppercase and end with colon or are all caps)
+                        if (line.match(/^[A-Z][A-Z\s]+:?$/) || line.match(/^#+\s/)) {
+                          return <h3 key={index} className="font-bold text-violet-400 mt-3 mb-1 text-base">{line.replace(/^#+\s/, '')}</h3>;
+                        }
+                        // Format bullet points
+                        if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
+                          return <p key={index} className="pl-4 text-slate-300">{line}</p>;
+                        }
+                        // Empty lines become spacing
+                        if (!line.trim()) {
+                          return <div key={index} className="h-2" />;
+                        }
+                        // Regular text
+                        return <p key={index} className="text-slate-200">{line}</p>;
+                      })}
+                    </div>
                   </div>
                   <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg">
                     <p className="text-sm text-green-600 dark:text-green-400">
