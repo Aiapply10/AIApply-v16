@@ -1215,14 +1215,21 @@ async def get_live_job_details(job_id: str, request: Request):
     """
     await get_current_user(request)
     
+    # Get API keys at request time
+    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
+    rapidapi_host = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
+    
+    if not rapidapi_key:
+        raise HTTPException(status_code=500, detail="JSearch API key not configured")
+    
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
             response = await http_client.get(
                 "https://jsearch.p.rapidapi.com/job-details",
                 params={"job_id": job_id},
                 headers={
-                    "X-RapidAPI-Key": RAPIDAPI_KEY,
-                    "X-RapidAPI-Host": RAPIDAPI_HOST
+                    "X-RapidAPI-Key": rapidapi_key,
+                    "X-RapidAPI-Host": rapidapi_host
                 }
             )
             
