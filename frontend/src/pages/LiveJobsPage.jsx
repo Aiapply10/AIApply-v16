@@ -286,13 +286,6 @@ export function LiveJobsPage() {
               </p>
             )}
 
-            {/* Source */}
-            {job.source && (
-              <p className="text-xs text-muted-foreground mt-2">
-                via {job.source}
-              </p>
-            )}
-
             {/* Actions */}
             <div className="flex items-center gap-2 mt-4">
               <Button 
