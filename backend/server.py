@@ -15,6 +15,7 @@ import jwt
 from io import BytesIO
 import aiofiles
 import base64
+import httpx
 
 # Document processing
 from docx import Document
@@ -43,6 +44,10 @@ JWT_EXPIRATION = int(os.environ.get('JWT_EXPIRATION_HOURS', '24'))
 
 # Emergent LLM Key
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+
+# RapidAPI Configuration for JSearch
+RAPIDAPI_KEY = os.environ.get('RAPIDAPI_KEY')
+RAPIDAPI_HOST = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
 
 app = FastAPI(title="AI Resume Tailor API")
 api_router = APIRouter(prefix="/api")
