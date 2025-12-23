@@ -195,12 +195,16 @@ export function JobsPage() {
           <Card className="border-dashed border-2">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <Briefcase className="w-16 h-16 text-muted-foreground/50 mb-4" />
-              <h3 className="font-heading text-xl font-semibold mb-2">No Job Portals Found</h3>
-              <p className="text-muted-foreground text-center max-w-md">
+              <h3 className="font-heading text-xl font-semibold mb-2">No Job Portals Added Yet</h3>
+              <p className="text-muted-foreground text-center max-w-md mb-4">
                 {selectedTech !== 'all' 
-                  ? `No job portals available for ${selectedTech}. Try selecting a different technology.`
-                  : 'Job portals will be added by the admin team. Check back soon!'}
+                  ? `No job portals available for ${selectedTech}. Try selecting a different technology or check back later.`
+                  : 'Our support team is working on adding relevant job portal links. In the meantime, check out the Live Jobs section for real-time opportunities!'}
               </p>
+              <Button variant="outline" onClick={() => window.location.href = '/live-jobs'}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Browse Live Jobs
+              </Button>
             </CardContent>
           </Card>
         ) : (
