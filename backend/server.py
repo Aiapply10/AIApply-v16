@@ -1076,12 +1076,17 @@ async def search_live_jobs(
             # Transform jobs to a consistent format
             formatted_jobs = []
             for job in jobs:
+                # Handle location safely
+                city = job.get("job_city") or ""
+                state = job.get("job_state") or ""
+                location = city + (", " + state if state and city else state)
+                
                 formatted_jobs.append({
                     "job_id": job.get("job_id"),
                     "title": job.get("job_title"),
                     "company": job.get("employer_name"),
                     "company_logo": job.get("employer_logo"),
-                    "location": job.get("job_city", "") + (", " + job.get("job_state", "") if job.get("job_state") else ""),
+                    "location": location,
                     "country": job.get("job_country"),
                     "description": job.get("job_description", "")[:500] + "..." if job.get("job_description") and len(job.get("job_description", "")) > 500 else job.get("job_description"),
                     "full_description": job.get("job_description"),
