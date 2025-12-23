@@ -144,11 +144,24 @@ export function JobsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold">Job Listings</h1>
+            <h1 className="font-heading text-3xl font-bold">Job Portals</h1>
             <p className="text-muted-foreground mt-1">
-              Browse and apply to jobs matching your skills
+              Curated job opportunities added by our support team
             </p>
           </div>
+          <Badge variant="outline" className="text-xs px-3 py-1 bg-violet-500/10 text-violet-400 border-violet-500/30">
+            <Globe className="w-3 h-3 mr-1" />
+            Manually Curated
+          </Badge>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-sm text-blue-400">
+            <strong>Note:</strong> These job portal links are manually added by our support team. 
+            We're working on an automated web crawler to discover more opportunities. 
+            For real-time job listings, check out the <a href="/live-jobs" className="underline hover:text-blue-300">Live Jobs</a> section.
+          </p>
         </div>
 
         {/* Filters */}
