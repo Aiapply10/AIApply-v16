@@ -32,3 +32,21 @@
 
 ## Previous Test Reports
 - /app/test_reports/iteration_1.json (from previous session)
+
+## AI Resume Tailor Feature Test Cases
+
+### Test Cases:
+1. Verify "AI Tailor Resume" button appears on job cards in Live Jobs page
+2. Click on "AI Tailor Resume" opens dialog with resume selection
+3. Select a resume and click "Tailor Resume with AI" 
+4. Verify tailored content is displayed after AI processing
+5. Verify "Download PDF" and "Download Word" buttons work
+6. Verify "Continue to Apply" button transitions to Apply dialog
+
+### Test User:
+- Email: testuser_dashboard@test.com
+- Password: Test123!
+
+### Files Modified:
+- /app/frontend/src/pages/LiveJobsPage.jsx - Added AI Tailor Resume button and dialog
+- /app/backend/server.py - Resume tailor endpoint already exists
