@@ -6,6 +6,7 @@ import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { DashboardPage } from './pages/DashboardPage';
 import { ResumesPage } from './pages/ResumesPage';
 import { JobsPage } from './pages/JobsPage';
+import { LiveJobsPage } from './pages/LiveJobsPage';
 import { ApplicationsPage } from './pages/ApplicationsPage';
 import { EmailsPage } from './pages/EmailsPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -56,6 +57,14 @@ function AppRouter() {
         element={
           <ProtectedRoute>
             <JobsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/live-jobs"
+        element={
+          <ProtectedRoute>
+            <LiveJobsPage />
           </ProtectedRoute>
         }
       />
