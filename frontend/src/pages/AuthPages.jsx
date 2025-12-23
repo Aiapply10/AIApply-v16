@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
-import { FileText, Loader2, ArrowLeft } from 'lucide-react';
+import { FileText, Loader2, ArrowLeft, Sparkles, Zap, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function LoginPage() {
@@ -48,35 +48,40 @@ export function LoginPage() {
     }
   };
 
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleLogin = () => {
     const redirectUrl = window.location.origin + '/dashboard';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background noise-overlay">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Left side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16 relative z-10">
         <div className="max-w-md mx-auto w-full">
-          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="w-4 h-4" />
+          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-white transition-colors mb-8 group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to home
           </Link>
           
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-lg gradient-ai flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl gradient-neon flex items-center justify-center shadow-lg shadow-violet-500/30">
+              <FileText className="w-6 h-6 text-white" />
             </div>
-            <span className="font-heading font-bold text-2xl">AI Resume Tailor</span>
+            <span className="font-heading font-bold text-2xl text-gradient-neon">ResumeAI</span>
           </div>
 
-          <h1 className="font-heading text-3xl font-bold mb-2">Welcome back</h1>
+          <h1 className="font-heading text-4xl font-bold mb-2">Welcome back</h1>
           <p className="text-muted-foreground mb-8">Sign in to your account to continue</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -84,11 +89,12 @@ export function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="glass border-white/20 focus:border-violet-500 bg-white/5"
                 data-testid="login-email"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -96,24 +102,24 @@ export function LoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
+                className="glass border-white/20 focus:border-violet-500 bg-white/5"
                 data-testid="login-password"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full" 
-              size="lg"
+              className="w-full btn-neon py-6 text-lg" 
               disabled={isLoading}
               data-testid="login-submit"
             >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Zap className="w-5 h-5 mr-2" />}
               Sign In
             </Button>
           </form>
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
+              <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-background text-muted-foreground">Or continue with</span>
@@ -122,8 +128,7 @@ export function LoginPage() {
 
           <Button 
             variant="outline" 
-            className="w-full" 
-            size="lg"
+            className="w-full glass border-white/20 hover:bg-white/10 py-6 text-lg"
             onClick={handleGoogleLogin}
             data-testid="google-login"
           >
@@ -138,21 +143,54 @@ export function LoginPage() {
 
           <p className="text-center mt-8 text-muted-foreground">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline font-medium">
+            <Link to="/register" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
               Sign up
             </Link>
           </p>
         </div>
       </div>
 
-      {/* Right side - Image */}
-      <div className="hidden lg:block lg:w-1/2 bg-muted">
-        <div className="h-full flex items-center justify-center p-12">
-          <img 
-            src="https://images.unsplash.com/photo-1758691736975-9f7f643d178e?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
-            alt="Team collaboration"
-            className="rounded-2xl shadow-2xl max-h-[80vh] object-cover"
-          />
+      {/* Right side - Visual */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
+        <div className="relative w-full max-w-lg">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/30 via-transparent to-cyan-600/30 rounded-3xl blur-3xl" />
+          <div className="relative glass-card rounded-3xl p-8 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl gradient-neon flex items-center justify-center animate-float">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading text-xl font-bold">AI-Powered Resumes</h3>
+                <p className="text-muted-foreground">Tailored for every job</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 glass rounded-xl p-4">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-white">GPT-5.2 Integration</span>
+              </div>
+              <div className="flex items-center gap-3 glass rounded-xl p-4">
+                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-white">Live Job Matching</span>
+              </div>
+              <div className="flex items-center gap-3 glass rounded-xl p-4">
+                <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <span className="text-white">Application Tracking</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -179,7 +217,6 @@ export function RegisterPage() {
       navigate('/dashboard');
     }
     
-    // Fetch technologies
     technologiesAPI.getAll().then(res => {
       setTechnologies(res.data);
     }).catch(console.error);
@@ -202,7 +239,6 @@ export function RegisterPage() {
     }
   };
 
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleGoogleLogin = () => {
     const redirectUrl = window.location.origin + '/dashboard';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
@@ -221,28 +257,34 @@ export function RegisterPage() {
     : [];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-background noise-overlay">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Left side - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16 py-12">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 lg:px-16 py-12 relative z-10">
         <div className="max-w-md mx-auto w-full">
-          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="w-4 h-4" />
+          <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-white transition-colors mb-8 group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to home
           </Link>
           
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-lg gradient-ai flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl gradient-neon flex items-center justify-center shadow-lg shadow-violet-500/30">
+              <FileText className="w-6 h-6 text-white" />
             </div>
-            <span className="font-heading font-bold text-2xl">AI Resume Tailor</span>
+            <span className="font-heading font-bold text-2xl text-gradient-neon">ResumeAI</span>
           </div>
 
-          <h1 className="font-heading text-3xl font-bold mb-2">Create your account</h1>
+          <h1 className="font-heading text-4xl font-bold mb-2">Create your account</h1>
           <p className="text-muted-foreground mb-8">Start your job search journey today</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name" className="text-white">Full Name</Label>
               <Input
                 id="name"
                 type="text"
@@ -250,11 +292,12 @@ export function RegisterPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                className="glass border-white/20 focus:border-violet-500 bg-white/5"
                 data-testid="register-name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -262,11 +305,12 @@ export function RegisterPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
+                className="glass border-white/20 focus:border-violet-500 bg-white/5"
                 data-testid="register-email"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -275,43 +319,46 @@ export function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 minLength={6}
+                className="glass border-white/20 focus:border-violet-500 bg-white/5"
                 data-testid="register-password"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (Optional)</Label>
+                <Label htmlFor="phone" className="text-white">Phone (Optional)</Label>
                 <Input
                   id="phone"
                   type="tel"
                   placeholder="+1 234 567 890"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="glass border-white/20 focus:border-violet-500 bg-white/5"
                   data-testid="register-phone"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">Location (Optional)</Label>
+                <Label htmlFor="location" className="text-white">Location (Optional)</Label>
                 <Input
                   id="location"
                   type="text"
                   placeholder="New York, NY"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="glass border-white/20 focus:border-violet-500 bg-white/5"
                   data-testid="register-location"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Primary Technology</Label>
+              <Label className="text-white">Primary Technology</Label>
               <Select
                 value={formData.primary_technology}
                 onValueChange={(value) => setFormData({ ...formData, primary_technology: value, sub_technologies: [] })}
               >
-                <SelectTrigger data-testid="register-primary-tech">
+                <SelectTrigger className="glass border-white/20 focus:border-violet-500 bg-white/5" data-testid="register-primary-tech">
                   <SelectValue placeholder="Select your primary technology" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="glass border-white/10">
                   {technologies.primary.map((tech) => (
                     <SelectItem key={tech} value={tech}>{tech}</SelectItem>
                   ))}
@@ -320,8 +367,8 @@ export function RegisterPage() {
             </div>
             {availableSubTechs.length > 0 && (
               <div className="space-y-2">
-                <Label>Sub Technologies (Select up to 3)</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <Label className="text-white">Sub Technologies (Select up to 3)</Label>
+                <div className="grid grid-cols-2 gap-2 glass rounded-xl p-4 border-white/10">
                   {availableSubTechs.map((tech) => (
                     <div key={tech} className="flex items-center space-x-2">
                       <Checkbox
@@ -329,9 +376,10 @@ export function RegisterPage() {
                         checked={formData.sub_technologies.includes(tech)}
                         onCheckedChange={(checked) => handleSubTechChange(tech, checked)}
                         disabled={!formData.sub_technologies.includes(tech) && formData.sub_technologies.length >= 3}
+                        className="border-white/30 data-[state=checked]:bg-violet-600"
                         data-testid={`sub-tech-${tech}`}
                       />
-                      <label htmlFor={tech} className="text-sm">{tech}</label>
+                      <label htmlFor={tech} className="text-sm text-muted-foreground">{tech}</label>
                     </div>
                   ))}
                 </div>
@@ -339,19 +387,18 @@ export function RegisterPage() {
             )}
             <Button 
               type="submit" 
-              className="w-full" 
-              size="lg"
+              className="w-full btn-neon py-6 text-lg"
               disabled={isLoading}
               data-testid="register-submit"
             >
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Rocket className="w-5 h-5 mr-2" />}
               Create Account
             </Button>
           </form>
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
+              <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-background text-muted-foreground">Or continue with</span>
@@ -360,8 +407,7 @@ export function RegisterPage() {
 
           <Button 
             variant="outline" 
-            className="w-full" 
-            size="lg"
+            className="w-full glass border-white/20 hover:bg-white/10 py-6 text-lg"
             onClick={handleGoogleLogin}
             data-testid="google-register"
           >
@@ -376,21 +422,46 @@ export function RegisterPage() {
 
           <p className="text-center mt-8 text-muted-foreground">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:underline font-medium">
+            <Link to="/login" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
               Sign in
             </Link>
           </p>
         </div>
       </div>
 
-      {/* Right side - Image */}
-      <div className="hidden lg:block lg:w-1/2 bg-muted">
-        <div className="h-full flex items-center justify-center p-12">
-          <img 
-            src="https://images.unsplash.com/photo-1748207904153-a45c1ea3eaed?crop=entropy&cs=srgb&fm=jpg&q=85&w=800"
-            alt="Success story"
-            className="rounded-2xl shadow-2xl max-h-[80vh] object-cover"
-          />
+      {/* Right side - Visual */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
+        <div className="relative w-full max-w-lg">
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-600/30 via-transparent to-violet-600/30 rounded-3xl blur-3xl" />
+          <div className="relative glass-card rounded-3xl p-8 space-y-6">
+            <h3 className="font-heading text-2xl font-bold text-center">Join 10,000+ Job Seekers</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-gradient-neon">95%</div>
+                <div className="text-sm text-muted-foreground">Success Rate</div>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-gradient-cyber">50K+</div>
+                <div className="text-sm text-muted-foreground">Jobs Matched</div>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-gradient-neon">10K+</div>
+                <div className="text-sm text-muted-foreground">Resumes Tailored</div>
+              </div>
+              <div className="glass rounded-xl p-4 text-center">
+                <div className="text-3xl font-bold text-gradient-cyber">24/7</div>
+                <div className="text-sm text-muted-foreground">AI Support</div>
+              </div>
+            </div>
+            <div className="flex justify-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} className="w-6 h-6 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              ))}
+            </div>
+            <p className="text-center text-muted-foreground text-sm">Rated 4.9/5 by our users</p>
+          </div>
         </div>
       </div>
     </div>
