@@ -187,7 +187,15 @@ export function LiveJobsPage() {
         job_description: selectedJob.full_description || selectedJob.description || '',
         technologies: selectedJob.required_skills || [user?.primary_technology || 'Software Development'],
       });
-      setTailoredContent(response.data.tailored_content);
+      
+      // Handle different response formats
+      let content = response.data.tailored_content;
+      if (typeof content === 'object') {
+        content = JSON.stringify(content, null, 2);
+      }
+      content = content || 'No content generated. Please try again.';
+      
+      setTailoredContent(content);
       toast.success('Resume tailored successfully!');
     } catch (error) {
       console.error('Error tailoring resume:', error);
