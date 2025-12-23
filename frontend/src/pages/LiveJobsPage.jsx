@@ -37,7 +37,8 @@ import {
   Send,
   Bookmark,
   Filter,
-  RefreshCw
+  RefreshCw,
+  FileEdit
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -50,8 +51,11 @@ export function LiveJobsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [showTailorDialog, setShowTailorDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [tailoredContent, setTailoredContent] = useState('');
   const [activeTab, setActiveTab] = useState('recommendations');
 
   const [searchForm, setSearchForm] = useState({
@@ -63,6 +67,10 @@ export function LiveJobsPage() {
   const [applicationForm, setApplicationForm] = useState({
     resume_id: '',
     cover_letter: '',
+  });
+
+  const [tailorForm, setTailorForm] = useState({
+    resume_id: '',
   });
 
   useEffect(() => {
