@@ -77,7 +77,7 @@ export function LoginPage() {
                 <path d="M2 12l10 5 10-5"/>
               </svg>
             </div>
-            <span className="font-heading font-bold text-2xl text-gradient-neon">CareerQuest</span>
+            <span className="font-heading font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
           </Link>
 
           <h1 className="font-heading text-4xl font-bold mb-2">Welcome back</h1>
@@ -284,7 +284,7 @@ export function RegisterPage() {
                 <path d="M2 12l10 5 10-5"/>
               </svg>
             </div>
-            <span className="font-heading font-bold text-2xl text-gradient-neon">CareerQuest</span>
+            <span className="font-heading font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">CareerQuest</span>
           </Link>
 
           <h1 className="font-heading text-4xl font-bold mb-2">Create your account</h1>
