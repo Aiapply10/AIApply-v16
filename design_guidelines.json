@@ -1,173 +1,178 @@
 {
   "identity": {
-    "name": "AI Resume Tailor",
-    "archetype": "Swiss & High-Contrast",
-    "vibe": "Empowering, Efficient, Smart, Reliable",
-    "primary_audience": "Job Seekers & Recruiters"
+    "name": "E1: The Anti-AI Designer",
+    "mission": "Create a 'happening, lively, and interactive' AI Resume Tailor that breaks the boring SaaS mold.",
+    "archetype": "Electric & Neon (Archetype 2) - Adapted for High Energy",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First (Empowerment & Energy)",
+      "Content is King (Storytelling)",
+      "Zoom In (Bold Details)",
+      "Negative Space (Breathing Room)",
+      "Contrast (High Impact)"
+    ]
   },
   "typography": {
     "font_family": {
-      "headings": "Outfit, sans-serif",
+      "heading": "Outfit, sans-serif",
       "body": "Manrope, sans-serif",
       "mono": "JetBrains Mono, monospace"
     },
-    "imports": [
-      "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-    ],
     "usage_rules": {
-      "headings": "Use 'Outfit' for all H1-H3. Weight: 600 or 700. Tracking: -0.02em.",
-      "body": "Use 'Manrope' for all body text. Weight: 400 (regular) or 500 (medium).",
-      "buttons": "Use 'Manrope' Weight: 600.",
-      "data_display": "Use 'JetBrains Mono' for code snippets or technical skills lists."
+      "headings": "Bold (700) or ExtraBold (800). Tight tracking (-0.02em).",
+      "body": "Regular (400) or Medium (500). Relaxed leading (1.6).",
+      "overline": "Uppercase, tracking-widest (0.2em), text-xs, font-bold."
     }
   },
   "colors": {
-    "theme_strategy": "Swiss High-Contrast with Tech Accents",
-    "palette": {
-      "light": {
-        "background": "0 0% 100%",
-        "foreground": "222 47% 11%",
-        "card": "0 0% 100%",
-        "card_foreground": "222 47% 11%",
-        "popover": "0 0% 100%",
-        "popover_foreground": "222 47% 11%",
-        "primary": "221 83% 53%",
-        "primary_foreground": "210 40% 98%",
-        "secondary": "210 40% 96.1%",
-        "secondary_foreground": "222 47% 11%",
-        "muted": "210 40% 96.1%",
-        "muted_foreground": "215.4 16.3% 46.9%",
-        "accent": "210 40% 96.1%",
-        "accent_foreground": "222 47% 11%",
-        "destructive": "0 84.2% 60.2%",
-        "destructive_foreground": "210 40% 98%",
-        "border": "214.3 31.8% 91.4%",
-        "input": "214.3 31.8% 91.4%",
-        "ring": "221 83% 53%"
-      },
-      "dark": {
-        "background": "222 47% 11%",
-        "foreground": "210 40% 98%",
-        "card": "222 47% 11%",
-        "card_foreground": "210 40% 98%",
-        "popover": "222 47% 11%",
-        "popover_foreground": "210 40% 98%",
-        "primary": "217 91% 60%",
-        "primary_foreground": "222 47% 11%",
-        "secondary": "217.2 32.6% 17.5%",
-        "secondary_foreground": "210 40% 98%",
-        "muted": "217.2 32.6% 17.5%",
-        "muted_foreground": "215 20.2% 65.1%",
-        "accent": "217.2 32.6% 17.5%",
-        "accent_foreground": "210 40% 98%",
-        "destructive": "0 62.8% 30.6%",
-        "destructive_foreground": "210 40% 98%",
-        "border": "217.2 32.6% 17.5%",
-        "input": "217.2 32.6% 17.5%",
-        "ring": "224.3 76.3% 48%"
-      }
+    "palette_name": "Neon Future",
+    "mode_strategy": "Hybrid (Dark Mode Default for 'Cool' factor, Light Mode for 'Clean' factor)",
+    "light_theme": {
+      "background": "210 40% 98%",
+      "foreground": "222 47% 11%",
+      "card": "0 0% 100%",
+      "card_foreground": "222 47% 11%",
+      "primary": "262 83% 58%",
+      "primary_foreground": "210 40% 98%",
+      "secondary": "210 40% 96.1%",
+      "secondary_foreground": "222 47% 11%",
+      "accent": "262 83% 58%",
+      "accent_foreground": "210 40% 98%",
+      "border": "214.3 31.8% 91.4%"
     },
-    "usage_rules": {
-      "primary_action": "Use 'bg-primary' for main CTAs (Apply, Save, Upload).",
-      "ai_features": "Use a gradient of 'from-violet-600 to-indigo-600' for AI-related buttons or badges.",
-      "status_success": "text-green-600 bg-green-50 border-green-200",
-      "status_pending": "text-amber-600 bg-amber-50 border-amber-200",
-      "status_error": "text-red-600 bg-red-50 border-red-200"
+    "dark_theme": {
+      "background": "222 47% 11%",
+      "foreground": "210 40% 98%",
+      "card": "217 33% 17%",
+      "card_foreground": "210 40% 98%",
+      "primary": "263 70% 50%",
+      "primary_foreground": "210 40% 98%",
+      "secondary": "217 33% 17%",
+      "secondary_foreground": "210 40% 98%",
+      "accent": "263 70% 50%",
+      "accent_foreground": "210 40% 98%",
+      "border": "217 33% 17%"
+    },
+    "special_accents": {
+      "electric_purple": "#8B5CF6",
+      "neon_cyan": "#06B6D4",
+      "acid_lime": "#84CC16",
+      "hot_pink": "#EC4899"
     }
   },
-  "layout_strategies": {
+  "visual_enhancers": {
+    "glassmorphism": {
+      "usage": "Sticky Headers, Floating Navs, Dashboard Cards",
+      "classes": "bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg"
+    },
+    "tracing_beam": {
+      "usage": "Feature Cards, Pricing Tables",
+      "description": "Animated gradient border that traces the container edge."
+    },
+    "gradients": {
+      "usage": "Text Highlights, Buttons, Background Blobs",
+      "rule": "Use noise/grain overlay on gradients to avoid 'digital flatness'."
+    },
+    "textures": {
+      "usage": "Backgrounds",
+      "type": "Subtle noise or grain (opacity 0.05)"
+    }
+  },
+  "layout_strategy": {
     "marketing_page": {
       "grid_type": "Mode A: The Tetris Grid",
-      "spacing": "Generous (p-8 to p-24)",
-      "hero_style": "Split Screen: Left Typography (Bold), Right Visual (Image + Floating Cards)",
-      "features_style": "Bento Grid with 'Glassmorphism' cards"
+      "columns": "grid-cols-1 md:grid-cols-12",
+      "gap": "gap-8 md:gap-12",
+      "rules": "Asymmetry is key. Use col-span-7 vs col-span-5. Never 50/50."
     },
     "dashboard": {
       "grid_type": "Mode B: The Control Room Grid",
-      "structure": "Sidebar (Fixed Left) + Topbar + Main Content Area",
-      "card_style": "Flat, 1px border (border-border), no shadow (or very subtle shadow-sm)",
-      "density": "High. Use 'gap-4' for dashboard widgets."
+      "columns": "grid-cols-1 md:grid-cols-4",
+      "gap": "gap-6",
+      "rules": "Dense, information-rich. Use bento-box style sizing."
     },
-    "resume_editor": {
-      "structure": "Split Pane (Resizable if possible, else 50/50)",
-      "left_pane": "Input Forms / Chat Interface (Scrollable)",
-      "right_pane": "Live Preview (Sticky/Fixed)",
-      "mobile_behavior": "Tabs to switch between Edit/Preview"
+    "spacing": {
+      "scale": "Generous. Use p-8, p-12, p-24 for sections.",
+      "container_padding": "px-6 md:px-12 lg:px-24"
     }
   },
   "components": {
     "buttons": {
-      "default": "h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
-      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      "ghost": "hover:bg-accent hover:text-accent-foreground",
-      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+      "style": "Pill-shaped or Sharp Rectangles (mix based on context).",
+      "interaction": "Scale down slightly on click (0.95). Glow on hover."
     },
     "cards": {
-      "base": "rounded-lg border border-border bg-card text-card-foreground shadow-sm",
-      "hover_effect": "hover:border-primary/50 transition-colors duration-300"
+      "style": "Glassmorphism or Solid with Tracing Beam.",
+      "hover": "Lift up (-4px) and increase shadow."
     },
     "inputs": {
-      "style": "h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      "style": "Minimalist. Bottom border only OR filled background with no border.",
+      "focus": "Ring with accent color."
     }
   },
-  "visual_assets": {
-    "images": [
-      {
-        "category": "hero_main",
-        "url": "https://images.unsplash.com/photo-1544813813-2c73bec209ca?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "description": "Smiling professional working on laptop - Use for Hero Section Right Side",
-        "alt": "Professional using AI resume builder"
+  "motion": {
+    "library": "framer-motion",
+    "variants": {
+      "fadeInUp": {
+        "initial": { "opacity": 0, "y": 20 },
+        "animate": { "opacity": 1, "y": 0 },
+        "transition": { "duration": 0.5, "ease": "easeOut" }
       },
-      {
-        "category": "team_about",
-        "url": "https://images.unsplash.com/photo-1758691736975-9f7f643d178e?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "description": "Diverse team meeting - Use for About Us or 'For Companies' section",
-        "alt": "Recruitment team analyzing candidates"
+      "staggerContainer": {
+        "animate": { "transition": { "staggerChildren": 0.1 } }
       },
-      {
-        "category": "testimonial_1",
-        "url": "https://images.unsplash.com/photo-1748207904153-a45c1ea3eaed?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "description": "Man in modern kitchen - Use for Candidate Testimonial",
-        "alt": "Successful job seeker"
-      },
-      {
-        "category": "testimonial_2",
-        "url": "https://images.unsplash.com/photo-1758873269317-51888e824b28?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "description": "Team collaborating - Use for Recruiter Testimonial",
-        "alt": "Hiring manager"
+      "scaleIn": {
+        "initial": { "scale": 0.9, "opacity": 0 },
+        "animate": { "scale": 1, "opacity": 1 }
       }
-    ],
-    "icons": {
-      "library": "lucide-react",
-      "preferred_icons": {
-        "resume": "FileText",
-        "ai_magic": "Sparkles",
-        "job_search": "Briefcase",
-        "apply": "Send",
-        "dashboard": "LayoutDashboard",
-        "settings": "Settings",
-        "user": "User",
-        "check": "CheckCircle2"
-      }
+    },
+    "micro_interactions": "All interactive elements must have hover/tap states."
+  },
+  "image_urls": {
+    "hero_main": {
+      "url": "https://images.unsplash.com/photo-1758518727592-706e80ebc354?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxjb25maWRlbnQlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzfGVufDB8fHx8MTc2NjUwNjYyNXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Confident successful professional woman",
+      "category": "Hero Section"
+    },
+    "about_team": {
+      "url": "https://images.unsplash.com/photo-1737573296361-75315239293a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjB0ZWNoJTIwb2ZmaWNlJTIwdGVhbXxlbnwwfHx8fDE3NjY1MDY2MjZ8MA&ixlib=rb-4.1.0&q=85",
+      "alt": "Modern tech team collaborating",
+      "category": "About/Features"
+    },
+    "background_abstract": {
+      "url": "https://images.unsplash.com/photo-1762278805303-69a5fe7b6a82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMG5lb24lMjBncmFkaWVudCUyMHRlY2hub2xvZ3l8ZW58MHx8fHwxNzY2NTA2NjI4fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Abstract neon flowing lines",
+      "category": "Backgrounds/Cards"
+    },
+    "feature_1": {
+      "url": "https://images.unsplash.com/photo-1737574821698-862e77f044c1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxjb25maWRlbnQlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzfGVufDB8fHx8MTc2NjUwNjYyNXww&ixlib=rb-4.1.0&q=85",
+      "alt": "Focused businessman",
+      "category": "Features"
     }
   },
-  "universal_guidelines": {
-    "spacing": "Use generous padding. Minimum 'p-6' for cards. 'py-20' for landing page sections.",
-    "contrast": "Ensure text contrast is WCAG AA compliant. Use 'text-slate-600' for secondary text on white backgrounds, never lighter.",
-    "interaction": "All interactive elements must have a hover state and active state. Use 'transition-all duration-200'.",
-    "testing": "Add 'data-testid' to all buttons, inputs, and links.",
-    "anti_patterns": [
-      "Do not use generic 'Inter' font for headings.",
-      "Do not use full-screen gradients.",
-      "Do not center text in long paragraphs (left align for readability).",
-      "Do not use 'alert' or native browser prompts."
-    ]
-  },
-  "instructions_to_main_agent": {
-    "setup": "1. Update 'index.css' with the provided color variables. 2. Add font imports to 'index.css' or 'index.html'. 3. Configure 'tailwind.config.js' to extend the font family.",
-    "implementation_order": "1. Landing Page (Hero -> Features -> CTA). 2. Auth Pages. 3. Dashboard Layout (Sidebar + Header). 4. Resume Builder (Complex State).",
-    "state_management": "Use React Context or Zustand for managing the 'Resume State' across the builder steps.",
-    "mocking": "Mock the AI response with a 2-second delay and a realistic JSON response structure for the resume data."
-  }
+  "instructions_to_main_agent": [
+    "Implement the 'Electric & Neon' theme using the provided HSL values in tailwind.config.js.",
+    "Use 'Outfit' for all headings and 'Manrope' for body text.",
+    "Apply 'glassmorphism' classes to dashboard cards and sticky headers.",
+    "Use the provided image URLs for the respective sections.",
+    "Ensure all interactive elements have hover states and micro-animations.",
+    "Use framer-motion for page transitions and element entry animations.",
+    "Follow the 'Tetris Grid' for the landing page layout.",
+    "Do NOT use generic gradients. Use the 'Neon Future' palette.",
+    "Ensure high contrast for accessibility (WCAG AA)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid 'AI slop' aesthetic (generic centered layouts, uniform styling).",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "Do NOT apply universal transition (e.g., transition: all).",
+    "Do NOT center align the app container.",
+    "Always use modern button styles (pill-shaped or sharp).",
+    "NEVER use AI assistant Emoji characters.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Use 'sonner' for toasts.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ]
 }
