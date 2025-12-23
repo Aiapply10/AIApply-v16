@@ -172,6 +172,50 @@ export function LiveJobsPage() {
     }
   };
 
+  const handleTailorResume = async () => {
+    if (!tailorForm.resume_id) {
+      toast.error('Please select a resume to tailor');
+      return;
+    }
+
+    setIsTailoring(true);
+    setTailoredContent('');
+    try {
+      const response = await resumeAPI.tailor({
+        resume_id: tailorForm.resume_id,
+        job_title: selectedJob.title,
+        job_description: selectedJob.full_description || selectedJob.description || '',
+        technologies: selectedJob.required_skills || [user?.primary_technology || 'Software Development'],
+      });
+      setTailoredContent(response.data.tailored_content);
+      toast.success('Resume tailored successfully!');
+    } catch (error) {
+      console.error('Error tailoring resume:', error);
+      toast.error('Failed to tailor resume. Please try again.');
+    } finally {
+      setIsTailoring(false);
+    }
+  };
+
+  const handleDownloadTailoredResume = async (format) => {
+    if (!tailorForm.resume_id) return;
+    
+    try {
+      const response = await resumeAPI.download(tailorForm.resume_id, format);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `tailored_resume_${selectedJob.title.replace(/[^a-zA-Z0-9]/g, '_')}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`Resume downloaded as ${format.toUpperCase()}`);
+    } catch (error) {
+      toast.error(`Failed to download resume as ${format.toUpperCase()}`);
+    }
+  };
+
   const formatSalary = (min, max, currency, period) => {
     if (!min && !max) return null;
     const formatter = new Intl.NumberFormat('en-US', {
