@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { 
@@ -15,7 +15,8 @@ import {
   Users,
   Globe,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -28,20 +29,20 @@ import {
 } from './ui/dropdown-menu';
 
 const candidateNavItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/resumes', label: 'My Resumes', icon: FileText },
-  { href: '/live-jobs', label: 'Live Jobs', icon: Sparkles },
-  { href: '/jobs', label: 'Job Portals', icon: Briefcase },
-  { href: '/applications', label: 'Applications', icon: Send },
-  { href: '/emails', label: 'Email Center', icon: Mail },
-  { href: '/reports', label: 'My Reports', icon: BarChart3 },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-violet-400' },
+  { href: '/resumes', label: 'My Resumes', icon: FileText, color: 'text-cyan-400' },
+  { href: '/live-jobs', label: 'Live Jobs', icon: Sparkles, color: 'text-pink-400' },
+  { href: '/jobs', label: 'Job Portals', icon: Briefcase, color: 'text-green-400' },
+  { href: '/applications', label: 'Applications', icon: Send, color: 'text-orange-400' },
+  { href: '/emails', label: 'Email Center', icon: Mail, color: 'text-blue-400' },
+  { href: '/reports', label: 'My Reports', icon: BarChart3, color: 'text-yellow-400' },
 ];
 
 const adminNavItems = [
-  { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard },
-  { href: '/admin/candidates', label: 'All Candidates', icon: Users },
-  { href: '/admin/portals', label: 'Job Portals', icon: Globe },
-  { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard, color: 'text-violet-400' },
+  { href: '/admin/candidates', label: 'All Candidates', icon: Users, color: 'text-cyan-400' },
+  { href: '/admin/portals', label: 'Job Portals', icon: Globe, color: 'text-pink-400' },
+  { href: '/admin/reports', label: 'Reports', icon: BarChart3, color: 'text-green-400' },
 ];
 
 export function DashboardLayout({ children }) {
@@ -64,34 +65,46 @@ export function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background noise-overlay">
+      {/* Animated background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+      </div>
+
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="hover:bg-white/10"
           data-testid="mobile-menu-toggle"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </Button>
-        <span className="font-heading font-semibold text-lg">AI Resume Tailor</span>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg gradient-neon flex items-center justify-center">
+            <FileText className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-heading font-semibold text-lg text-gradient-neon">ResumeAI</span>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" data-testid="user-menu-mobile">
-              <Avatar className="w-8 h-8">
+            <Button variant="ghost" size="icon" className="hover:bg-white/10" data-testid="user-menu-mobile">
+              <Avatar className="w-8 h-8 ring-2 ring-violet-500/50">
                 <AvatarImage src={user?.picture} />
-                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                <AvatarFallback className="bg-violet-600">{getInitials(user?.name)}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate('/settings')}>
+          <DropdownMenuContent align="end" className="glass border-white/10">
+            <DropdownMenuItem onClick={() => navigate('/settings')} className="hover:bg-white/10">
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem onClick={handleLogout} className="hover:bg-red-500/20 text-red-400">
               <LogOut className="w-4 h-4 mr-2" />
               Logout
             </DropdownMenuItem>
@@ -101,23 +114,23 @@ export function DashboardLayout({ children }) {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 z-40 h-screen bg-background border-r border-border transition-transform lg:translate-x-0 w-64 ${
+        className={`fixed top-0 left-0 z-40 h-screen glass border-r border-white/10 transition-transform lg:translate-x-0 w-64 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-border">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-ai flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
+          <div className="p-6 border-b border-white/10">
+            <Link to="/dashboard" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl gradient-neon flex items-center justify-center shadow-lg group-hover:shadow-violet-500/50 transition-shadow group-hover:scale-105 duration-300">
+                <FileText className="w-5 h-5 text-white" />
               </div>
-              <span className="font-heading font-bold text-xl">ResumeAI</span>
+              <span className="font-heading font-bold text-xl text-gradient-neon">ResumeAI</span>
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -126,45 +139,54 @@ export function DashboardLayout({ children }) {
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
                   data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      ? 'bg-gradient-to-r from-violet-600/30 to-purple-600/30 border border-violet-500/50 shadow-lg shadow-violet-500/20'
+                      : 'hover:bg-white/5 border border-transparent'
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <item.icon className={`w-5 h-5 transition-colors ${isActive ? item.color : 'text-muted-foreground group-hover:' + item.color}`} />
+                  <span className={`font-medium ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-white'}`}>
+                    {item.label}
+                  </span>
+                  {item.label === 'Live Jobs' && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 text-xs font-semibold animate-pulse">
+                      LIVE
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-white/10">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button 
-                  className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all duration-300 group"
                   data-testid="user-menu-desktop"
                 >
-                  <Avatar className="w-10 h-10">
+                  <Avatar className="w-10 h-10 ring-2 ring-violet-500/50 group-hover:ring-violet-400 transition-all">
                     <AvatarImage src={user?.picture} />
-                    <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-violet-600 to-purple-600 text-white">
+                      {getInitials(user?.name)}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="font-medium text-sm truncate">{user?.name}</p>
+                    <p className="font-medium text-sm truncate text-white">{user?.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <DropdownMenuContent align="end" className="w-56 glass border-white/10">
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="hover:bg-white/10">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem onClick={handleLogout} className="hover:bg-red-500/20 text-red-400">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
@@ -177,13 +199,13 @@ export function DashboardLayout({ children }) {
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
+      <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen relative">
         <div className="p-6 lg:p-8">
           {children}
         </div>
