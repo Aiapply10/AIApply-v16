@@ -734,8 +734,8 @@ export function LiveJobsPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border max-h-[300px] overflow-y-auto">
-                    <pre className="text-sm whitespace-pre-wrap font-sans text-foreground">
+                  <div className="bg-slate-900 p-4 rounded-lg border border-slate-700 max-h-[300px] overflow-y-auto shadow-inner">
+                    <pre className="text-sm whitespace-pre-wrap font-sans text-slate-100 leading-relaxed">
                       {tailoredContent}
                     </pre>
                   </div>
