@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { authAPI } from '../lib/api';
 import { Button } from '../components/ui/button';
@@ -8,10 +8,17 @@ import { Label } from '../components/ui/label';
 import { FileText, Loader2, ArrowLeft, Sparkles, Zap, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
 
+// LinkedIn OAuth Configuration
+const LINKEDIN_CLIENT_ID = process.env.REACT_APP_LINKEDIN_CLIENT_ID || '';
+const LINKEDIN_REDIRECT_URI = typeof window !== 'undefined' ? `${window.location.origin}/auth/linkedin/callback` : '';
+const LINKEDIN_SCOPE = 'openid profile email';
+
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,7 +28,30 @@ export function LoginPage() {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+    
+    // Handle LinkedIn callback
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    if (code && state === 'linkedin_login') {
+      handleLinkedInCallback(code);
+    }
+  }, [isAuthenticated, navigate, searchParams]);
+
+  const handleLinkedInCallback = async (code) => {
+    setIsLinkedInLoading(true);
+    try {
+      const response = await authAPI.linkedinCallback(code, LINKEDIN_REDIRECT_URI);
+      const { user, access_token } = response.data;
+      setUser(user, access_token);
+      toast.success('Welcome! Signed in with LinkedIn');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('LinkedIn login error:', error);
+      toast.error(error.response?.data?.detail || 'LinkedIn login failed');
+    } finally {
+      setIsLinkedInLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
