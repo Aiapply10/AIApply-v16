@@ -38,7 +38,8 @@ import {
   Bookmark,
   Filter,
   RefreshCw,
-  FileEdit
+  FileEdit,
+  Target
 } from 'lucide-react';
 import { toast } from 'sonner';
 
