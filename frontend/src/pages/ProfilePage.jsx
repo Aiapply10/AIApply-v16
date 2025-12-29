@@ -383,13 +383,13 @@ export function ProfilePage() {
             </div>
             
             <div className="space-y-2">
-              <Label>Additional Skills</Label>
-              <div className="flex flex-wrap gap-2">
+              <Label>Additional Skills (Select your sub-technologies)</Label>
+              <div className="grid grid-cols-3 gap-3">
                 {TECHNOLOGIES.filter(t => t !== formData.primary_technology).map((tech) => (
                   <Badge
                     key={tech}
                     variant={formData.sub_technologies.includes(tech) ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer transition-colors justify-center py-2 ${
                       formData.sub_technologies.includes(tech) 
                         ? 'bg-violet-600 hover:bg-violet-700' 
                         : 'hover:bg-violet-500/10'
