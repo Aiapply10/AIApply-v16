@@ -34,6 +34,7 @@ const candidateNavItems = [
   { href: '/profile', label: 'My Profile', icon: User, color: 'text-fuchsia-400' },
   { href: '/resumes', label: 'My Resumes', icon: FileText, color: 'text-cyan-400' },
   { href: '/live-jobs', label: 'Live Jobs', icon: Sparkles, color: 'text-pink-400' },
+  { href: '/live-jobs-2', label: 'Live Jobs 2', icon: Zap, color: 'text-cyan-400' },
   { href: '/jobs', label: 'Job Portals', icon: Briefcase, color: 'text-green-400' },
   { href: '/applications', label: 'Applications', icon: Send, color: 'text-orange-400' },
   { href: '/emails', label: 'Email Center', icon: Mail, color: 'text-blue-400' },

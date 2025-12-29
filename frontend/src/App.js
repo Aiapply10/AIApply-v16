@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ResumesPage } from './pages/ResumesPage';
 import { JobsPage } from './pages/JobsPage';
 import { LiveJobsPage } from './pages/LiveJobsPage';
+import { LiveJobs2Page } from './pages/LiveJobs2Page';
 import { ApplicationsPage } from './pages/ApplicationsPage';
 import { EmailsPage } from './pages/EmailsPage';
 import { ReportsPage } from './pages/ReportsPage';
