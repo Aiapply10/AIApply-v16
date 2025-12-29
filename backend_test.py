@@ -77,44 +77,8 @@ class ATSResumeOptimizerTester:
         except Exception as e:
             return False, {"error": str(e)}, 0
 
-    def test_technologies_endpoint(self):
-        """Test /api/technologies endpoint"""
-        success, data, status = self.test_api_call('GET', 'technologies', 200)
-        
-        if success and 'primary' in data and 'sub_technologies' in data:
-            expected_techs = ['Java', 'Python', 'PHP', 'AI', 'React']
-            has_expected = all(tech in data['primary'] for tech in expected_techs)
-            self.log_test("GET /api/technologies", has_expected, 
-                         f"Found {len(data['primary'])} primary technologies")
-        else:
-            self.log_test("GET /api/technologies", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_user_registration(self):
-        """Test user registration"""
-        registration_data = {
-            "email": self.test_email,
-            "password": self.test_password,
-            "name": self.test_name,
-            "primary_technology": "Python",
-            "sub_technologies": ["FastAPI", "Django"],
-            "phone": "+1234567890",
-            "location": "New York, NY"
-        }
-
-        success, data, status = self.test_api_call('POST', 'auth/register', 200, registration_data)
-        
-        if success and 'access_token' in data and 'user' in data:
-            self.token = data['access_token']
-            self.user_id = data['user']['user_id']
-            self.log_test("POST /api/auth/register", True, 
-                         f"User created with ID: {self.user_id}")
-        else:
-            self.log_test("POST /api/auth/register", False, 
-                         error=f"Status: {status}, Data: {data}")
-
     def test_user_login(self):
-        """Test user login"""
+        """Test user login with provided credentials"""
         login_data = {
             "email": self.test_email,
             "password": self.test_password
@@ -123,84 +87,156 @@ class ATSResumeOptimizerTester:
         success, data, status = self.test_api_call('POST', 'auth/login', 200, login_data)
         
         if success and 'access_token' in data:
-            # Update token from login
             self.token = data['access_token']
-            self.log_test("POST /api/auth/login", True, "Login successful")
+            self.user_id = data['user']['user_id']
+            self.log_test("POST /api/auth/login", True, f"Login successful for {self.test_email}")
         else:
             self.log_test("POST /api/auth/login", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_get_current_user(self):
-        """Test /api/auth/me endpoint"""
-        success, data, status = self.test_api_call('GET', 'auth/me', 200)
-        
-        if success and 'user_id' in data and 'email' in data:
-            self.log_test("GET /api/auth/me", True, 
-                         f"Retrieved user: {data.get('name', 'Unknown')}")
-        else:
-            self.log_test("GET /api/auth/me", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_resume_endpoints(self):
-        """Test resume-related endpoints"""
-        # Test get resumes (should be empty initially)
+    def test_get_resumes(self):
+        """Test GET /api/resumes - Get list of resumes for the user"""
         success, data, status = self.test_api_call('GET', 'resumes', 200)
         
         if success and isinstance(data, list):
-            self.log_test("GET /api/resumes", True, f"Found {len(data)} resumes")
+            # Look for the specific resume ID from review request
+            resume_found = False
+            for resume in data:
+                if resume.get('resume_id') == self.test_resume_id:
+                    self.resume_id = self.test_resume_id
+                    resume_found = True
+                    break
+            
+            if not resume_found and len(data) > 0:
+                # Use the first available resume
+                self.resume_id = data[0].get('resume_id')
+                resume_found = True
+            
+            if resume_found:
+                self.log_test("GET /api/resumes", True, 
+                             f"Found {len(data)} resumes, using resume_id: {self.resume_id}")
+            else:
+                self.log_test("GET /api/resumes", False, 
+                             error="No resumes found for testing")
         else:
             self.log_test("GET /api/resumes", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_job_portals_endpoint(self):
-        """Test job portals endpoint"""
-        success, data, status = self.test_api_call('GET', 'job-portals', 200)
+    def test_ats_optimize_without_versions(self):
+        """Test POST /api/resumes/{resume_id}/optimize without generate_versions"""
+        if not self.resume_id:
+            self.log_test("ATS Optimize (no versions)", False, 
+                         error="No resume ID available for testing")
+            return
+
+        optimize_data = {
+            "target_role": "Senior Python Developer",
+            "generate_versions": False
+        }
+
+        success, data, status = self.test_api_call(
+            'POST', f'resumes/{self.resume_id}/optimize', 200, optimize_data
+        )
         
-        if success and isinstance(data, list):
-            self.log_test("GET /api/job-portals", True, f"Found {len(data)} job portals")
+        if success:
+            # Verify response contains required fields
+            required_fields = ['optimized_content', 'keywords', 'ats_optimized']
+            missing_fields = [field for field in required_fields if field not in data]
+            
+            if not missing_fields and data.get('ats_optimized') is True:
+                self.log_test("ATS Optimize (no versions)", True, 
+                             f"Optimization successful, keywords: {len(data.get('keywords', '').split(','))}")
+            else:
+                self.log_test("ATS Optimize (no versions)", False, 
+                             error=f"Missing fields: {missing_fields} or ats_optimized not True")
         else:
-            self.log_test("GET /api/job-portals", False, 
+            self.log_test("ATS Optimize (no versions)", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_applications_endpoint(self):
-        """Test applications endpoint"""
-        success, data, status = self.test_api_call('GET', 'applications', 200)
+    def test_ats_optimize_with_versions(self):
+        """Test POST /api/resumes/{resume_id}/optimize with generate_versions: true"""
+        if not self.resume_id:
+            self.log_test("ATS Optimize (with versions)", False, 
+                         error="No resume ID available for testing")
+            return
+
+        optimize_data = {
+            "target_role": "Senior Python Developer",
+            "generate_versions": True
+        }
+
+        success, data, status = self.test_api_call(
+            'POST', f'resumes/{self.resume_id}/optimize', 200, optimize_data
+        )
         
-        if success and isinstance(data, list):
-            self.log_test("GET /api/applications", True, f"Found {len(data)} applications")
+        if success:
+            # Verify response contains versions array with 3 items
+            versions = data.get('versions', [])
+            expected_version_names = ["Standard ATS-Optimized", "Technical Focus", "Leadership Focus"]
+            
+            if len(versions) == 3:
+                version_names = [v.get('name') for v in versions]
+                has_expected_names = all(name in version_names for name in expected_version_names)
+                
+                if has_expected_names:
+                    self.log_test("ATS Optimize (with versions)", True, 
+                                 f"Generated 3 versions: {version_names}")
+                else:
+                    self.log_test("ATS Optimize (with versions)", False, 
+                                 error=f"Unexpected version names: {version_names}")
+            else:
+                self.log_test("ATS Optimize (with versions)", False, 
+                             error=f"Expected 3 versions, got {len(versions)}")
         else:
-            self.log_test("GET /api/applications", False, 
+            self.log_test("ATS Optimize (with versions)", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_emails_endpoint(self):
-        """Test emails endpoint"""
-        success, data, status = self.test_api_call('GET', 'emails', 200)
-        
-        if success and isinstance(data, list):
-            self.log_test("GET /api/emails", True, f"Found {len(data)} emails")
-        else:
-            self.log_test("GET /api/emails", False, 
-                         error=f"Status: {status}, Data: {data}")
+    def test_download_word_document(self):
+        """Test Word document generation for optimized resume"""
+        if not self.resume_id:
+            self.log_test("Download Word Document", False, 
+                         error="No resume ID available for testing")
+            return
 
-    def test_candidate_reports(self):
-        """Test candidate reports endpoint"""
-        success, data, status = self.test_api_call('GET', 'reports/candidate', 200)
+        # Test the Word document generation endpoint
+        url = f"{self.base_url}/api/resumes/{self.resume_id}/generate-word"
+        headers = {'Authorization': f'Bearer {self.token}'}
         
-        if success and 'total_applications' in data:
-            self.log_test("GET /api/reports/candidate", True, 
-                         f"Total applications: {data.get('total_applications', 0)}")
-        else:
-            self.log_test("GET /api/reports/candidate", False, 
-                         error=f"Status: {status}, Data: {data}")
+        try:
+            response = self.session.post(url, headers=headers)
+            
+            if response.status_code == 200:
+                # Check if response is a Word document
+                content_type = response.headers.get('content-type', '')
+                if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
+                    self.log_test("Download Word Document", True, 
+                                 f"Word document generated, size: {len(response.content)} bytes")
+                else:
+                    self.log_test("Download Word Document", False, 
+                                 error=f"Unexpected content type: {content_type}")
+            else:
+                self.log_test("Download Word Document", False, 
+                             error=f"Status: {response.status_code}")
+        except Exception as e:
+            self.log_test("Download Word Document", False, 
+                         error=f"Exception: {str(e)}")
 
-    def test_root_endpoint(self):
-        """Test root API endpoint"""
-        success, data, status = self.test_api_call('GET', '', 200)
+    def test_get_specific_resume(self):
+        """Test GET /api/resumes/{resume_id} for the specific resume"""
+        if not self.resume_id:
+            self.log_test("GET specific resume", False, 
+                         error="No resume ID available for testing")
+            return
+
+        success, data, status = self.test_api_call('GET', f'resumes/{self.resume_id}', 200)
         
-        if success and 'message' in data:
-            self.log_test("GET /api/", True, f"API message: {data.get('message')}")
+        if success and data.get('resume_id') == self.resume_id:
+            # Check if it has ATS optimization data
+            has_ats_data = 'ats_optimized' in data or 'ats_optimized_content' in data
+            self.log_test("GET specific resume", True, 
+                         f"Resume retrieved, ATS optimized: {has_ats_data}")
         else:
-            self.log_test("GET /api/", False, 
+            self.log_test("GET specific resume", False, 
                          error=f"Status: {status}, Data: {data}")
 
     def run_all_tests(self):
