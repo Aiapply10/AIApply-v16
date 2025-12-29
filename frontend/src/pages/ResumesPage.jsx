@@ -149,6 +149,64 @@ export function ResumesPage() {
     }
   };
 
+  const handleOptimize = async () => {
+    if (!selectedResume) {
+      toast.error('No resume selected');
+      return;
+    }
+
+    setIsOptimizing(true);
+    setOptimizedContent('');
+    setExtractedKeywords('');
+    setResumeVersions([]);
+    
+    try {
+      const response = await resumeAPI.optimize(selectedResume.resume_id, {
+        target_role: optimizeForm.target_role || '',
+        generate_versions: optimizeForm.generateVersions,
+      });
+      
+      setOptimizedContent(response.data.optimized_content);
+      setExtractedKeywords(response.data.keywords || '');
+      
+      if (response.data.versions && response.data.versions.length > 0) {
+        setResumeVersions(response.data.versions);
+        setSelectedVersion('Standard ATS-Optimized');
+      }
+      
+      toast.success('Resume optimized for ATS!');
+      loadData();
+    } catch (error) {
+      console.error('Optimization error:', error);
+      toast.error('Failed to optimize resume');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  const handleDownloadOptimized = async (format, versionName = 'default') => {
+    if (!selectedResume) return;
+    
+    try {
+      const response = await resumeAPI.generateWord(selectedResume.resume_id, versionName);
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const versionSuffix = versionName !== 'default' ? `_${versionName.replace(/\s+/g, '_')}` : '_ATS_Optimized';
+      a.download = `resume${versionSuffix}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('ATS-optimized resume downloaded as Word');
+    } catch (error) {
+      toast.error('Failed to download resume');
+    }
+  };
+
   const handleDownload = async (resume, format) => {
     try {
       const response = await resumeAPI.download(resume.resume_id, format);
