@@ -150,6 +150,8 @@ class TailorResumeRequest(BaseModel):
     job_title: str
     job_description: str
     technologies: List[str]
+    generate_versions: bool = False  # Optional: generate 2-3 ATS versions
+    ats_optimize: bool = True  # ATS-friendly optimization
 
 class GenerateCoverLetterRequest(BaseModel):
     resume_id: str
