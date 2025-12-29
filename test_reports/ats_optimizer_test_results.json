@@ -1,0 +1,48 @@
+{
+  "total_tests": 6,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "POST /api/auth/login",
+      "success": true,
+      "details": "Login successful for testuser_dashboard@test.com",
+      "error": ""
+    },
+    {
+      "test": "GET /api/resumes",
+      "success": true,
+      "details": "Found 1 resumes, using resume_id: resume_0dbaaaa25be6",
+      "error": ""
+    },
+    {
+      "test": "GET specific resume",
+      "success": true,
+      "details": "Resume retrieved, ATS optimized: True",
+      "error": ""
+    },
+    {
+      "test": "ATS Optimize (no versions)",
+      "success": true,
+      "details": "Optimization successful, keywords: 20",
+      "error": ""
+    },
+    {
+      "test": "ATS Optimize (with versions)",
+      "success": true,
+      "details": "Generated 3 versions: ['Standard ATS-Optimized', 'Technical Focus', 'Leadership Focus']",
+      "error": ""
+    },
+    {
+      "test": "Download Word Document",
+      "success": true,
+      "details": "Word document generated, size: 37783 bytes",
+      "error": ""
+    }
+  ],
+  "test_user": {
+    "email": "testuser_dashboard@test.com",
+    "user_id": "user_cf74e6829f66"
+  }
+}
