@@ -206,6 +206,19 @@ export function RegisterPage() {
   const { setUser, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [technologies, setTechnologies] = useState({ primary: [], sub_technologies: {} });
+  const [locationInput, setLocationInput] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  
+  const US_CITIES = [
+    'New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ',
+    'Philadelphia, PA', 'San Antonio, TX', 'San Diego, CA', 'Dallas, TX', 'San Jose, CA',
+    'Austin, TX', 'Jacksonville, FL', 'Fort Worth, TX', 'Columbus, OH', 'Charlotte, NC',
+    'San Francisco, CA', 'Indianapolis, IN', 'Seattle, WA', 'Denver, CO', 'Boston, MA',
+    'Nashville, TN', 'Detroit, MI', 'Portland, OR', 'Atlanta, GA', 'Miami, FL',
+    'Raleigh, NC', 'Minneapolis, MN', 'Tampa, FL', 'Remote', 'Anywhere in US'
+  ];
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -225,6 +238,26 @@ export function RegisterPage() {
       setTechnologies(res.data);
     }).catch(console.error);
   }, [isAuthenticated, navigate]);
+
+  const handleLocationChange = (value) => {
+    setLocationInput(value);
+    setFormData({ ...formData, location: value });
+    if (value.length > 0) {
+      const filtered = US_CITIES.filter(city => 
+        city.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 6);
+      setLocationSuggestions(filtered);
+      setShowLocationSuggestions(true);
+    } else {
+      setShowLocationSuggestions(false);
+    }
+  };
+
+  const selectLocation = (city) => {
+    setLocationInput(city);
+    setFormData({ ...formData, location: city });
+    setShowLocationSuggestions(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
