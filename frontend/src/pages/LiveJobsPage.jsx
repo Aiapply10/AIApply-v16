@@ -56,6 +56,9 @@ export function LiveJobsPage() {
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [tailoredContent, setTailoredContent] = useState('');
+  const [tailoredVersions, setTailoredVersions] = useState([]);
+  const [extractedKeywords, setExtractedKeywords] = useState('');
+  const [selectedVersion, setSelectedVersion] = useState('default');
   const [activeTab, setActiveTab] = useState('recommendations');
 
   const [searchForm, setSearchForm] = useState({
@@ -71,6 +74,7 @@ export function LiveJobsPage() {
 
   const [tailorForm, setTailorForm] = useState({
     resume_id: '',
+    generateVersions: false,
   });
 
   useEffect(() => {
