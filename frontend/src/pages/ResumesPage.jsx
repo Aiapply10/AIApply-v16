@@ -352,17 +352,35 @@ export function ResumesPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {resume.tailored_content && (
-                    <Badge variant="secondary" className="gradient-ai text-white">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      AI Tailored
-                    </Badge>
-                  )}
+                  {/* Status Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {resume.ats_optimized && (
+                      <Badge className="bg-green-600 text-white">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        ATS Optimized
+                      </Badge>
+                    )}
+                    {resume.tailored_content && (
+                      <Badge variant="secondary" className="gradient-ai text-white">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        AI Tailored
+                      </Badge>
+                    )}
+                    {resume.versions && resume.versions.length > 0 && (
+                      <Badge variant="outline" className="text-violet-400 border-violet-400">
+                        <Copy className="w-3 h-3 mr-1" />
+                        {resume.versions.length} Versions
+                      </Badge>
+                    )}
+                  </div>
+                  
                   {resume.target_job_title && (
                     <p className="text-sm text-muted-foreground">
                       Tailored for: {resume.target_job_title}
                     </p>
                   )}
+                  
+                  {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2">
                     <Button 
                       variant="outline" 
@@ -377,6 +395,22 @@ export function ResumesPage() {
                       Preview
                     </Button>
                     <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                      onClick={() => {
+                        setSelectedResume(resume);
+                        setOptimizeForm({ target_role: '', generateVersions: false });
+                        setOptimizedContent('');
+                        setExtractedKeywords('');
+                        setResumeVersions([]);
+                        setShowOptimizeDialog(true);
+                      }}
+                      data-testid={`optimize-${resume.resume_id}`}
+                    >
+                      <Target className="w-4 h-4 mr-1" />
+                      ATS Optimize
+                    </Button>
+                    <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => {
@@ -387,7 +421,7 @@ export function ResumesPage() {
                       data-testid={`tailor-${resume.resume_id}`}
                     >
                       <Sparkles className="w-4 h-4 mr-1" />
-                      Tailor
+                      Tailor for Job
                     </Button>
                     <Button 
                       variant="outline" 
