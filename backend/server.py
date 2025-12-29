@@ -112,6 +112,10 @@ class TokenResponse(BaseModel):
     token_type: str
     user: UserResponse
 
+class LinkedInCallbackRequest(BaseModel):
+    code: str
+    redirect_uri: str
+
 class ResumeCreate(BaseModel):
     original_content: str
     file_name: str
