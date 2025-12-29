@@ -274,18 +274,6 @@ export function RegisterPage() {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
-  const handleSubTechChange = (tech, checked) => {
-    if (checked) {
-      setFormData({ ...formData, sub_technologies: [...formData.sub_technologies, tech] });
-    } else {
-      setFormData({ ...formData, sub_technologies: formData.sub_technologies.filter(t => t !== tech) });
-    }
-  };
-
-  const availableSubTechs = formData.primary_technology 
-    ? technologies.sub_technologies[formData.primary_technology] || []
-    : [];
-
   return (
     <div className="min-h-screen flex bg-background noise-overlay">
       {/* Animated Background */}
