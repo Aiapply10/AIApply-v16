@@ -205,7 +205,6 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const { setUser, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [technologies, setTechnologies] = useState({ primary: [], sub_technologies: {} });
   const [locationInput, setLocationInput] = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
@@ -223,8 +222,6 @@ export function RegisterPage() {
     email: '',
     password: '',
     name: '',
-    primary_technology: '',
-    sub_technologies: [],
     phone: '',
     location: '',
   });
@@ -233,10 +230,6 @@ export function RegisterPage() {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
-    
-    technologiesAPI.getAll().then(res => {
-      setTechnologies(res.data);
-    }).catch(console.error);
   }, [isAuthenticated, navigate]);
 
   const handleLocationChange = (value) => {
