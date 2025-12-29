@@ -292,15 +292,20 @@ class ATSResumeOptimizerTester:
         }
 
 def main():
-    tester = AIResumeTailorTester()
+    tester = ATSResumeOptimizerTester()
     exit_code = tester.run_all_tests()
     
     # Save detailed results
     summary = tester.get_test_summary()
-    with open('/app/test_reports/backend_test_results.json', 'w') as f:
+    
+    # Ensure test_reports directory exists
+    import os
+    os.makedirs('/app/test_reports', exist_ok=True)
+    
+    with open('/app/test_reports/ats_optimizer_test_results.json', 'w') as f:
         json.dump(summary, f, indent=2)
     
-    print(f"\n📄 Detailed results saved to: /app/test_reports/backend_test_results.json")
+    print(f"\n📄 Detailed results saved to: /app/test_reports/ats_optimizer_test_results.json")
     return exit_code
 
 if __name__ == "__main__":
