@@ -748,58 +748,271 @@ async def tailor_resume(data: TailorResumeRequest, request: Request):
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     
-    # Use AI to tailor resume
+    # Enhanced ATS-optimized system message
+    system_message = """You are an expert resume writer, ATS optimization specialist, and career consultant.
+Your expertise includes:
+- Making resumes ATS (Applicant Tracking System) friendly
+- Identifying and incorporating relevant keywords from job descriptions
+- Formatting content for both human readers and automated parsing systems
+- Highlighting quantifiable achievements and metrics
+- Using industry-standard section headers (SUMMARY, EXPERIENCE, SKILLS, EDUCATION)
+
+ATS Optimization Rules:
+1. Use standard section headers that ATS systems recognize
+2. Include relevant keywords naturally throughout the resume
+3. Avoid tables, graphics, headers/footers that ATS cannot parse
+4. Use standard fonts and formatting
+5. Include both spelled-out terms and acronyms (e.g., "Artificial Intelligence (AI)")
+6. Place most important keywords in the top third of the resume
+7. Use reverse chronological order for experience
+8. Include job titles that match the target position terminology"""
+
+    # Use AI to tailor resume with ATS optimization
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY,
         session_id=f"tailor_{data.resume_id}_{uuid.uuid4().hex[:8]}",
-        system_message="""You are an expert resume writer and career consultant. 
-        Your task is to tailor resumes to match specific job descriptions while maintaining authenticity.
-        Focus on highlighting relevant skills, experiences, and achievements that match the target position.
-        Use action verbs and quantifiable achievements where possible.
-        Keep the resume professional and ATS-friendly."""
+        system_message=system_message
     ).with_model("openai", "gpt-5.2")
     
-    prompt = f"""Please tailor the following resume for the position of {data.job_title}.
+    # Extract keywords from job description
+    keywords_prompt = f"""Analyze this job description and extract the top 15-20 most important keywords and phrases that an ATS would look for:
 
-Technologies to highlight: {', '.join(data.technologies)}
+Job Title: {data.job_title}
+Technologies: {', '.join(data.technologies)}
 
 Job Description:
 {data.job_description}
 
-Original Resume:
+Return ONLY a comma-separated list of keywords, nothing else."""
+
+    keywords_message = UserMessage(text=keywords_prompt)
+    extracted_keywords = await chat.send_message(keywords_message)
+    
+    # Main tailoring prompt
+    prompt = f"""Tailor the following resume for the position of {data.job_title}.
+
+TARGET KEYWORDS TO INCORPORATE (from job description):
+{extracted_keywords}
+
+REQUIRED TECHNOLOGIES TO HIGHLIGHT:
+{', '.join(data.technologies)}
+
+JOB DESCRIPTION:
+{data.job_description}
+
+ORIGINAL RESUME:
 {resume['original_content']}
 
-Please provide a tailored version of the resume that:
-1. Highlights relevant experience and skills for this position
-2. Uses keywords from the job description
-3. Maintains accuracy and authenticity
-4. Is formatted in a clear, professional manner
-5. Optimizes for ATS (Applicant Tracking Systems)
+CREATE AN ATS-OPTIMIZED RESUME that:
+1. Uses standard ATS-friendly section headers: PROFESSIONAL SUMMARY, SKILLS, EXPERIENCE, EDUCATION, CERTIFICATIONS
+2. Incorporates the target keywords naturally (aim for 70%+ keyword match)
+3. Starts with a powerful PROFESSIONAL SUMMARY (3-4 lines) with key skills
+4. Lists a SKILLS section with relevant technical and soft skills
+5. Uses bullet points for achievements, starting with strong action verbs
+6. Includes quantifiable metrics where possible (percentages, numbers, dollar amounts)
+7. Maintains reverse chronological order
+8. Uses clear, ATS-parseable formatting
 
-Return the tailored resume content only, without any additional commentary."""
+Return ONLY the tailored resume content, formatted as plain text with clear section headers."""
 
     message = UserMessage(text=prompt)
     tailored_content = await chat.send_message(message)
     
+    versions = []
+    
+    # Generate additional versions if requested
+    if data.generate_versions:
+        # Version 2: More technical focus
+        version2_prompt = f"""Create an alternative version of this tailored resume with MORE TECHNICAL FOCUS.
+        
+Original tailored resume:
+{tailored_content}
+
+For this version:
+1. Lead with technical skills and certifications
+2. Emphasize technical projects and implementations
+3. Include more technical keywords and acronyms
+4. Focus on tools, technologies, and methodologies used
+5. Highlight technical problem-solving achievements
+
+Keep it ATS-friendly. Return ONLY the resume content."""
+
+        version2_message = UserMessage(text=version2_prompt)
+        version2_content = await chat.send_message(version2_message)
+        
+        # Version 3: Leadership/Impact focus
+        version3_prompt = f"""Create an alternative version of this tailored resume with LEADERSHIP & IMPACT FOCUS.
+        
+Original tailored resume:
+{tailored_content}
+
+For this version:
+1. Emphasize leadership roles and team management
+2. Highlight business impact and ROI of projects
+3. Focus on stakeholder management and communication
+4. Include mentoring and cross-functional collaboration
+5. Emphasize strategic thinking and decision-making
+
+Keep it ATS-friendly. Return ONLY the resume content."""
+
+        version3_message = UserMessage(text=version3_prompt)
+        version3_content = await chat.send_message(version3_message)
+        
+        versions = [
+            {"name": "Standard ATS-Optimized", "content": tailored_content},
+            {"name": "Technical Focus", "content": version2_content},
+            {"name": "Leadership Focus", "content": version3_content}
+        ]
+    
     # Update resume with tailored content
+    update_data = {
+        "tailored_content": tailored_content,
+        "target_job_title": data.job_title,
+        "target_job_description": data.job_description,
+        "target_technologies": data.technologies,
+        "extracted_keywords": extracted_keywords,
+        "ats_optimized": True,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if versions:
+        update_data["versions"] = versions
+    
     await db.resumes.update_one(
         {"resume_id": data.resume_id},
-        {
-            "$set": {
-                "tailored_content": tailored_content,
-                "target_job_title": data.job_title,
-                "target_job_description": data.job_description,
-                "target_technologies": data.technologies,
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-        }
+        {"$set": update_data}
     )
     
-    return {
+    response_data = {
         "resume_id": data.resume_id,
         "tailored_content": tailored_content,
-        "message": "Resume tailored successfully"
+        "keywords": extracted_keywords,
+        "ats_optimized": True,
+        "message": "Resume tailored successfully with ATS optimization"
     }
+    
+    if versions:
+        response_data["versions"] = versions
+    
+    return response_data
+
+@api_router.post("/resumes/{resume_id}/generate-word")
+async def generate_word_resume(resume_id: str, request: Request, version: str = "default"):
+    """Generate a Word document from the tailored resume"""
+    user = await get_current_user(request)
+    
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Get content based on version
+    if version != "default" and resume.get("versions"):
+        content = None
+        for v in resume["versions"]:
+            if v["name"] == version:
+                content = v["content"]
+                break
+        if not content:
+            content = resume.get("tailored_content") or resume.get("original_content", "")
+    else:
+        content = resume.get("tailored_content") or resume.get("original_content", "")
+    
+    # Create Word document
+    doc = Document()
+    
+    # Set narrow margins for more content
+    sections = doc.sections
+    for section in sections:
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.6)
+        section.right_margin = Inches(0.6)
+    
+    # Add name as title
+    name = user.get("name", "Candidate")
+    title = doc.add_heading(name, 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in title.runs:
+        run.font.size = Pt(18)
+        run.font.bold = True
+    
+    # Add contact info
+    contact_parts = []
+    if user.get('email'):
+        contact_parts.append(user['email'])
+    if user.get('phone'):
+        contact_parts.append(user['phone'])
+    if user.get('location'):
+        contact_parts.append(user['location'])
+    if user.get('linkedin_profile'):
+        contact_parts.append(user['linkedin_profile'])
+    
+    if contact_parts:
+        contact = doc.add_paragraph()
+        contact.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        contact_run = contact.add_run(" | ".join(contact_parts))
+        contact_run.font.size = Pt(10)
+    
+    # Add horizontal line
+    doc.add_paragraph("_" * 80)
+    
+    # Parse and add content with proper formatting
+    lines = content.split('\n')
+    current_section = None
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Check if it's a section header (ALL CAPS or common headers)
+        section_headers = ['PROFESSIONAL SUMMARY', 'SUMMARY', 'SKILLS', 'TECHNICAL SKILLS', 
+                         'EXPERIENCE', 'WORK EXPERIENCE', 'EDUCATION', 'CERTIFICATIONS',
+                         'PROJECTS', 'ACHIEVEMENTS', 'AWARDS', 'LANGUAGES']
+        
+        is_header = line.upper() in section_headers or (line.isupper() and len(line) < 50)
+        
+        if is_header:
+            # Add section header
+            heading = doc.add_heading(line.title(), level=1)
+            heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            for run in heading.runs:
+                run.font.size = Pt(12)
+                run.font.bold = True
+            current_section = line.upper()
+        elif line.startswith(('•', '-', '*', '○')):
+            # Bullet point
+            para = doc.add_paragraph(style='List Bullet')
+            run = para.add_run(line.lstrip('•-*○ '))
+            run.font.size = Pt(10)
+        elif line.startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')):
+            # Numbered list
+            para = doc.add_paragraph(style='List Number')
+            run = para.add_run(line[2:].strip())
+            run.font.size = Pt(10)
+        else:
+            # Regular paragraph
+            para = doc.add_paragraph()
+            run = para.add_run(line)
+            run.font.size = Pt(10)
+    
+    # Save to BytesIO
+    doc_io = BytesIO()
+    doc.save(doc_io)
+    doc_io.seek(0)
+    
+    # Generate filename
+    job_title = resume.get("target_job_title", "").replace(" ", "_")[:30]
+    filename = f"{name.replace(' ', '_')}_Resume_{job_title}.docx"
+    
+    return StreamingResponse(
+        doc_io,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @api_router.get("/resumes/{resume_id}/download/{format}")
 async def download_resume(resume_id: str, format: str, request: Request):
