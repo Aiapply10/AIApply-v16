@@ -315,7 +315,112 @@ async def get_me(request: Request):
         "location": user.get("location"),
         "role": user.get("role", "candidate"),
         "picture": user.get("picture"),
+        "profile_picture": user.get("profile_picture"),
+        "linkedin_profile": user.get("linkedin_profile"),
+        "salary_min": user.get("salary_min"),
+        "salary_max": user.get("salary_max"),
+        "salary_type": user.get("salary_type"),
+        "tax_type": user.get("tax_type"),
+        "relocation_preference": user.get("relocation_preference"),
+        "location_preferences": user.get("location_preferences", []),
+        "job_type_preferences": user.get("job_type_preferences", []),
         "created_at": created_at.isoformat() if created_at else None
+    }
+
+@api_router.put("/auth/profile")
+async def update_profile(data: UserProfileUpdate, request: Request):
+    user = await get_current_user(request)
+    
+    update_data = {}
+    if data.name is not None:
+        update_data["name"] = data.name
+    if data.phone is not None:
+        update_data["phone"] = data.phone
+    if data.location is not None:
+        update_data["location"] = data.location
+    if data.primary_technology is not None:
+        update_data["primary_technology"] = data.primary_technology
+    if data.sub_technologies is not None:
+        update_data["sub_technologies"] = data.sub_technologies
+    if data.profile_picture is not None:
+        update_data["profile_picture"] = data.profile_picture
+    if data.linkedin_profile is not None:
+        update_data["linkedin_profile"] = data.linkedin_profile
+    if data.salary_min is not None:
+        update_data["salary_min"] = data.salary_min
+    if data.salary_max is not None:
+        update_data["salary_max"] = data.salary_max
+    if data.salary_type is not None:
+        update_data["salary_type"] = data.salary_type
+    if data.tax_type is not None:
+        update_data["tax_type"] = data.tax_type
+    if data.relocation_preference is not None:
+        update_data["relocation_preference"] = data.relocation_preference
+    if data.location_preferences is not None:
+        update_data["location_preferences"] = data.location_preferences
+    if data.job_type_preferences is not None:
+        update_data["job_type_preferences"] = data.job_type_preferences
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": update_data}
+    )
+    
+    # Fetch updated user
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
+    
+    return {"message": "Profile updated successfully", "user": updated_user}
+
+@api_router.get("/auth/profile-completeness")
+async def get_profile_completeness(request: Request):
+    user = await get_current_user(request)
+    
+    # Define required fields and their weights
+    fields = {
+        "name": 10,
+        "email": 10,
+        "primary_technology": 15,
+        "sub_technologies": 10,
+        "location": 10,
+        "phone": 5,
+        "linkedin_profile": 10,
+        "salary_min": 5,
+        "salary_max": 5,
+        "tax_type": 5,
+        "relocation_preference": 5,
+        "location_preferences": 5,
+        "job_type_preferences": 5,
+    }
+    
+    total_weight = sum(fields.values())
+    completed_weight = 0
+    missing_fields = []
+    
+    for field, weight in fields.items():
+        value = user.get(field)
+        if value and (not isinstance(value, list) or len(value) > 0):
+            completed_weight += weight
+        else:
+            missing_fields.append(field)
+    
+    # Check if user has uploaded a resume
+    resume_count = await db.resumes.count_documents({"user_id": user["user_id"]})
+    if resume_count > 0:
+        completed_weight += 10  # Resume adds 10%
+    else:
+        missing_fields.append("resume")
+    
+    total_weight += 10  # Add resume weight to total
+    
+    percentage = int((completed_weight / total_weight) * 100)
+    
+    return {
+        "percentage": percentage,
+        "completed_weight": completed_weight,
+        "total_weight": total_weight,
+        "missing_fields": missing_fields
     }
 
 @api_router.post("/auth/logout")
