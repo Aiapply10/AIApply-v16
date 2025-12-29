@@ -168,6 +168,27 @@ class EmailReplyRequest(BaseModel):
     context: str
     tone: str = "professional"
 
+# Auto-Apply Models
+class AutoApplySettings(BaseModel):
+    enabled: bool = False
+    resume_id: str = ""
+    job_keywords: List[str] = []
+    locations: List[str] = ["United States"]
+    employment_types: List[str] = ["FULL_TIME"]
+    min_salary: Optional[int] = None
+    max_applications_per_day: int = 10
+    auto_tailor_resume: bool = True
+
+class AutoApplySettingsUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    resume_id: Optional[str] = None
+    job_keywords: Optional[List[str]] = None
+    locations: Optional[List[str]] = None
+    employment_types: Optional[List[str]] = None
+    min_salary: Optional[int] = None
+    max_applications_per_day: Optional[int] = None
+    auto_tailor_resume: Optional[bool] = None
+
 # ============ AUTH HELPERS ============
 
 def hash_password(password: str) -> str:
