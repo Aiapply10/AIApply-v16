@@ -251,8 +251,10 @@ export function LoginPage() {
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
   const [locationInput, setLocationInput] = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
@@ -278,7 +280,31 @@ export function RegisterPage() {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+    
+    // Handle LinkedIn callback
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    if (code && state === 'linkedin_register') {
+      handleLinkedInCallback(code);
+    }
+  }, [isAuthenticated, navigate, searchParams]);
+
+  const handleLinkedInCallback = async (code) => {
+    setIsLinkedInLoading(true);
+    try {
+      const redirectUri = `${window.location.origin}/auth/linkedin/callback`;
+      const response = await authAPI.linkedinCallback(code, redirectUri);
+      const { user, access_token } = response.data;
+      setUser(user, access_token);
+      toast.success('Account created with LinkedIn!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('LinkedIn register error:', error);
+      toast.error(error.response?.data?.detail || 'LinkedIn sign up failed');
+    } finally {
+      setIsLinkedInLoading(false);
+    }
+  };
 
   const handleLocationChange = (value) => {
     setLocationInput(value);
