@@ -51,7 +51,16 @@ const US_CITIES = [
 ];
 
 const PRIMARY_TECHNOLOGIES = ['Java', 'Python', 'PHP', 'AI', 'Front End React'];
-const SUB_TECHNOLOGIES = ['Java', 'Python', 'PHP', 'AI/ML', 'React', 'Node.js', 'Angular', 'Vue.js', '.NET', 'Go', 'Ruby', 'Swift', 'Kotlin', 'DevOps', 'Cloud', 'Data Science', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'GraphQL', 'TypeScript', 'JavaScript'];
+
+// Sub-technologies mapped to primary technologies
+const SUB_TECHNOLOGIES_MAP = {
+  'Java': ['Spring Boot', 'Spring MVC', 'Hibernate', 'Maven', 'Gradle', 'JUnit', 'Microservices', 'REST APIs', 'JDBC', 'JSP', 'Servlets', 'Apache Kafka', 'JPA', 'Log4j', 'Tomcat'],
+  'Python': ['Django', 'Flask', 'FastAPI', 'NumPy', 'Pandas', 'TensorFlow', 'PyTorch', 'Scikit-learn', 'Celery', 'SQLAlchemy', 'Pytest', 'BeautifulSoup', 'Selenium', 'OpenCV', 'Matplotlib'],
+  'PHP': ['Laravel', 'Symfony', 'CodeIgniter', 'WordPress', 'Drupal', 'Magento', 'Composer', 'PHPUnit', 'MySQL', 'REST APIs', 'Blade', 'Twig', 'Redis', 'Eloquent ORM', 'CakePHP'],
+  'AI': ['Machine Learning', 'Deep Learning', 'NLP', 'Computer Vision', 'TensorFlow', 'PyTorch', 'Keras', 'Scikit-learn', 'OpenAI', 'LLMs', 'RAG', 'Langchain', 'Hugging Face', 'Neural Networks', 'Data Science'],
+  'Front End React': ['JavaScript', 'TypeScript', 'Redux', 'Next.js', 'React Router', 'Tailwind CSS', 'Material UI', 'Styled Components', 'Jest', 'React Query', 'Axios', 'GraphQL', 'Webpack', 'Vite', 'Storybook'],
+};
+
 const TAX_TYPES = ['W2', '1099', 'C2C'];
 const JOB_TYPES = ['Remote', 'Hybrid', 'Onsite'];
 const RELOCATION_OPTIONS = ['Yes', 'No', 'Open to Discussion'];
