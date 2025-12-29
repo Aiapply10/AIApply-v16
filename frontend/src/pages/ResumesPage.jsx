@@ -33,7 +33,11 @@ import {
   Loader2,
   Trash2,
   Plus,
-  FileType
+  FileType,
+  Target,
+  Wand2,
+  CheckCircle2,
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,17 +47,28 @@ export function ResumesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedResume, setSelectedResume] = useState(null);
   const [showTailorDialog, setShowTailorDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCoverLetterDialog, setShowCoverLetterDialog] = useState(false);
+  const [showOptimizeDialog, setShowOptimizeDialog] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
+  const [optimizedContent, setOptimizedContent] = useState('');
+  const [extractedKeywords, setExtractedKeywords] = useState('');
+  const [resumeVersions, setResumeVersions] = useState([]);
+  const [selectedVersion, setSelectedVersion] = useState('default');
   const fileInputRef = useRef(null);
 
   const [tailorForm, setTailorForm] = useState({
     job_title: '',
     job_description: '',
     technologies: [],
+  });
+
+  const [optimizeForm, setOptimizeForm] = useState({
+    target_role: '',
+    generateVersions: false,
   });
 
   const [coverLetterForm, setCoverLetterForm] = useState({
