@@ -75,6 +75,16 @@ export function LoginPage() {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
+  const handleLinkedInLogin = () => {
+    if (!LINKEDIN_CLIENT_ID) {
+      toast.error('LinkedIn login is not configured yet. Please use Google or email login.');
+      return;
+    }
+    const state = 'linkedin_login';
+    const authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(LINKEDIN_REDIRECT_URI)}&state=${state}&scope=${encodeURIComponent(LINKEDIN_SCOPE)}`;
+    window.location.href = authUrl;
+  };
+
   return (
     <div className="min-h-screen flex bg-background noise-overlay">
       {/* Animated Background */}
