@@ -376,7 +376,7 @@ export function ProfilePage() {
                   <SelectValue placeholder="Select your main expertise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TECHNOLOGIES.map((tech) => (
+                  {PRIMARY_TECHNOLOGIES.map((tech) => (
                     <SelectItem key={tech} value={tech}>{tech}</SelectItem>
                   ))}
                 </SelectContent>
@@ -386,7 +386,7 @@ export function ProfilePage() {
             <div className="space-y-2">
               <Label>Additional Skills (Select your sub-technologies)</Label>
               <div className="grid grid-cols-3 gap-3">
-                {TECHNOLOGIES.filter(t => t !== formData.primary_technology).map((tech) => (
+                {SUB_TECHNOLOGIES.map((tech) => (
                   <Badge
                     key={tech}
                     variant={formData.sub_technologies.includes(tech) ? "default" : "outline"}
