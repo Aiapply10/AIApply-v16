@@ -16,7 +16,8 @@ import {
   Globe,
   ChevronDown,
   Sparkles,
-  Zap
+  Zap,
+  User
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -30,6 +31,7 @@ import {
 
 const candidateNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-violet-400' },
+  { href: '/profile', label: 'My Profile', icon: User, color: 'text-fuchsia-400' },
   { href: '/resumes', label: 'My Resumes', icon: FileText, color: 'text-cyan-400' },
   { href: '/live-jobs', label: 'Live Jobs', icon: Sparkles, color: 'text-pink-400' },
   { href: '/jobs', label: 'Job Portals', icon: Briefcase, color: 'text-green-400' },
