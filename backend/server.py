@@ -58,7 +58,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
-    primary_technology: str
+    primary_technology: Optional[str] = ""
     sub_technologies: List[str] = []
     phone: Optional[str] = None
     location: Optional[str] = None
