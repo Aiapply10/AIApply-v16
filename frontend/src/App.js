@@ -72,6 +72,14 @@ function AppRouter() {
         }
       />
       <Route
+        path="/live-jobs-2"
+        element={
+          <ProtectedRoute>
+            <LiveJobs2Page />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/applications"
         element={
           <ProtectedRoute>
