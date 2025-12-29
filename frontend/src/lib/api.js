@@ -51,6 +51,7 @@ export const resumeAPI = {
   getAll: () => api.get('/resumes'),
   getOne: (id) => api.get(`/resumes/${id}`),
   tailor: (data) => api.post('/resumes/tailor', data),
+  optimize: (id, data) => api.post(`/resumes/${id}/optimize`, data),
   download: (id, format) => api.get(`/resumes/${id}/download/${format}`, {
     responseType: 'blob',
   }),
