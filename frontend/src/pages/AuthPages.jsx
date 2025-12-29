@@ -377,17 +377,33 @@ export function RegisterPage() {
                   data-testid="register-phone"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <Label htmlFor="location" className="text-white">Location (Optional)</Label>
                 <Input
                   id="location"
                   type="text"
-                  placeholder="New York, NY"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="Start typing a city..."
+                  value={locationInput}
+                  onChange={(e) => handleLocationChange(e.target.value)}
+                  onFocus={() => locationInput && setShowLocationSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 200)}
                   className="glass border-white/20 focus:border-violet-500 bg-white/5"
                   data-testid="register-location"
                 />
+                {showLocationSuggestions && locationSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-slate-900 border border-white/20 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {locationSuggestions.map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        className="w-full px-4 py-2 text-left text-white hover:bg-violet-600/30 transition-colors text-sm"
+                        onMouseDown={() => selectLocation(city)}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="space-y-2">
