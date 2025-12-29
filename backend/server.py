@@ -67,6 +67,22 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    primary_technology: Optional[str] = None
+    sub_technologies: Optional[List[str]] = None
+    profile_picture: Optional[str] = None
+    linkedin_profile: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    salary_type: Optional[str] = None  # hourly, annual
+    tax_type: Optional[str] = None  # W2, 1099, C2C
+    relocation_preference: Optional[str] = None  # yes, no, maybe
+    location_preferences: Optional[List[str]] = None
+    job_type_preferences: Optional[List[str]] = None  # remote, hybrid, onsite
+
 class UserResponse(BaseModel):
     user_id: str
     email: str
@@ -77,6 +93,15 @@ class UserResponse(BaseModel):
     location: Optional[str]
     role: str
     created_at: datetime
+    profile_picture: Optional[str] = None
+    linkedin_profile: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    salary_type: Optional[str] = None
+    tax_type: Optional[str] = None
+    relocation_preference: Optional[str] = None
+    location_preferences: Optional[List[str]] = None
+    job_type_preferences: Optional[List[str]] = None
 
 class TokenResponse(BaseModel):
     access_token: str
