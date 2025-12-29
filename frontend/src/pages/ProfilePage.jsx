@@ -50,7 +50,8 @@ const US_CITIES = [
   'Remote', 'Anywhere in US'
 ];
 
-const TECHNOLOGIES = ['Java', 'Python', 'PHP', 'AI/ML', 'React', 'Node.js', 'Angular', 'Vue.js', '.NET', 'Go', 'Ruby', 'Swift', 'Kotlin', 'DevOps', 'Cloud', 'Data Science'];
+const PRIMARY_TECHNOLOGIES = ['Java', 'Python', 'PHP', 'AI', 'Front End React'];
+const SUB_TECHNOLOGIES = ['Java', 'Python', 'PHP', 'AI/ML', 'React', 'Node.js', 'Angular', 'Vue.js', '.NET', 'Go', 'Ruby', 'Swift', 'Kotlin', 'DevOps', 'Cloud', 'Data Science', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'GraphQL', 'TypeScript', 'JavaScript'];
 const TAX_TYPES = ['W2', '1099', 'C2C'];
 const JOB_TYPES = ['Remote', 'Hybrid', 'Onsite'];
 const RELOCATION_OPTIONS = ['Yes', 'No', 'Open to Discussion'];
