@@ -406,42 +406,6 @@ export function RegisterPage() {
                 )}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-white">Primary Technology</Label>
-              <Select
-                value={formData.primary_technology}
-                onValueChange={(value) => setFormData({ ...formData, primary_technology: value, sub_technologies: [] })}
-              >
-                <SelectTrigger className="glass border-white/20 focus:border-violet-500 bg-white/5" data-testid="register-primary-tech">
-                  <SelectValue placeholder="Select your primary technology" />
-                </SelectTrigger>
-                <SelectContent className="glass border-white/10">
-                  {technologies.primary.map((tech) => (
-                    <SelectItem key={tech} value={tech}>{tech}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {availableSubTechs.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-white">Sub Technologies (Select up to 3)</Label>
-                <div className="grid grid-cols-2 gap-2 glass rounded-xl p-4 border-white/10">
-                  {availableSubTechs.map((tech) => (
-                    <div key={tech} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={tech}
-                        checked={formData.sub_technologies.includes(tech)}
-                        onCheckedChange={(checked) => handleSubTechChange(tech, checked)}
-                        disabled={!formData.sub_technologies.includes(tech) && formData.sub_technologies.length >= 3}
-                        className="border-white/30 data-[state=checked]:bg-violet-600"
-                        data-testid={`sub-tech-${tech}`}
-                      />
-                      <label htmlFor={tech} className="text-sm text-muted-foreground">{tech}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             <Button 
               type="submit" 
               className="w-full btn-neon py-6 text-lg"
