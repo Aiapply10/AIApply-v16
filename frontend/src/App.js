@@ -11,6 +11,7 @@ import { ApplicationsPage } from './pages/ApplicationsPage';
 import { EmailsPage } from './pages/EmailsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { 
   AdminDashboard, 
   AdminCandidatesPage, 
