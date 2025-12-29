@@ -577,6 +577,177 @@ export function ResumesPage() {
           </DialogContent>
         </Dialog>
 
+        {/* ATS Optimize Dialog */}
+        <Dialog open={showOptimizeDialog} onOpenChange={setShowOptimizeDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-green-500" />
+                ATS Resume Optimizer
+              </DialogTitle>
+              <DialogDescription>
+                Make your resume ATS-friendly with relevant keywords and optimized formatting
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              {/* Configuration Section */}
+              {!optimizedContent && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">Selected Resume</h4>
+                    <p className="text-sm text-muted-foreground">{selectedResume?.file_name}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Target Role (Optional)</Label>
+                    <Input
+                      placeholder="e.g., Senior Software Engineer, Data Scientist..."
+                      value={optimizeForm.target_role}
+                      onChange={(e) => setOptimizeForm({ ...optimizeForm, target_role: e.target.value })}
+                      data-testid="optimize-target-role"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Specifying a target role helps optimize keywords and focus areas
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                    <Checkbox
+                      id="generate-versions"
+                      checked={optimizeForm.generateVersions}
+                      onCheckedChange={(checked) => setOptimizeForm({ ...optimizeForm, generateVersions: checked })}
+                      data-testid="generate-versions-checkbox"
+                    />
+                    <div>
+                      <label htmlFor="generate-versions" className="text-sm font-medium cursor-pointer">
+                        Generate Multiple Versions
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Creates 3 versions: Standard ATS, Technical Focus, and Leadership Focus
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                    onClick={handleOptimize}
+                    disabled={isOptimizing}
+                    data-testid="submit-optimize"
+                  >
+                    {isOptimizing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Optimizing with AI...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Optimize for ATS
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Results Section */}
+              {optimizedContent && (
+                <div className="space-y-4">
+                  {/* Keywords Section */}
+                  {extractedKeywords && (
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <h4 className="font-medium text-green-500 mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Extracted ATS Keywords
+                      </h4>
+                      <p className="text-sm text-muted-foreground">{extractedKeywords}</p>
+                    </div>
+                  )}
+                  
+                  {/* Version Tabs or Single Content */}
+                  {resumeVersions.length > 0 ? (
+                    <Tabs value={selectedVersion} onValueChange={setSelectedVersion}>
+                      <TabsList className="grid w-full grid-cols-3">
+                        {resumeVersions.map((version) => (
+                          <TabsTrigger key={version.name} value={version.name} className="text-xs">
+                            {version.name}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      {resumeVersions.map((version) => (
+                        <TabsContent key={version.name} value={version.name}>
+                          <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-[40vh] overflow-y-auto">
+                            {version.content}
+                          </div>
+                          <div className="flex gap-2 mt-4">
+                            <Button 
+                              onClick={() => handleDownloadOptimized('docx', version.name)}
+                              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download {version.name} (Word)
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(version.content);
+                                toast.success('Copied to clipboard!');
+                              }}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copy
+                            </Button>
+                          </div>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label>ATS-Optimized Resume</Label>
+                        <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-[40vh] overflow-y-auto">
+                          {optimizedContent}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={() => handleDownloadOptimized('docx')}
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download as Word
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(optimizedContent);
+                            toast.success('Copied to clipboard!');
+                          }}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Reset Button */}
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      setOptimizedContent('');
+                      setExtractedKeywords('');
+                      setResumeVersions([]);
+                    }}
+                  >
+                    Optimize Again with Different Settings
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Cover Letter Dialog */}
         <Dialog open={showCoverLetterDialog} onOpenChange={setShowCoverLetterDialog}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
