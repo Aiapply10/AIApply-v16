@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AI Resume Tailor Backend API Testing Suite
-Tests all backend endpoints using the external URL
+AI Resume Tailor Backend API Testing Suite - ATS Resume Optimizer Focus
+Tests ATS Resume Optimizer feature endpoints using the external URL
 """
 
 import requests
@@ -11,20 +11,21 @@ from datetime import datetime
 import uuid
 import time
 
-class AIResumeTailorTester:
+class ATSResumeOptimizerTester:
     def __init__(self, base_url="https://resumeforge-47.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.user_id = None
+        self.resume_id = None
         self.tests_run = 0
         self.tests_passed = 0
         self.test_results = []
         self.session = requests.Session()
         
-        # Test data
-        self.test_email = f"test.user.{int(time.time())}@example.com"
-        self.test_password = "TestPass123!"
-        self.test_name = "Test User"
+        # Test credentials from review request
+        self.test_email = "testuser_dashboard@test.com"
+        self.test_password = "Test123!"
+        self.test_resume_id = "resume_0dbaaaa25be6"  # From review request
 
     def log_test(self, name, success, details="", error=""):
         """Log test result"""
