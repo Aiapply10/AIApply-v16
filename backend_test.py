@@ -240,36 +240,38 @@ class ATSResumeOptimizerTester:
                          error=f"Status: {status}, Data: {data}")
 
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting AI Resume Tailor Backend API Tests")
+        """Run ATS Resume Optimizer focused tests"""
+        print("🚀 Starting ATS Resume Optimizer Backend API Tests")
         print(f"📍 Testing against: {self.base_url}")
+        print(f"👤 Test user: {self.test_email}")
         print("=" * 60)
 
-        # Test public endpoints first
-        self.test_root_endpoint()
-        self.test_technologies_endpoint()
-
-        # Test authentication flow
-        self.test_user_registration()
+        # Test authentication with provided credentials
+        self.test_user_login()
         
         if self.token:
-            # Test authenticated endpoints
-            self.test_user_login()
-            self.test_get_current_user()
-            self.test_resume_endpoints()
-            self.test_job_portals_endpoint()
-            self.test_applications_endpoint()
-            self.test_emails_endpoint()
-            self.test_candidate_reports()
+            print("\n🔐 Authentication successful, testing ATS features...")
+            
+            # Test ATS Resume Optimizer specific endpoints
+            self.test_get_resumes()
+            
+            if self.resume_id:
+                print(f"\n📄 Testing with resume ID: {self.resume_id}")
+                self.test_get_specific_resume()
+                self.test_ats_optimize_without_versions()
+                self.test_ats_optimize_with_versions()
+                self.test_download_word_document()
+            else:
+                print("❌ No resume found for testing ATS optimization")
         else:
-            print("❌ Skipping authenticated tests - registration failed")
+            print("❌ Authentication failed - cannot test ATS features")
 
         # Print summary
         print("\n" + "=" * 60)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 All tests passed!")
+            print("🎉 All ATS Resume Optimizer tests passed!")
             return 0
         else:
             print(f"⚠️  {self.tests_run - self.tests_passed} tests failed")
