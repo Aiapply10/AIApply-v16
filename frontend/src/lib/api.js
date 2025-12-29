@@ -55,6 +55,9 @@ export const resumeAPI = {
     responseType: 'blob',
   }),
   remove: (id) => api.delete(`/resumes/${id}`),
+  generateWord: (id, version = 'default') => api.post(`/resumes/${id}/generate-word?version=${encodeURIComponent(version)}`, {}, {
+    responseType: 'blob',
+  }),
 };
 
 // Cover Letter API
