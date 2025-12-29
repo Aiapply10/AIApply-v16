@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
+import { ProfileCompleteness } from '../components/ProfileCompleteness';
 import { useAuthStore } from '../store';
 import { reportAPI, resumeAPI } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -19,7 +20,8 @@ import {
   TrendingUp,
   Zap,
   Target,
-  Rocket
+  Rocket,
+  User
 } from 'lucide-react';
 
 export function DashboardPage() {
