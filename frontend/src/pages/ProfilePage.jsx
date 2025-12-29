@@ -379,7 +379,7 @@ export function ProfilePage() {
               <Label>Primary Technology *</Label>
               <Select
                 value={formData.primary_technology}
-                onValueChange={(value) => setFormData({ ...formData, primary_technology: value })}
+                onValueChange={(value) => setFormData({ ...formData, primary_technology: value, sub_technologies: [] })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your main expertise" />
@@ -392,26 +392,45 @@ export function ProfilePage() {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label>Additional Skills (Select your sub-technologies)</Label>
-              <div className="grid grid-cols-3 gap-3">
-                {SUB_TECHNOLOGIES.map((tech) => (
-                  <Badge
-                    key={tech}
-                    variant={formData.sub_technologies.includes(tech) ? "default" : "outline"}
-                    className={`cursor-pointer transition-colors justify-center py-2 ${
-                      formData.sub_technologies.includes(tech) 
-                        ? 'bg-violet-600 hover:bg-violet-700' 
-                        : 'hover:bg-violet-500/10'
-                    }`}
-                    onClick={() => toggleSubTech(tech)}
-                  >
-                    {formData.sub_technologies.includes(tech) && <Check className="w-3 h-3 mr-1" />}
-                    {tech}
-                  </Badge>
-                ))}
+            {/* Sub Technologies - Auto-suggested based on primary technology */}
+            {formData.primary_technology && SUB_TECHNOLOGIES_MAP[formData.primary_technology] && (
+              <div className="space-y-3">
+                <Label>Sub Technologies</Label>
+                <p className="text-sm text-muted-foreground">
+                  Select the sub-technologies you're proficient in for {formData.primary_technology}
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {SUB_TECHNOLOGIES_MAP[formData.primary_technology].map((tech) => (
+                    <Badge
+                      key={tech}
+                      variant={formData.sub_technologies.includes(tech) ? "default" : "outline"}
+                      className={`cursor-pointer transition-colors justify-center py-2 text-xs ${
+                        formData.sub_technologies.includes(tech) 
+                          ? 'bg-violet-600 hover:bg-violet-700' 
+                          : 'hover:bg-violet-500/10'
+                      }`}
+                      onClick={() => toggleSubTech(tech)}
+                    >
+                      {formData.sub_technologies.includes(tech) && <Check className="w-3 h-3 mr-1" />}
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
+                {formData.sub_technologies.length > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Selected: {formData.sub_technologies.length} technologies
+                  </p>
+                )}
               </div>
-            </div>
+            )}
+            
+            {!formData.primary_technology && (
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Select a Primary Technology above to see related sub-technologies
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
