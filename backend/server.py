@@ -516,6 +516,142 @@ async def create_session(request: Request, response: Response):
         "role": user.get("role", "candidate")
     }
 
+# LinkedIn OAuth endpoint
+@api_router.post("/auth/linkedin/callback", response_model=TokenResponse)
+async def linkedin_callback(data: LinkedInCallbackRequest):
+    """
+    Handle LinkedIn OAuth callback - exchange code for access token and get user profile.
+    """
+    if not LINKEDIN_CLIENT_ID or not LINKEDIN_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=500, 
+            detail="LinkedIn OAuth is not configured. Please add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to your environment."
+        )
+    
+    try:
+        async with httpx.AsyncClient() as http_client:
+            # Step 1: Exchange authorization code for access token
+            token_response = await http_client.post(
+                "https://www.linkedin.com/oauth/v2/accessToken",
+                data={
+                    "grant_type": "authorization_code",
+                    "code": data.code,
+                    "redirect_uri": data.redirect_uri,
+                    "client_id": LINKEDIN_CLIENT_ID,
+                    "client_secret": LINKEDIN_CLIENT_SECRET,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=15.0
+            )
+            
+            if token_response.status_code != 200:
+                error_data = token_response.json()
+                logger.error(f"LinkedIn token exchange failed: {error_data}")
+                raise HTTPException(status_code=400, detail=f"LinkedIn authentication failed: {error_data.get('error_description', 'Unknown error')}")
+            
+            token_data = token_response.json()
+            access_token = token_data.get("access_token")
+            
+            # Step 2: Get user profile using OpenID Connect userinfo endpoint
+            profile_response = await http_client.get(
+                "https://api.linkedin.com/v2/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=10.0
+            )
+            
+            if profile_response.status_code != 200:
+                logger.error(f"LinkedIn profile fetch failed: {profile_response.text}")
+                raise HTTPException(status_code=400, detail="Failed to fetch LinkedIn profile")
+            
+            profile_data = profile_response.json()
+            
+            # Extract user information
+            linkedin_id = profile_data.get("sub")
+            email = profile_data.get("email")
+            name = profile_data.get("name")
+            picture = profile_data.get("picture")
+            
+            if not email:
+                raise HTTPException(status_code=400, detail="LinkedIn account does not have an email address")
+            
+            # Check if user exists by LinkedIn ID or email
+            user = await db.users.find_one(
+                {"$or": [{"linkedin_id": linkedin_id}, {"email": email}]},
+                {"_id": 0}
+            )
+            
+            if user:
+                # Update existing user with LinkedIn info
+                await db.users.update_one(
+                    {"user_id": user["user_id"]},
+                    {"$set": {
+                        "linkedin_id": linkedin_id,
+                        "picture": picture or user.get("picture"),
+                        "profile_picture": picture or user.get("profile_picture"),
+                        "last_login": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                user_id = user["user_id"]
+            else:
+                # Create new user
+                user_id = f"user_{uuid.uuid4().hex[:12]}"
+                user = {
+                    "user_id": user_id,
+                    "email": email,
+                    "name": name,
+                    "linkedin_id": linkedin_id,
+                    "picture": picture,
+                    "profile_picture": picture,
+                    "primary_technology": "",
+                    "sub_technologies": [],
+                    "role": "candidate",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "last_login": datetime.now(timezone.utc).isoformat()
+                }
+                await db.users.insert_one(user)
+            
+            # Fetch updated user
+            user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password_hash": 0})
+            
+            # Generate JWT token
+            token_payload = {
+                "user_id": user_id,
+                "email": email,
+                "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION)
+            }
+            access_token_jwt = jwt.encode(token_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+            
+            return TokenResponse(
+                access_token=access_token_jwt,
+                token_type="bearer",
+                user=UserResponse(
+                    user_id=user["user_id"],
+                    email=user["email"],
+                    name=user["name"],
+                    primary_technology=user.get("primary_technology", ""),
+                    sub_technologies=user.get("sub_technologies", []),
+                    phone=user.get("phone"),
+                    location=user.get("location"),
+                    role=user.get("role", "candidate"),
+                    created_at=datetime.fromisoformat(user["created_at"]) if isinstance(user.get("created_at"), str) else user.get("created_at"),
+                    profile_picture=user.get("profile_picture") or user.get("picture"),
+                    linkedin_profile=user.get("linkedin_profile"),
+                    salary_min=user.get("salary_min"),
+                    salary_max=user.get("salary_max"),
+                    salary_type=user.get("salary_type"),
+                    tax_type=user.get("tax_type"),
+                    relocation_preference=user.get("relocation_preference"),
+                    location_preferences=user.get("location_preferences", []),
+                    job_type_preferences=user.get("job_type_preferences", [])
+                )
+            )
+            
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="LinkedIn authentication timed out")
+    except Exception as e:
+        logger.error(f"LinkedIn authentication error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"LinkedIn authentication failed: {str(e)}")
+
 # ============ RESUME ROUTES ============
 
 @api_router.post("/resumes/upload")
