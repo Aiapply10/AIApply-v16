@@ -901,6 +901,165 @@ Keep it ATS-friendly. Return ONLY the resume content."""
     
     return response_data
 
+@api_router.post("/resumes/{resume_id}/optimize")
+async def optimize_resume_ats(resume_id: str, data: OptimizeResumeRequest, request: Request):
+    """Make an uploaded resume ATS-friendly with keyword extraction and optional version generation"""
+    user = await get_current_user(request)
+    
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    original_content = resume.get('original_content', '')
+    if not original_content:
+        raise HTTPException(status_code=400, detail="Resume has no content to optimize")
+    
+    # System message for ATS optimization
+    system_message = """You are an expert ATS (Applicant Tracking System) optimization specialist and professional resume writer.
+Your task is to transform resumes to be ATS-friendly while maintaining authenticity and readability.
+
+ATS Optimization Guidelines:
+1. Use standard, recognizable section headers: PROFESSIONAL SUMMARY, SKILLS, EXPERIENCE, EDUCATION, CERTIFICATIONS
+2. Remove fancy formatting, tables, columns, graphics that ATS cannot parse
+3. Use standard bullet points (•) for lists
+4. Include both acronyms and full terms (e.g., "Artificial Intelligence (AI)")
+5. Place most important skills and keywords in the top third
+6. Use reverse chronological order for experience
+7. Include quantifiable achievements with metrics (%, $, numbers)
+8. Use industry-standard job titles
+9. Ensure consistent date formatting (Month Year - Month Year)
+10. Remove headers/footers that might confuse ATS"""
+
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"optimize_{resume_id}_{uuid.uuid4().hex[:8]}",
+        system_message=system_message
+    ).with_model("openai", "gpt-5.2")
+    
+    # Extract keywords from the resume
+    keywords_prompt = f"""Analyze this resume and extract the top 20 most important professional keywords that should be highlighted for ATS systems. Include:
+- Technical skills and tools
+- Industry-specific terms
+- Certifications and qualifications
+- Soft skills mentioned
+- Action verbs used
+
+Resume:
+{original_content}
+
+Return ONLY a comma-separated list of keywords, nothing else."""
+
+    keywords_message = UserMessage(text=keywords_prompt)
+    extracted_keywords = await chat.send_message(keywords_message)
+    
+    # Determine target role
+    target_role = data.target_role if data.target_role else "a professional role matching their experience"
+    
+    # Main ATS optimization prompt
+    optimize_prompt = f"""Transform this resume to be fully ATS-optimized for {target_role}.
+
+CURRENT RESUME:
+{original_content}
+
+EXTRACTED KEYWORDS TO EMPHASIZE:
+{extracted_keywords}
+
+CREATE AN ATS-OPTIMIZED VERSION that:
+1. Starts with a powerful PROFESSIONAL SUMMARY (3-4 lines) highlighting key qualifications
+2. Includes a comprehensive SKILLS section organized by category (Technical Skills, Tools, Soft Skills)
+3. Reformats EXPERIENCE section with:
+   - Clear job titles and company names
+   - Date ranges in consistent format
+   - Bullet points starting with strong action verbs
+   - Quantifiable achievements where possible
+4. Includes EDUCATION with degrees, institutions, and graduation dates
+5. Adds CERTIFICATIONS section if applicable
+6. Uses clean, ATS-parseable formatting throughout
+7. Naturally incorporates the extracted keywords
+
+Return ONLY the optimized resume content in plain text format with clear section headers."""
+
+    optimize_message = UserMessage(text=optimize_prompt)
+    optimized_content = await chat.send_message(optimize_message)
+    
+    versions = []
+    
+    # Generate additional versions if requested
+    if data.generate_versions:
+        # Version 2: Technical/Skills-focused
+        version2_prompt = f"""Create an alternative TECHNICAL FOCUS version of this resume.
+
+Optimized resume:
+{optimized_content}
+
+For this version:
+1. Lead with a TECHNICAL SKILLS section at the top (after contact info)
+2. Emphasize technical projects, implementations, and tools
+3. Include more technical acronyms and certifications
+4. Highlight problem-solving and technical achievements
+5. Focus on technologies, frameworks, and methodologies
+
+Keep it ATS-friendly. Return ONLY the resume content."""
+
+        version2_message = UserMessage(text=version2_prompt)
+        version2_content = await chat.send_message(version2_message)
+        
+        # Version 3: Experience/Leadership-focused
+        version3_prompt = f"""Create an alternative LEADERSHIP & EXPERIENCE FOCUS version of this resume.
+
+Optimized resume:
+{optimized_content}
+
+For this version:
+1. Lead with the PROFESSIONAL SUMMARY emphasizing leadership
+2. Highlight team management and mentoring experience
+3. Emphasize business impact, ROI, and cost savings
+4. Focus on stakeholder management and communication
+5. Include project management and strategic initiatives
+
+Keep it ATS-friendly. Return ONLY the resume content."""
+
+        version3_message = UserMessage(text=version3_prompt)
+        version3_content = await chat.send_message(version3_message)
+        
+        versions = [
+            {"name": "Standard ATS-Optimized", "content": optimized_content},
+            {"name": "Technical Focus", "content": version2_content},
+            {"name": "Leadership Focus", "content": version3_content}
+        ]
+    
+    # Update resume in database
+    update_data = {
+        "ats_optimized": True,
+        "ats_optimized_content": optimized_content,
+        "extracted_keywords": extracted_keywords,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if versions:
+        update_data["versions"] = versions
+    
+    await db.resumes.update_one(
+        {"resume_id": resume_id},
+        {"$set": update_data}
+    )
+    
+    response_data = {
+        "resume_id": resume_id,
+        "optimized_content": optimized_content,
+        "keywords": extracted_keywords,
+        "ats_optimized": True,
+        "message": "Resume optimized for ATS successfully"
+    }
+    
+    if versions:
+        response_data["versions"] = versions
+    
+    return response_data
+
 @api_router.post("/resumes/{resume_id}/generate-word")
 async def generate_word_resume(resume_id: str, request: Request, version: str = "default"):
     """Generate a Word document from the tailored resume"""
