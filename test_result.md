@@ -4,6 +4,33 @@
 - Test the CareerQuest branding across all pages
 - Verify logo click redirects to home page
 
+## Test Cases for ATS Resume Optimizer Feature
+
+### Prerequisites
+- User account: testuser_dashboard@test.com / Test123!
+- Existing resume uploaded in the system
+
+### Test Cases:
+1. Navigate to My Resumes page after login
+2. Click "ATS Optimize" button on a resume card
+3. Verify ATS Resume Optimizer dialog opens with:
+   - Title "ATS Resume Optimizer"
+   - Selected resume name shown
+   - Target Role (Optional) input field
+   - Generate Multiple Versions checkbox
+   - "Optimize for ATS" button
+4. Test with target role "Senior Python Developer" and without multiple versions
+5. Verify optimized content is displayed after AI processing
+6. Verify extracted keywords are shown
+7. Test download Word button
+8. Test "Optimize Again" button resets the dialog
+9. Test with "Generate Multiple Versions" enabled - verify 3 tabs appear (Standard ATS, Technical Focus, Leadership Focus)
+10. Verify each version tab has its own download button
+
+### Files Modified:
+- /app/frontend/src/pages/ResumesPage.jsx - Added ATS Optimize Dialog
+- /app/backend/server.py - Fixed OptimizeResumeRequest model
+
 ## Test Cases for Current Session
 
 ### 1. Landing Page Branding
