@@ -180,12 +180,17 @@ export function LiveJobsPage() {
 
     setIsTailoring(true);
     setTailoredContent('');
+    setTailoredVersions([]);
+    setExtractedKeywords('');
+    
     try {
       const response = await resumeAPI.tailor({
         resume_id: tailorForm.resume_id,
         job_title: selectedJob.title,
         job_description: selectedJob.full_description || selectedJob.description || '',
         technologies: selectedJob.required_skills || [user?.primary_technology || 'Software Development'],
+        generate_versions: tailorForm.generateVersions || false,
+        ats_optimize: true,
       });
       
       // Handle different response formats
@@ -196,7 +201,18 @@ export function LiveJobsPage() {
       content = content || 'No content generated. Please try again.';
       
       setTailoredContent(content);
-      toast.success('Resume tailored successfully!');
+      
+      // Set extracted keywords
+      if (response.data.keywords) {
+        setExtractedKeywords(response.data.keywords);
+      }
+      
+      // Set versions if available
+      if (response.data.versions && response.data.versions.length > 0) {
+        setTailoredVersions(response.data.versions);
+      }
+      
+      toast.success('Resume tailored with ATS optimization!');
     } catch (error) {
       console.error('Error tailoring resume:', error);
       toast.error('Failed to tailor resume. Please try again.');
@@ -205,15 +221,22 @@ export function LiveJobsPage() {
     }
   };
 
-  const handleDownloadTailoredResume = async (format) => {
+  const handleDownloadTailoredResume = async (format, versionName = 'default') => {
     if (!tailorForm.resume_id) return;
     
     try {
-      const response = await resumeAPI.download(tailorForm.resume_id, format);
+      let response;
+      if (format === 'docx') {
+        // Use the new generate-word endpoint
+        response = await resumeAPI.generateWord(tailorForm.resume_id, versionName);
+      } else {
+        response = await resumeAPI.download(tailorForm.resume_id, format);
+      }
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `tailored_resume_${selectedJob.title.replace(/[^a-zA-Z0-9]/g, '_')}.${format}`);
+      const versionSuffix = versionName !== 'default' ? `_${versionName.replace(/\s+/g, '_')}` : '';
+      link.setAttribute('download', `tailored_resume_${selectedJob.title.replace(/[^a-zA-Z0-9]/g, '_')}${versionSuffix}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
