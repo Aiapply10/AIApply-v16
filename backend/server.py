@@ -1938,11 +1938,11 @@ async def get_live_job_details(job_id: str, request: Request):
         logger.error(f"Error getting job details: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get job details: {str(e)}")
 
-# ============ LIVE JOBS 2 (Alternative Job Source) ============
+# ============ LIVE JOBS 2 (LinkedIn Job Search API) ============
 
-# Configuration for Live Jobs 2 API (will use a different API key)
+# Configuration for Live Jobs 2 API
 LIVEJOBS2_API_KEY = os.environ.get('LIVEJOBS2_API_KEY', '')
-LIVEJOBS2_API_HOST = os.environ.get('LIVEJOBS2_API_HOST', '')
+LIVEJOBS2_API_HOST = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
 
 @api_router.get("/live-jobs-2/search")
 async def search_live_jobs_2(
@@ -1953,36 +1953,36 @@ async def search_live_jobs_2(
     page: int = 1
 ):
     """
-    Search jobs from alternative job source (Live Jobs 2).
-    Configure LIVEJOBS2_API_KEY and LIVEJOBS2_API_HOST in .env to enable.
+    Search jobs from LinkedIn Job Search API.
     """
     user = await get_current_user(request)
     
     # Get API keys at request time
     api_key = os.environ.get('LIVEJOBS2_API_KEY')
-    api_host = os.environ.get('LIVEJOBS2_API_HOST')
+    api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
     
-    if not api_key or not api_host:
-        # Return placeholder data when API not configured
+    if not api_key:
         return {
             "jobs": [],
             "total": 0,
             "page": page,
-            "message": "Live Jobs 2 API not configured. Please provide LIVEJOBS2_API_KEY and LIVEJOBS2_API_HOST in backend/.env"
+            "message": "Live Jobs 2 API not configured. Please provide LIVEJOBS2_API_KEY in backend/.env"
         }
     
     search_query = query or user.get('primary_technology', 'Software Developer')
+    offset = (page - 1) * 10
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
-            # This is a placeholder - adjust the API call based on your actual API provider
+            # LinkedIn Job Search API endpoint
             response = await http_client.get(
-                f"https://{api_host}/search",
+                f"https://{api_host}/active-jb-24h",
                 params={
-                    "query": search_query,
-                    "location": location,
-                    "employment_type": employment_type,
-                    "page": page
+                    "limit": 10,
+                    "offset": offset,
+                    "title_filter": f'"{search_query}"',
+                    "location_filter": f'"{location}"',
+                    "description_type": "text"
                 },
                 headers={
                     "X-RapidAPI-Key": api_key,
@@ -1994,30 +1994,61 @@ async def search_live_jobs_2(
                 logger.warning(f"Live Jobs 2 API returned status {response.status_code}")
                 return {"jobs": [], "total": 0, "page": page}
             
-            data = response.json()
-            jobs_data = data.get("data", [])
+            jobs_data = response.json()
+            if not isinstance(jobs_data, list):
+                jobs_data = jobs_data.get("data", [])
             
             jobs = []
             for job in jobs_data:
+                # Parse location from locations_derived
+                location_str = ""
+                if job.get("locations_derived"):
+                    location_str = job["locations_derived"][0] if job["locations_derived"] else ""
+                elif job.get("cities_derived"):
+                    location_str = job["cities_derived"][0]
+                    if job.get("regions_derived"):
+                        location_str += f", {job['regions_derived'][0]}"
+                
+                # Parse salary
+                salary_min = None
+                salary_max = None
+                salary_currency = "USD"
+                salary_period = ""
+                if job.get("salary_raw") and job["salary_raw"].get("value"):
+                    salary_value = job["salary_raw"]["value"]
+                    salary_min = salary_value.get("minValue")
+                    salary_max = salary_value.get("maxValue")
+                    salary_currency = job["salary_raw"].get("currency", "USD")
+                    salary_period = salary_value.get("unitText", "")
+                
+                # Parse employment type
+                emp_type = ""
+                if job.get("employment_type"):
+                    emp_type = job["employment_type"][0] if isinstance(job["employment_type"], list) else job["employment_type"]
+                
+                description = job.get("description_text", "")
+                
                 jobs.append({
-                    "job_id": job.get("job_id", str(uuid.uuid4())),
-                    "title": job.get("job_title", job.get("title", "")),
-                    "company": job.get("employer_name", job.get("company", "")),
-                    "company_logo": job.get("employer_logo", job.get("logo", "")),
-                    "location": job.get("job_city", job.get("location", "")) + (", " + job.get("job_state", "") if job.get("job_state") else ""),
-                    "country": job.get("job_country", job.get("country", "")),
-                    "description": job.get("job_description", job.get("description", ""))[:500] + "..." if len(job.get("job_description", job.get("description", ""))) > 500 else job.get("job_description", job.get("description", "")),
-                    "full_description": job.get("job_description", job.get("description", "")),
-                    "employment_type": job.get("job_employment_type", job.get("employment_type", "")),
-                    "is_remote": job.get("job_is_remote", job.get("is_remote", False)),
-                    "apply_link": job.get("job_apply_link", job.get("apply_link", "")),
-                    "posted_at": job.get("job_posted_at_datetime_utc", job.get("posted_at", "")),
-                    "salary_min": job.get("job_min_salary", job.get("salary_min")),
-                    "salary_max": job.get("job_max_salary", job.get("salary_max")),
-                    "salary_currency": job.get("job_salary_currency", job.get("salary_currency", "USD")),
-                    "salary_period": job.get("job_salary_period", job.get("salary_period", "")),
-                    "source": job.get("job_publisher", job.get("source", "Live Jobs 2")),
-                    "required_skills": job.get("job_required_skills", job.get("skills", [])),
+                    "job_id": job.get("id", str(uuid.uuid4())),
+                    "title": job.get("title", ""),
+                    "company": job.get("organization", ""),
+                    "company_logo": job.get("organization_logo", ""),
+                    "location": location_str,
+                    "country": job["countries_derived"][0] if job.get("countries_derived") else "",
+                    "description": description[:500] + "..." if len(description) > 500 else description,
+                    "full_description": description,
+                    "employment_type": emp_type,
+                    "is_remote": job.get("remote_derived", False),
+                    "apply_link": job.get("url") or job.get("external_apply_url", ""),
+                    "posted_at": job.get("date_posted", ""),
+                    "salary_min": salary_min,
+                    "salary_max": salary_max,
+                    "salary_currency": salary_currency,
+                    "salary_period": salary_period,
+                    "source": "LinkedIn",
+                    "required_skills": [],
+                    "industry": job.get("linkedin_org_industry", ""),
+                    "company_size": job.get("linkedin_org_size", ""),
                 })
             
             return {
@@ -2033,23 +2064,23 @@ async def search_live_jobs_2(
 @api_router.get("/live-jobs-2/recommendations")
 async def get_live_jobs_2_recommendations(request: Request):
     """
-    Get job recommendations from Live Jobs 2 based on user's profile.
+    Get job recommendations from LinkedIn Job Search API based on user's profile.
     """
     user = await get_current_user(request)
     
     api_key = os.environ.get('LIVEJOBS2_API_KEY')
-    api_host = os.environ.get('LIVEJOBS2_API_HOST')
+    api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
     
-    if not api_key or not api_host:
+    if not api_key:
         return {
             "recommendations": [],
-            "message": "Live Jobs 2 API not configured. Please provide LIVEJOBS2_API_KEY and LIVEJOBS2_API_HOST in backend/.env"
+            "message": "Live Jobs 2 API not configured. Please provide LIVEJOBS2_API_KEY in backend/.env"
         }
     
     # Get user's technologies
     user_technologies = [user.get('primary_technology', 'Software Developer')]
     if user.get('sub_technologies'):
-        user_technologies.extend(user['sub_technologies'][:3])
+        user_technologies.extend(user['sub_technologies'][:2])
     
     all_recommendations = []
     
@@ -2057,11 +2088,13 @@ async def get_live_jobs_2_recommendations(request: Request):
         async with httpx.AsyncClient(timeout=30.0) as http_client:
             for tech in user_technologies[:2]:  # Limit to 2 searches
                 response = await http_client.get(
-                    f"https://{api_host}/search",
+                    f"https://{api_host}/active-jb-24h",
                     params={
-                        "query": f"{tech} Developer",
-                        "location": "United States",
-                        "page": 1
+                        "limit": 5,
+                        "offset": 0,
+                        "title_filter": f'"{tech}"',
+                        "location_filter": '"United States"',
+                        "description_type": "text"
                     },
                     headers={
                         "X-RapidAPI-Key": api_key,
@@ -2070,30 +2103,61 @@ async def get_live_jobs_2_recommendations(request: Request):
                 )
                 
                 if response.status_code == 200:
-                    data = response.json()
-                    jobs_data = data.get("data", [])[:5]
+                    jobs_data = response.json()
+                    if not isinstance(jobs_data, list):
+                        jobs_data = jobs_data.get("data", [])
                     
-                    for job in jobs_data:
+                    for job in jobs_data[:5]:
+                        # Parse location
+                        location_str = ""
+                        if job.get("locations_derived"):
+                            location_str = job["locations_derived"][0] if job["locations_derived"] else ""
+                        elif job.get("cities_derived"):
+                            location_str = job["cities_derived"][0]
+                            if job.get("regions_derived"):
+                                location_str += f", {job['regions_derived'][0]}"
+                        
+                        # Parse salary
+                        salary_min = None
+                        salary_max = None
+                        salary_currency = "USD"
+                        salary_period = ""
+                        if job.get("salary_raw") and job["salary_raw"].get("value"):
+                            salary_value = job["salary_raw"]["value"]
+                            salary_min = salary_value.get("minValue")
+                            salary_max = salary_value.get("maxValue")
+                            salary_currency = job["salary_raw"].get("currency", "USD")
+                            salary_period = salary_value.get("unitText", "")
+                        
+                        # Parse employment type
+                        emp_type = ""
+                        if job.get("employment_type"):
+                            emp_type = job["employment_type"][0] if isinstance(job["employment_type"], list) else job["employment_type"]
+                        
+                        description = job.get("description_text", "")
+                        
                         all_recommendations.append({
-                            "job_id": job.get("job_id", str(uuid.uuid4())),
-                            "title": job.get("job_title", job.get("title", "")),
-                            "company": job.get("employer_name", job.get("company", "")),
-                            "company_logo": job.get("employer_logo", job.get("logo", "")),
-                            "location": job.get("job_city", job.get("location", "")) + (", " + job.get("job_state", "") if job.get("job_state") else ""),
-                            "country": job.get("job_country", job.get("country", "")),
-                            "description": job.get("job_description", job.get("description", ""))[:500] + "..." if len(job.get("job_description", job.get("description", ""))) > 500 else job.get("job_description", job.get("description", "")),
-                            "full_description": job.get("job_description", job.get("description", "")),
-                            "employment_type": job.get("job_employment_type", job.get("employment_type", "")),
-                            "is_remote": job.get("job_is_remote", job.get("is_remote", False)),
-                            "apply_link": job.get("job_apply_link", job.get("apply_link", "")),
-                            "posted_at": job.get("job_posted_at_datetime_utc", job.get("posted_at", "")),
-                            "salary_min": job.get("job_min_salary", job.get("salary_min")),
-                            "salary_max": job.get("job_max_salary", job.get("salary_max")),
-                            "salary_currency": job.get("job_salary_currency", job.get("salary_currency", "USD")),
-                            "salary_period": job.get("job_salary_period", job.get("salary_period", "")),
-                            "source": job.get("job_publisher", job.get("source", "Live Jobs 2")),
-                            "required_skills": job.get("job_required_skills", job.get("skills", [])),
+                            "job_id": job.get("id", str(uuid.uuid4())),
+                            "title": job.get("title", ""),
+                            "company": job.get("organization", ""),
+                            "company_logo": job.get("organization_logo", ""),
+                            "location": location_str,
+                            "country": job["countries_derived"][0] if job.get("countries_derived") else "",
+                            "description": description[:500] + "..." if len(description) > 500 else description,
+                            "full_description": description,
+                            "employment_type": emp_type,
+                            "is_remote": job.get("remote_derived", False),
+                            "apply_link": job.get("url") or job.get("external_apply_url", ""),
+                            "posted_at": job.get("date_posted", ""),
+                            "salary_min": salary_min,
+                            "salary_max": salary_max,
+                            "salary_currency": salary_currency,
+                            "salary_period": salary_period,
+                            "source": "LinkedIn",
+                            "required_skills": [],
                             "matched_technology": tech,
+                            "industry": job.get("linkedin_org_industry", ""),
+                            "company_size": job.get("linkedin_org_size", ""),
                         })
         
         return {"recommendations": all_recommendations[:10]}
@@ -2105,69 +2169,16 @@ async def get_live_jobs_2_recommendations(request: Request):
 @api_router.get("/live-jobs-2/{job_id}")
 async def get_live_job_2_details(job_id: str, request: Request):
     """
-    Get detailed information about a specific job from Live Jobs 2.
+    Get detailed information about a specific job from LinkedIn Job Search API.
     """
     await get_current_user(request)
     
-    api_key = os.environ.get('LIVEJOBS2_API_KEY')
-    api_host = os.environ.get('LIVEJOBS2_API_HOST')
-    
-    if not api_key or not api_host:
-        raise HTTPException(status_code=500, detail="Live Jobs 2 API not configured")
-    
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as http_client:
-            response = await http_client.get(
-                f"https://{api_host}/job-details",
-                params={"job_id": job_id},
-                headers={
-                    "X-RapidAPI-Key": api_key,
-                    "X-RapidAPI-Host": api_host
-                }
-            )
-            
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail="Failed to fetch job details")
-            
-            data = response.json()
-            jobs = data.get("data", [])
-            
-            if not jobs:
-                raise HTTPException(status_code=404, detail="Job not found")
-            
-            job = jobs[0]
-            
-            return {
-                "job_id": job.get("job_id"),
-                "title": job.get("job_title", job.get("title", "")),
-                "company": job.get("employer_name", job.get("company", "")),
-                "company_logo": job.get("employer_logo", job.get("logo", "")),
-                "company_website": job.get("employer_website", job.get("website", "")),
-                "location": job.get("job_city", job.get("location", "")) + (", " + job.get("job_state", "") if job.get("job_state") else ""),
-                "country": job.get("job_country", job.get("country", "")),
-                "description": job.get("job_description", job.get("description", "")),
-                "employment_type": job.get("job_employment_type", job.get("employment_type", "")),
-                "is_remote": job.get("job_is_remote", job.get("is_remote", False)),
-                "apply_link": job.get("job_apply_link", job.get("apply_link", "")),
-                "posted_at": job.get("job_posted_at_datetime_utc", job.get("posted_at", "")),
-                "expires_at": job.get("job_offer_expiration_datetime_utc", job.get("expires_at", "")),
-                "salary_min": job.get("job_min_salary", job.get("salary_min")),
-                "salary_max": job.get("job_max_salary", job.get("salary_max")),
-                "salary_currency": job.get("job_salary_currency", job.get("salary_currency", "USD")),
-                "salary_period": job.get("job_salary_period", job.get("salary_period", "")),
-                "source": job.get("job_publisher", job.get("source", "Live Jobs 2")),
-                "highlights": job.get("job_highlights", {}),
-                "required_skills": job.get("job_required_skills", job.get("skills", [])),
-                "benefits": job.get("job_benefits", job.get("benefits", [])),
-                "qualifications": job.get("job_highlights", {}).get("Qualifications", []),
-                "responsibilities": job.get("job_highlights", {}).get("Responsibilities", []),
-            }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting Live Job 2 details: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get job details: {str(e)}")
+    # For LinkedIn Job Search API, job details are typically included in search results
+    # This endpoint can be extended if the API provides a dedicated details endpoint
+    return {
+        "job_id": job_id,
+        "message": "Job details are included in search results. Use the search or recommendations endpoint."
+    }
 
 # ============ TECHNOLOGY OPTIONS ============
 
