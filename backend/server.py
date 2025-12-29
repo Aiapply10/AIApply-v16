@@ -49,6 +49,10 @@ EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 RAPIDAPI_KEY = os.environ.get('RAPIDAPI_KEY')
 RAPIDAPI_HOST = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
 
+# LinkedIn OAuth Configuration
+LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
+LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
+
 app = FastAPI(title="AI Resume Tailor API")
 api_router = APIRouter(prefix="/api")
 
