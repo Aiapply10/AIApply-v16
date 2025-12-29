@@ -2201,6 +2201,396 @@ async def get_live_job_2_details(job_id: str, request: Request):
         "message": "Job details are included in search results. Use the search or recommendations endpoint."
     }
 
+# ============ AUTO-APPLY FEATURE ============
+
+@api_router.get("/auto-apply/settings")
+async def get_auto_apply_settings(request: Request):
+    """Get user's auto-apply settings"""
+    user = await get_current_user(request)
+    
+    settings = await db.auto_apply_settings.find_one(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        # Return default settings
+        return {
+            "user_id": user["user_id"],
+            "enabled": False,
+            "resume_id": "",
+            "job_keywords": [user.get("primary_technology", "Software Developer")],
+            "locations": ["United States"],
+            "employment_types": ["FULL_TIME"],
+            "min_salary": None,
+            "max_applications_per_day": 10,
+            "auto_tailor_resume": True,
+            "last_run": None,
+            "total_applications": 0
+        }
+    
+    return settings
+
+@api_router.post("/auto-apply/settings")
+async def update_auto_apply_settings(data: AutoApplySettingsUpdate, request: Request):
+    """Update user's auto-apply settings"""
+    user = await get_current_user(request)
+    
+    # Get existing settings or create new
+    existing = await db.auto_apply_settings.find_one({"user_id": user["user_id"]})
+    
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data["user_id"] = user["user_id"]
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    if existing:
+        await db.auto_apply_settings.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": update_data}
+        )
+    else:
+        update_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["last_run"] = None
+        update_data["total_applications"] = 0
+        await db.auto_apply_settings.insert_one(update_data)
+    
+    return {"message": "Settings updated successfully", "settings": update_data}
+
+@api_router.post("/auto-apply/toggle")
+async def toggle_auto_apply(request: Request):
+    """Toggle auto-apply on/off"""
+    user = await get_current_user(request)
+    
+    settings = await db.auto_apply_settings.find_one({"user_id": user["user_id"]})
+    
+    if settings:
+        new_status = not settings.get("enabled", False)
+        await db.auto_apply_settings.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"enabled": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        new_status = True
+        await db.auto_apply_settings.insert_one({
+            "user_id": user["user_id"],
+            "enabled": True,
+            "resume_id": "",
+            "job_keywords": [user.get("primary_technology", "Software Developer")],
+            "locations": ["United States"],
+            "employment_types": ["FULL_TIME"],
+            "min_salary": None,
+            "max_applications_per_day": 10,
+            "auto_tailor_resume": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_run": None,
+            "total_applications": 0
+        })
+    
+    return {"enabled": new_status, "message": f"Auto-apply {'enabled' if new_status else 'disabled'}"}
+
+@api_router.get("/auto-apply/history")
+async def get_auto_apply_history(request: Request, limit: int = 50):
+    """Get user's auto-apply history"""
+    user = await get_current_user(request)
+    
+    history = await db.auto_applications.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("applied_at", -1).limit(limit).to_list(limit)
+    
+    return {"history": history, "total": len(history)}
+
+@api_router.post("/auto-apply/run")
+async def run_auto_apply(request: Request):
+    """
+    Manually trigger auto-apply process.
+    Fetches jobs based on user settings, tailors resume, and records applications.
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get user's auto-apply settings
+    settings = await db.auto_apply_settings.find_one({"user_id": user_id})
+    
+    if not settings:
+        raise HTTPException(status_code=400, detail="Please configure auto-apply settings first")
+    
+    if not settings.get("resume_id"):
+        raise HTTPException(status_code=400, detail="Please select a resume for auto-apply")
+    
+    # Check if auto-apply is enabled
+    if not settings.get("enabled", False):
+        raise HTTPException(status_code=400, detail="Auto-apply is disabled. Please enable it first.")
+    
+    # Get the user's resume
+    resume = await db.resumes.find_one(
+        {"resume_id": settings["resume_id"], "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Selected resume not found")
+    
+    # Check daily limit
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_applications = await db.auto_applications.count_documents({
+        "user_id": user_id,
+        "applied_at": {"$gte": today_start.isoformat()}
+    })
+    
+    max_daily = settings.get("max_applications_per_day", 10)
+    remaining = max_daily - today_applications
+    
+    if remaining <= 0:
+        return {
+            "message": f"Daily limit of {max_daily} applications reached",
+            "applied_count": 0,
+            "applications": []
+        }
+    
+    # Fetch jobs from LinkedIn API
+    api_key = os.environ.get('LIVEJOBS2_API_KEY')
+    api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
+    
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Job search API not configured")
+    
+    job_keywords = settings.get("job_keywords", ["Software Developer"])
+    locations = settings.get("locations", ["United States"])
+    
+    all_jobs = []
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            for keyword in job_keywords[:2]:  # Limit keywords
+                for location in locations[:2]:  # Limit locations
+                    response = await http_client.get(
+                        f"https://{api_host}/active-jb-24h",
+                        params={
+                            "limit": 10,
+                            "offset": 0,
+                            "title_filter": f'"{keyword}"',
+                            "location_filter": f'"{location}"',
+                            "description_type": "text"
+                        },
+                        headers={
+                            "X-RapidAPI-Key": api_key,
+                            "X-RapidAPI-Host": api_host
+                        }
+                    )
+                    
+                    if response.status_code == 200:
+                        jobs_data = response.json()
+                        if isinstance(jobs_data, list):
+                            all_jobs.extend(jobs_data)
+    except Exception as e:
+        logger.error(f"Error fetching jobs for auto-apply: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch jobs: {str(e)}")
+    
+    # Filter out already applied jobs
+    applied_job_ids = await db.auto_applications.distinct(
+        "job_id",
+        {"user_id": user_id}
+    )
+    
+    new_jobs = [j for j in all_jobs if j.get("id") not in applied_job_ids][:remaining]
+    
+    if not new_jobs:
+        return {
+            "message": "No new jobs found matching your criteria",
+            "applied_count": 0,
+            "applications": []
+        }
+    
+    applications = []
+    original_content = resume.get('original_content', '')
+    
+    # Process each job
+    for job in new_jobs:
+        try:
+            job_id = job.get("id", str(uuid.uuid4()))
+            job_title = job.get("title", "")
+            company = job.get("organization", "")
+            description = job.get("description_text", "")[:2000]  # Limit description length
+            
+            # Parse location
+            location_str = ""
+            if job.get("locations_derived"):
+                location_str = job["locations_derived"][0]
+            elif job.get("cities_derived"):
+                location_str = job["cities_derived"][0]
+            
+            # Parse salary
+            salary_info = ""
+            if job.get("salary_raw") and job["salary_raw"].get("value"):
+                salary_value = job["salary_raw"]["value"]
+                if salary_value.get("minValue") and salary_value.get("maxValue"):
+                    salary_info = f"${salary_value['minValue']:,} - ${salary_value['maxValue']:,}"
+            
+            tailored_content = original_content
+            keywords_extracted = ""
+            
+            # Auto-tailor resume if enabled
+            if settings.get("auto_tailor_resume", True) and description:
+                try:
+                    system_message = """You are an expert ATS resume optimizer. Transform resumes to match job requirements while maintaining authenticity. Focus on:
+1. Matching keywords from the job description
+2. Highlighting relevant experience
+3. Using industry-standard formatting
+4. Quantifying achievements where possible"""
+                    
+                    chat = LlmChat(
+                        api_key=EMERGENT_LLM_KEY,
+                        session_id=f"auto_tailor_{job_id}_{uuid.uuid4().hex[:8]}",
+                        system_message=system_message
+                    ).with_model("openai", "gpt-5.2")
+                    
+                    # Extract keywords
+                    keywords_prompt = f"""Extract the top 15 most important keywords from this job posting for ATS optimization:
+
+Job Title: {job_title}
+Company: {company}
+Description: {description[:1500]}
+
+Return ONLY a comma-separated list of keywords."""
+                    
+                    keywords_message = UserMessage(text=keywords_prompt)
+                    keywords_extracted = await chat.send_message(keywords_message)
+                    
+                    # Tailor resume
+                    tailor_prompt = f"""Tailor this resume for the following job. Make it ATS-friendly and incorporate relevant keywords.
+
+JOB DETAILS:
+Title: {job_title}
+Company: {company}
+Key Requirements: {description[:1000]}
+
+KEYWORDS TO INCORPORATE: {keywords_extracted}
+
+ORIGINAL RESUME:
+{original_content}
+
+Return ONLY the tailored resume content."""
+                    
+                    tailor_message = UserMessage(text=tailor_prompt)
+                    tailored_content = await chat.send_message(tailor_message)
+                    
+                except Exception as e:
+                    logger.error(f"Error tailoring resume for job {job_id}: {str(e)}")
+                    tailored_content = original_content
+            
+            # Create auto-application record
+            application_record = {
+                "application_id": f"auto_{uuid.uuid4().hex[:12]}",
+                "user_id": user_id,
+                "job_id": job_id,
+                "job_title": job_title,
+                "company": company,
+                "location": location_str,
+                "salary_info": salary_info,
+                "job_description": description[:500],
+                "apply_link": job.get("url") or job.get("external_apply_url", ""),
+                "resume_id": settings["resume_id"],
+                "tailored_content": tailored_content,
+                "keywords_extracted": keywords_extracted,
+                "status": "ready_to_apply",
+                "applied_at": datetime.now(timezone.utc).isoformat(),
+                "source": "LinkedIn",
+                "auto_applied": True
+            }
+            
+            await db.auto_applications.insert_one(application_record)
+            
+            # Also record in main applications collection
+            await db.applications.insert_one({
+                "application_id": application_record["application_id"],
+                "user_id": user_id,
+                "job_portal_id": "linkedin_auto",
+                "job_title": job_title,
+                "company_name": company,
+                "job_description": description[:500],
+                "resume_id": settings["resume_id"],
+                "cover_letter": "",
+                "status": "ready_to_apply",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "auto_applied": True,
+                "apply_link": application_record["apply_link"]
+            })
+            
+            applications.append({
+                "application_id": application_record["application_id"],
+                "job_id": job_id,
+                "job_title": job_title,
+                "company": company,
+                "location": location_str,
+                "apply_link": application_record["apply_link"],
+                "status": "ready_to_apply"
+            })
+            
+        except Exception as e:
+            logger.error(f"Error processing job {job.get('id')}: {str(e)}")
+            continue
+    
+    # Update settings with last run info
+    await db.auto_apply_settings.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {"last_run": datetime.now(timezone.utc).isoformat()},
+            "$inc": {"total_applications": len(applications)}
+        }
+    )
+    
+    return {
+        "message": f"Successfully processed {len(applications)} job applications",
+        "applied_count": len(applications),
+        "applications": applications,
+        "remaining_today": remaining - len(applications)
+    }
+
+@api_router.get("/auto-apply/status")
+async def get_auto_apply_status(request: Request):
+    """Get current auto-apply status including today's progress"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    settings = await db.auto_apply_settings.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        return {
+            "enabled": False,
+            "configured": False,
+            "today_applications": 0,
+            "max_daily": 10,
+            "remaining": 10,
+            "last_run": None,
+            "total_applications": 0
+        }
+    
+    # Count today's applications
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_applications = await db.auto_applications.count_documents({
+        "user_id": user_id,
+        "applied_at": {"$gte": today_start.isoformat()}
+    })
+    
+    max_daily = settings.get("max_applications_per_day", 10)
+    
+    return {
+        "enabled": settings.get("enabled", False),
+        "configured": bool(settings.get("resume_id")),
+        "today_applications": today_applications,
+        "max_daily": max_daily,
+        "remaining": max(0, max_daily - today_applications),
+        "last_run": settings.get("last_run"),
+        "total_applications": settings.get("total_applications", 0),
+        "resume_id": settings.get("resume_id", ""),
+        "job_keywords": settings.get("job_keywords", []),
+        "locations": settings.get("locations", [])
+    }
+
 # ============ TECHNOLOGY OPTIONS ============
 
 @api_router.get("/technologies")
