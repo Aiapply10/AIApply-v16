@@ -725,38 +725,40 @@ export function LiveJobsPage() {
 
               {/* Tailor Button */}
               {!tailoredContent && (
-                <Button
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
-                  onClick={handleTailorResume}
-                  disabled={isTailoring || !tailorForm.resume_id}
-                  data-testid="tailor-resume-btn"
-                >
-                  {isTailoring ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Optimizing for ATS & Keywords...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Tailor Resume with AI (ATS Optimized)
-                    </>
-                  )}
-                </Button>
-                
-                {/* Generate Versions Checkbox */}
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="generateVersions"
-                    checked={tailorForm.generateVersions}
-                    onChange={(e) => setTailorForm({ ...tailorForm, generateVersions: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-600 bg-slate-800"
-                  />
-                  <label htmlFor="generateVersions" className="text-sm text-muted-foreground">
-                    Generate 2-3 resume versions (Technical Focus, Leadership Focus)
-                  </label>
-                </div>
+                <>
+                  <Button
+                    className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                    onClick={handleTailorResume}
+                    disabled={isTailoring || !tailorForm.resume_id}
+                    data-testid="tailor-resume-btn"
+                  >
+                    {isTailoring ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Optimizing for ATS & Keywords...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Tailor Resume with AI (ATS Optimized)
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* Generate Versions Checkbox */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="generateVersions"
+                      checked={tailorForm.generateVersions}
+                      onChange={(e) => setTailorForm({ ...tailorForm, generateVersions: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-800"
+                    />
+                    <label htmlFor="generateVersions" className="text-sm text-muted-foreground">
+                      Generate 2-3 resume versions (Technical Focus, Leadership Focus)
+                    </label>
+                  </div>
+                </>
               )}
 
               {/* Tailored Content Display */}
