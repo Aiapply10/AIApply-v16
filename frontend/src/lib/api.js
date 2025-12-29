@@ -33,6 +33,10 @@ export const authAPI = {
   createSession: (sessionId) => api.post('/auth/session', {}, {
     headers: { 'X-Session-ID': sessionId }
   }),
+  linkedinCallback: (code, redirectUri) => api.post('/auth/linkedin/callback', {
+    code,
+    redirect_uri: redirectUri
+  }),
 };
 
 // Resume API
