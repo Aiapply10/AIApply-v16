@@ -733,37 +733,90 @@ export function LiveJobsPage() {
                   {isTailoring ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Tailoring your resume with AI...
+                      Optimizing for ATS & Keywords...
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Tailor Resume with AI
+                      Tailor Resume with AI (ATS Optimized)
                     </>
                   )}
                 </Button>
+                
+                {/* Generate Versions Checkbox */}
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="generateVersions"
+                    checked={tailorForm.generateVersions}
+                    onChange={(e) => setTailorForm({ ...tailorForm, generateVersions: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-600 bg-slate-800"
+                  />
+                  <label htmlFor="generateVersions" className="text-sm text-muted-foreground">
+                    Generate 2-3 resume versions (Technical Focus, Leadership Focus)
+                  </label>
+                </div>
               )}
 
               {/* Tailored Content Display */}
               {tailoredContent && (
                 <div className="space-y-4">
+                  {/* ATS Keywords Section */}
+                  {extractedKeywords && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-400 mb-2 flex items-center gap-2">
+                        <Target className="w-4 h-4" />
+                        ATS Keywords Incorporated
+                      </h4>
+                      <p className="text-xs text-blue-300/80 leading-relaxed">
+                        {extractedKeywords}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Version Selector (if versions available) */}
+                  {tailoredVersions.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Select Resume Version</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {tailoredVersions.map((version, idx) => (
+                          <Badge
+                            key={idx}
+                            variant={selectedVersion === version.name ? "default" : "outline"}
+                            className={`cursor-pointer px-3 py-1 ${
+                              selectedVersion === version.name 
+                                ? 'bg-violet-600' 
+                                : 'hover:bg-violet-500/20'
+                            }`}
+                            onClick={() => {
+                              setSelectedVersion(version.name);
+                              setTailoredContent(version.content);
+                            }}
+                          >
+                            {version.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h4 className="font-medium flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-violet-500" />
-                      Tailored Resume Preview
+                      ATS-Optimized Resume Preview
                     </h4>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDownloadTailoredResume('pdf')}
+                        onClick={() => handleDownloadTailoredResume('pdf', selectedVersion)}
                       >
                         Download PDF
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => handleDownloadTailoredResume('docx')}
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleDownloadTailoredResume('docx', selectedVersion)}
                       >
                         Download Word
                       </Button>
@@ -791,7 +844,7 @@ export function LiveJobsPage() {
                   </div>
                   <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg">
                     <p className="text-sm text-green-600 dark:text-green-400">
-                      ✓ Your resume has been tailored and saved. You can now use it to apply for this position!
+                      ✓ Your resume has been ATS-optimized with relevant keywords. Download as Word for best compatibility with job portals!
                     </p>
                   </div>
                   <Button
