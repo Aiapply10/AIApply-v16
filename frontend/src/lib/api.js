@@ -110,4 +110,14 @@ export const technologiesAPI = {
   getAll: () => api.get('/technologies'),
 };
 
+// Auto-Apply API
+export const autoApplyAPI = {
+  getSettings: () => api.get('/auto-apply/settings'),
+  updateSettings: (data) => api.post('/auto-apply/settings', data),
+  toggle: () => api.post('/auto-apply/toggle'),
+  getHistory: (limit = 50) => api.get('/auto-apply/history', { params: { limit } }),
+  run: () => api.post('/auto-apply/run'),
+  getStatus: () => api.get('/auto-apply/status'),
+};
+
 export default api;
