@@ -28,6 +28,8 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/profile', data),
+  getProfileCompleteness: () => api.get('/auth/profile-completeness'),
   createSession: (sessionId) => api.post('/auth/session', {}, {
     headers: { 'X-Session-ID': sessionId }
   }),
