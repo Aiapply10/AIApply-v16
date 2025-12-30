@@ -698,13 +698,15 @@ export function LiveJobs2Page() {
         </Card>
 
         {/* Search Form */}
-        <Card className="border-cyan-500/20">
+        <Card className="bg-white border-slate-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-cyan-500" />
+            <CardTitle className="flex items-center gap-2 text-slate-800">
+              <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+                <Search className="w-5 h-5 text-slate-600" />
+              </div>
               Search Jobs
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-500">
               Search across LinkedIn job listings
             </CardDescription>
           </CardHeader>
@@ -712,31 +714,33 @@ export function LiveJobs2Page() {
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Job Title / Keywords</Label>
+                  <Label className="text-slate-700">Job Title / Keywords</Label>
                   <Input
                     placeholder={`e.g., ${user?.primary_technology || 'React'} Developer`}
                     value={searchForm.query}
                     onChange={(e) => setSearchForm({ ...searchForm, query: e.target.value })}
+                    className="border-slate-200 focus:border-violet-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Location</Label>
+                  <Label className="text-slate-700">Location</Label>
                   <Input
                     placeholder="e.g., New York, Remote"
                     value={searchForm.location}
                     onChange={(e) => setSearchForm({ ...searchForm, location: e.target.value })}
+                    className="border-slate-200 focus:border-violet-400"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Employment Type</Label>
+                  <Label className="text-slate-700">Employment Type</Label>
                   <Select
                     value={searchForm.employment_type || "all"}
                     onValueChange={(value) => setSearchForm({ ...searchForm, employment_type: value === "all" ? "" : value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-slate-200">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-slate-200">
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="FULLTIME">Full Time</SelectItem>
                       <SelectItem value="PARTTIME">Part Time</SelectItem>
@@ -749,7 +753,7 @@ export function LiveJobs2Page() {
               <Button 
                 type="submit" 
                 disabled={isSearching}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30"
               >
                 {isSearching ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
