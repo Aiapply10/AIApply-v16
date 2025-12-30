@@ -563,11 +563,13 @@ export function LiveJobs2Page() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold flex items-center gap-2">
-              <Zap className="w-8 h-8 text-cyan-500" />
+            <h1 className="font-heading text-3xl font-bold flex items-center gap-3 text-slate-800">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
               Live Jobs 2
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-slate-600 mt-2">
               LinkedIn jobs with AI-powered auto-apply
             </p>
           </div>
@@ -576,7 +578,7 @@ export function LiveJobs2Page() {
               variant="outline" 
               onClick={loadInitialData}
               disabled={isLoading}
-              className="border-cyan-500/30 hover:bg-cyan-500/10"
+              className="border-slate-200 text-slate-700 hover:bg-slate-50"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
