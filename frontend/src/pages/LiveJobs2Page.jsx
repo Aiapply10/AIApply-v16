@@ -420,7 +420,7 @@ export function LiveJobs2Page() {
   };
 
   const JobCard = ({ job, showMatchedTech = false }) => (
-    <Card className="hover:shadow-lg transition-all duration-200 group border-cyan-500/20">
+    <Card className="hover:shadow-xl transition-all duration-300 group bg-white border-slate-200 hover:-translate-y-1">
       <CardContent className="p-6">
         <div className="flex gap-4">
           <div className="shrink-0">
@@ -428,7 +428,7 @@ export function LiveJobs2Page() {
               <img 
                 src={job.company_logo} 
                 alt={job.company}
-                className="w-14 h-14 rounded-lg object-contain bg-muted p-1"
+                className="w-14 h-14 rounded-xl object-contain bg-slate-50 p-1 border border-slate-100"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
@@ -436,29 +436,29 @@ export function LiveJobs2Page() {
               />
             ) : null}
             <div 
-              className={`w-14 h-14 rounded-lg bg-cyan-500/10 items-center justify-center ${job.company_logo ? 'hidden' : 'flex'}`}
+              className={`w-14 h-14 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 items-center justify-center ${job.company_logo ? 'hidden' : 'flex'}`}
             >
-              <Building2 className="w-6 h-6 text-cyan-500" />
+              <Building2 className="w-6 h-6 text-blue-600" />
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="font-semibold text-lg group-hover:text-cyan-400 transition-colors line-clamp-1">
+                <h3 className="font-semibold text-lg text-slate-800 group-hover:text-violet-600 transition-colors line-clamp-1">
                   {job.title}
                 </h3>
-                <p className="text-muted-foreground">{job.company}</p>
+                <p className="text-slate-600">{job.company}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {showMatchedTech && job.matched_technology && (
-                  <Badge className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white">
+                  <Badge className="bg-gradient-to-r from-violet-600 to-purple-600 text-white border-0 shadow-sm">
                     <Zap className="w-3 h-3 mr-1" />
                     {job.matched_technology}
                   </Badge>
                 )}
                 {job.source && (
-                  <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                     <Globe className="w-3 h-3 mr-1" />
                     {job.source}
                   </Badge>
@@ -466,40 +466,40 @@ export function LiveJobs2Page() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-slate-500">
               {job.location && (
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 text-slate-400" />
                   {job.location || job.country}
                 </span>
               )}
               {job.is_remote && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <Globe className="w-3 h-3 mr-1" />
                   Remote
                 </Badge>
               )}
               {job.employment_type && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
                   {job.employment_type}
                 </Badge>
               )}
               {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period) && (
-                <span className="flex items-center gap-1 text-green-600">
+                <span className="flex items-center gap-1 text-emerald-600 font-medium">
                   <DollarSign className="w-4 h-4" />
                   {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
                 </span>
               )}
               {job.posted_at && (
                 <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-4 h-4 text-slate-400" />
                   {formatDate(job.posted_at)}
                 </span>
               )}
             </div>
 
             {job.description && (
-              <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
+              <p className="text-sm text-slate-500 mt-3 line-clamp-2">
                 {job.description}
               </p>
             )}
@@ -507,7 +507,7 @@ export function LiveJobs2Page() {
             <div className="flex flex-wrap items-center gap-2 mt-4">
               <Button 
                 size="sm"
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/20"
                 onClick={() => {
                   setSelectedJob(job);
                   setTailorForm({ resume_id: '' });
@@ -520,6 +520,7 @@ export function LiveJobs2Page() {
               </Button>
               <Button 
                 size="sm"
+                className="bg-slate-800 hover:bg-slate-900 text-white"
                 onClick={() => {
                   setSelectedJob(job);
                   setShowApplyDialog(true);
@@ -532,6 +533,7 @@ export function LiveJobs2Page() {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="border-slate-300 text-slate-600 hover:bg-slate-50"
                   onClick={() => window.open(job.apply_link, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
