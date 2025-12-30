@@ -585,24 +585,24 @@ export function LiveJobs2Page() {
         </div>
 
         {/* Auto-Apply Control Panel */}
-        <Card className="border-2 border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-blue-500/5">
+        <Card className="border-2 border-violet-200 bg-gradient-to-r from-violet-50 via-purple-50 to-indigo-50 shadow-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <Bot className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-slate-800">
                     Auto-Apply AI Agent
                     {autoApplyStatus?.enabled && (
-                      <Badge className="bg-green-500 text-white">
+                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Active
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-slate-600">
                     Automatically tailor your resume and apply to matching jobs daily
                   </CardDescription>
                 </div>
@@ -617,27 +617,27 @@ export function LiveJobs2Page() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-background/50 rounded-lg p-4 border border-cyan-500/20">
-                <p className="text-sm text-muted-foreground">Today's Applications</p>
-                <p className="text-2xl font-bold text-cyan-500">
+              <div className="bg-white rounded-xl p-4 border border-violet-100 shadow-sm">
+                <p className="text-sm text-slate-500">Today's Applications</p>
+                <p className="text-2xl font-bold text-violet-600">
                   {autoApplyStatus?.today_applications || 0} / {autoApplyStatus?.max_daily || 10}
                 </p>
               </div>
-              <div className="bg-background/50 rounded-lg p-4 border border-cyan-500/20">
-                <p className="text-sm text-muted-foreground">Remaining Today</p>
-                <p className="text-2xl font-bold text-green-500">
+              <div className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm">
+                <p className="text-sm text-slate-500">Remaining Today</p>
+                <p className="text-2xl font-bold text-emerald-600">
                   {autoApplyStatus?.remaining || 10}
                 </p>
               </div>
-              <div className="bg-background/50 rounded-lg p-4 border border-cyan-500/20">
-                <p className="text-sm text-muted-foreground">Total Applications</p>
-                <p className="text-2xl font-bold text-blue-500">
+              <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+                <p className="text-sm text-slate-500">Total Applications</p>
+                <p className="text-2xl font-bold text-blue-600">
                   {autoApplyStatus?.total_applications || 0}
                 </p>
               </div>
-              <div className="bg-background/50 rounded-lg p-4 border border-cyan-500/20">
-                <p className="text-sm text-muted-foreground">Last Run</p>
-                <p className="text-sm font-medium">
+              <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                <p className="text-sm text-slate-500">Last Run</p>
+                <p className="text-sm font-semibold text-slate-700">
                   {autoApplyStatus?.last_run 
                     ? formatDate(autoApplyStatus.last_run)
                     : 'Never'}
@@ -649,7 +649,7 @@ export function LiveJobs2Page() {
               <Button
                 onClick={handleRunAutoApply}
                 disabled={isRunningAutoApply || !autoApplyStatus?.enabled || !autoApplyStatus?.configured}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30"
               >
                 {isRunningAutoApply ? (
                   <>
@@ -666,7 +666,7 @@ export function LiveJobs2Page() {
               <Button
                 variant="outline"
                 onClick={() => setShowAutoApplyDialog(true)}
-                className="border-cyan-500/30"
+                className="border-violet-200 text-violet-700 hover:bg-violet-50"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
@@ -677,7 +677,7 @@ export function LiveJobs2Page() {
                   loadAutoApplyHistory();
                   setShowHistoryDialog(true);
                 }}
-                className="border-cyan-500/30"
+                className="border-slate-200 text-slate-700 hover:bg-slate-50"
               >
                 <History className="w-4 h-4 mr-2" />
                 View History
@@ -685,9 +685,9 @@ export function LiveJobs2Page() {
             </div>
             
             {!autoApplyStatus?.configured && (
-              <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-500" />
-                <p className="text-sm text-amber-500">
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+                <p className="text-sm text-amber-700">
                   Please configure auto-apply settings and select a resume to enable automatic applications.
                 </p>
               </div>
