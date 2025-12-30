@@ -768,12 +768,12 @@ export function LiveJobs2Page() {
 
         {/* Job Listings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="recommendations" className="flex items-center gap-2">
+          <TabsList className="bg-slate-100 p-1">
+            <TabsTrigger value="recommendations" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Zap className="w-4 h-4" />
               Recommended ({recommendations.length})
             </TabsTrigger>
-            <TabsTrigger value="search" className="flex items-center gap-2">
+            <TabsTrigger value="search" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Search className="w-4 h-4" />
               Search Results ({jobs.length})
             </TabsTrigger>
@@ -782,21 +782,23 @@ export function LiveJobs2Page() {
           <TabsContent value="recommendations" className="mt-6">
             {recommendations.length > 0 ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Zap className="w-4 h-4 text-cyan-500" />
-                  Based on your skills: {user?.primary_technology}
-                  {user?.sub_technologies?.length > 0 && `, ${user.sub_technologies.join(', ')}`}
+                <div className="flex items-center gap-2 text-sm text-slate-500 bg-violet-50 p-3 rounded-lg border border-violet-100">
+                  <Zap className="w-4 h-4 text-violet-600" />
+                  <span>Based on your skills: <strong className="text-violet-700">{user?.primary_technology}</strong></span>
+                  {user?.sub_technologies?.length > 0 && <span>, {user.sub_technologies.join(', ')}</span>}
                 </div>
                 {recommendations.map((job) => (
                   <JobCard key={job.job_id} job={job} showMatchedTech />
                 ))}
               </div>
             ) : (
-              <Card className="border-dashed border-2 border-cyan-500/30">
+              <Card className="border-dashed border-2 border-slate-200 bg-slate-50">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Briefcase className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                  <h3 className="font-heading text-xl font-semibold mb-2">No Recommendations Yet</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                    <Briefcase className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">No Recommendations Yet</h3>
+                  <p className="text-slate-500 text-center max-w-md">
                     Update your profile with your primary technology and skills to get personalized job recommendations.
                   </p>
                 </CardContent>
@@ -812,11 +814,13 @@ export function LiveJobs2Page() {
                 ))}
               </div>
             ) : (
-              <Card className="border-dashed border-2 border-cyan-500/30">
+              <Card className="border-dashed border-2 border-slate-200 bg-slate-50">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Search className="w-16 h-16 text-muted-foreground/50 mb-4" />
-                  <h3 className="font-heading text-xl font-semibold mb-2">No Search Results</h3>
-                  <p className="text-muted-foreground text-center max-w-md">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                    <Search className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">No Search Results</h3>
+                  <p className="text-slate-500 text-center max-w-md">
                     Use the search form above to find jobs from LinkedIn.
                   </p>
                 </CardContent>
