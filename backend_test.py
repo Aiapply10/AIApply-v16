@@ -140,9 +140,14 @@ class SchedulerTester:
 
         success, data, status = self.test_api_call('GET', 'scheduler/logs', 200)
         
-        if success and isinstance(data, list):
-            self.log_test("GET /api/scheduler/logs", True, 
-                         f"Retrieved {len(data)} scheduler log entries")
+        if success:
+            # Check if response has the expected structure (logs array)
+            if 'logs' in data and isinstance(data['logs'], list):
+                self.log_test("GET /api/scheduler/logs", True, 
+                             f"Retrieved {len(data['logs'])} scheduler log entries")
+            else:
+                self.log_test("GET /api/scheduler/logs", False, 
+                             error=f"Expected 'logs' array in response, got: {data}")
         else:
             self.log_test("GET /api/scheduler/logs", False, 
                          error=f"Status: {status}, Data: {data}")
