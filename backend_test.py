@@ -12,7 +12,7 @@ import uuid
 import time
 
 class ATSResumeOptimizerTester:
-    def __init__(self, base_url="https://resumeforge-47.preview.emergentagent.com"):
+    def __init__(self, base_url="https://job-craft-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.user_id = None

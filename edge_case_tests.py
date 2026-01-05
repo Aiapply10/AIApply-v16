@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_edge_cases():
-    base_url = "https://resumeforge-47.preview.emergentagent.com"
+    base_url = "https://job-craft-1.preview.emergentagent.com"
     
     # Login to get token
     login_data = {
