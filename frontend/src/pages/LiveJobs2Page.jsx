@@ -125,7 +125,17 @@ export function LiveJobs2Page() {
   useEffect(() => {
     loadInitialData();
     loadAutoApplyStatus();
+    loadProfileCompleteness();
   }, []);
+
+  const loadProfileCompleteness = async () => {
+    try {
+      const res = await authAPI.getProfileCompleteness();
+      setProfileCompleteness(res.data);
+    } catch (error) {
+      console.error('Error loading profile completeness:', error);
+    }
+  };
 
   const loadInitialData = async () => {
     setIsLoading(true);
