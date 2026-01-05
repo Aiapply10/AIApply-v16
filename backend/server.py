@@ -61,6 +61,9 @@ LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
 app = FastAPI(title="AI Resume Tailor API")
 api_router = APIRouter(prefix="/api")
 
+# Initialize the scheduler
+scheduler = AsyncIOScheduler()
+
 # ============ MODELS ============
 
 class UserCreate(BaseModel):
