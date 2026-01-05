@@ -2599,6 +2599,92 @@ async def get_auto_apply_status(request: Request):
         "locations": settings.get("locations", [])
     }
 
+
+# ============ SCHEDULER MANAGEMENT ENDPOINTS ============
+
+@api_router.get("/scheduler/status")
+async def get_scheduler_status():
+    """Get the current status of the auto-apply scheduler."""
+    jobs = scheduler.get_jobs()
+    
+    job_info = []
+    for job in jobs:
+        job_info.append({
+            "id": job.id,
+            "name": job.name,
+            "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+            "trigger": str(job.trigger)
+        })
+    
+    return {
+        "scheduler_running": scheduler.running,
+        "jobs": job_info,
+        "timezone": "UTC"
+    }
+
+
+@api_router.post("/scheduler/trigger")
+async def trigger_scheduled_auto_apply(request: Request):
+    """Manually trigger the scheduled auto-apply for testing (admin only)."""
+    user = await get_current_user(request)
+    
+    # For now, allow any authenticated user to trigger their own
+    # In production, you might want to add admin check
+    
+    # Run for just this user
+    settings = await db.auto_apply_settings.find_one(
+        {"user_id": user["user_id"], "enabled": True},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        raise HTTPException(status_code=400, detail="Auto-apply is not enabled for your account")
+    
+    # Process in background
+    asyncio.create_task(process_auto_apply_for_user(user["user_id"], settings))
+    
+    return {
+        "message": "Scheduled auto-apply triggered successfully",
+        "note": "Processing will continue in the background"
+    }
+
+
+@api_router.get("/scheduler/logs")
+async def get_scheduler_logs(request: Request, limit: int = 20):
+    """Get scheduler run logs for the current user."""
+    user = await get_current_user(request)
+    
+    logs = await db.scheduler_logs.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("run_at", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs}
+
+
+@api_router.post("/auto-apply/schedule-settings")
+async def update_schedule_settings(request: Request):
+    """Update the user's preferred schedule time for auto-apply."""
+    user = await get_current_user(request)
+    data = await request.json()
+    
+    preferred_hour = data.get("preferred_hour", 6)  # Default 6 AM UTC
+    
+    if not 0 <= preferred_hour <= 23:
+        raise HTTPException(status_code=400, detail="Hour must be between 0 and 23")
+    
+    await db.auto_apply_settings.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"preferred_schedule_hour": preferred_hour}},
+        upsert=True
+    )
+    
+    return {
+        "message": f"Schedule preference updated to {preferred_hour}:00 UTC",
+        "preferred_hour": preferred_hour
+    }
+
+
 # ============ TECHNOLOGY OPTIONS ============
 
 @api_router.get("/technologies")
