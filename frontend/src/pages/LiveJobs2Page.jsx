@@ -1242,6 +1242,71 @@ export function LiveJobs2Page() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Profile Warning Dialog */}
+        <Dialog open={showProfileWarning} onOpenChange={setShowProfileWarning}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+                Complete Your Profile
+              </DialogTitle>
+              <DialogDescription>
+                Your profile needs to be at least 80% complete to use auto-apply features.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-amber-800">Profile Completion</span>
+                  <span className="text-sm font-bold text-amber-600">
+                    {profileCompleteness?.percentage || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-amber-200 rounded-full h-2">
+                  <div 
+                    className="bg-amber-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${profileCompleteness?.percentage || 0}%` }}
+                  />
+                </div>
+              </div>
+              
+              {profileCompleteness?.missing_fields && profileCompleteness.missing_fields.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">Missing Information:</p>
+                  <ul className="text-sm text-slate-600 space-y-1">
+                    {profileCompleteness.missing_fields.map((field, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <ChevronRight className="w-3 h-3 text-amber-500" />
+                        {field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={() => setShowProfileWarning(false)}
+                >
+                  Later
+                </Button>
+                <Button 
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                  onClick={() => {
+                    setShowProfileWarning(false);
+                    navigate('/profile');
+                  }}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Complete Profile
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
