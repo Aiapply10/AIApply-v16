@@ -198,6 +198,12 @@ export function LiveJobs2Page() {
   };
 
   const handleRunAutoApply = async () => {
+    // Check if profile is complete (at least 80%)
+    if (!profileCompleteness || profileCompleteness.percentage < 80) {
+      setShowProfileWarning(true);
+      return;
+    }
+
     if (!autoApplySettings.resume_id) {
       toast.error('Please select a resume in auto-apply settings');
       return;
@@ -233,6 +239,12 @@ export function LiveJobs2Page() {
   };
 
   const handleToggleAutoApply = async () => {
+    // Check if profile is complete before enabling
+    if (!autoApplyStatus?.enabled && (!profileCompleteness || profileCompleteness.percentage < 80)) {
+      setShowProfileWarning(true);
+      return;
+    }
+
     try {
       const res = await autoApplyAPI.toggle();
       setAutoApplySettings({ ...autoApplySettings, enabled: res.data.enabled });
