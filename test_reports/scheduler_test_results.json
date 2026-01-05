@@ -1,0 +1,48 @@
+{
+  "total_tests": 6,
+  "passed_tests": 5,
+  "failed_tests": 1,
+  "success_rate": 83.33333333333334,
+  "test_results": [
+    {
+      "test": "GET /api/scheduler/status",
+      "success": true,
+      "details": "Scheduler running: True, daily_auto_apply job found",
+      "error": ""
+    },
+    {
+      "test": "POST /api/auth/login",
+      "success": true,
+      "details": "Login successful for scheduler@test.com",
+      "error": ""
+    },
+    {
+      "test": "GET /api/scheduler/logs",
+      "success": false,
+      "details": "",
+      "error": "Status: 200, Data: {'logs': []}"
+    },
+    {
+      "test": "GET /api/auto-apply/status",
+      "success": true,
+      "details": "Auto-apply status retrieved with scheduler info",
+      "error": ""
+    },
+    {
+      "test": "POST /api/auto-apply/schedule-settings",
+      "success": true,
+      "details": "Schedule settings updated: Schedule preference updated to 6:00 UTC",
+      "error": ""
+    },
+    {
+      "test": "POST /api/scheduler/trigger",
+      "success": true,
+      "details": "Scheduler triggered successfully: Scheduled auto-apply triggered successfully",
+      "error": ""
+    }
+  ],
+  "test_user": {
+    "email": "scheduler@test.com",
+    "user_id": "user_e30942787ada"
+  }
+}
