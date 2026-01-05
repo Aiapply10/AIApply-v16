@@ -93,184 +93,202 @@ class SchedulerTester:
             self.log_test("POST /api/auth/login", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_get_resumes(self):
-        """Test GET /api/resumes - Get list of resumes for the user"""
-        success, data, status = self.test_api_call('GET', 'resumes', 200)
-        
-        if success and isinstance(data, list):
-            # Look for the specific resume ID from review request
-            resume_found = False
-            for resume in data:
-                if resume.get('resume_id') == self.test_resume_id:
-                    self.resume_id = self.test_resume_id
-                    resume_found = True
-                    break
-            
-            if not resume_found and len(data) > 0:
-                # Use the first available resume
-                self.resume_id = data[0].get('resume_id')
-                resume_found = True
-            
-            if resume_found:
-                self.log_test("GET /api/resumes", True, 
-                             f"Found {len(data)} resumes, using resume_id: {self.resume_id}")
-            else:
-                self.log_test("GET /api/resumes", False, 
-                             error="No resumes found for testing")
-        else:
-            self.log_test("GET /api/resumes", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_ats_optimize_without_versions(self):
-        """Test POST /api/resumes/{resume_id}/optimize without generate_versions"""
-        if not self.resume_id:
-            self.log_test("ATS Optimize (no versions)", False, 
-                         error="No resume ID available for testing")
-            return
-
-        optimize_data = {
-            "target_role": "Senior Python Developer",
-            "generate_versions": False
-        }
-
-        success, data, status = self.test_api_call(
-            'POST', f'resumes/{self.resume_id}/optimize', 200, optimize_data
-        )
-        
-        if success:
-            # Verify response contains required fields
-            required_fields = ['optimized_content', 'keywords', 'ats_optimized']
-            missing_fields = [field for field in required_fields if field not in data]
-            
-            if not missing_fields and data.get('ats_optimized') is True:
-                self.log_test("ATS Optimize (no versions)", True, 
-                             f"Optimization successful, keywords: {len(data.get('keywords', '').split(','))}")
-            else:
-                self.log_test("ATS Optimize (no versions)", False, 
-                             error=f"Missing fields: {missing_fields} or ats_optimized not True")
-        else:
-            self.log_test("ATS Optimize (no versions)", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_ats_optimize_with_versions(self):
-        """Test POST /api/resumes/{resume_id}/optimize with generate_versions: true"""
-        if not self.resume_id:
-            self.log_test("ATS Optimize (with versions)", False, 
-                         error="No resume ID available for testing")
-            return
-
-        optimize_data = {
-            "target_role": "Senior Python Developer",
-            "generate_versions": True
-        }
-
-        success, data, status = self.test_api_call(
-            'POST', f'resumes/{self.resume_id}/optimize', 200, optimize_data
-        )
-        
-        if success:
-            # Verify response contains versions array with 3 items
-            versions = data.get('versions', [])
-            expected_version_names = ["Standard ATS-Optimized", "Technical Focus", "Leadership Focus"]
-            
-            if len(versions) == 3:
-                version_names = [v.get('name') for v in versions]
-                has_expected_names = all(name in version_names for name in expected_version_names)
-                
-                if has_expected_names:
-                    self.log_test("ATS Optimize (with versions)", True, 
-                                 f"Generated 3 versions: {version_names}")
-                else:
-                    self.log_test("ATS Optimize (with versions)", False, 
-                                 error=f"Unexpected version names: {version_names}")
-            else:
-                self.log_test("ATS Optimize (with versions)", False, 
-                             error=f"Expected 3 versions, got {len(versions)}")
-        else:
-            self.log_test("ATS Optimize (with versions)", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_download_word_document(self):
-        """Test Word document generation for optimized resume"""
-        if not self.resume_id:
-            self.log_test("Download Word Document", False, 
-                         error="No resume ID available for testing")
-            return
-
-        # Test the Word document generation endpoint
-        url = f"{self.base_url}/api/resumes/{self.resume_id}/generate-word"
-        headers = {'Authorization': f'Bearer {self.token}'}
+    def test_scheduler_status_public(self):
+        """Test GET /api/scheduler/status - Public endpoint that returns scheduler status"""
+        # This endpoint should not require authentication
+        url = f"{self.base_url}/api/scheduler/status"
         
         try:
-            response = self.session.post(url, headers=headers)
+            response = self.session.get(url)
             
             if response.status_code == 200:
-                # Check if response is a Word document
-                content_type = response.headers.get('content-type', '')
-                if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
-                    self.log_test("Download Word Document", True, 
-                                 f"Word document generated, size: {len(response.content)} bytes")
+                data = response.json()
+                
+                # Check required fields
+                if 'scheduler_running' in data and data['scheduler_running'] is True:
+                    # Look for daily_auto_apply job
+                    jobs = data.get('jobs', [])
+                    daily_job_found = False
+                    
+                    for job in jobs:
+                        if job.get('id') == 'daily_auto_apply' and 'next_run_time' in job:
+                            daily_job_found = True
+                            break
+                    
+                    if daily_job_found:
+                        self.log_test("GET /api/scheduler/status", True, 
+                                     f"Scheduler running: {data['scheduler_running']}, daily_auto_apply job found")
+                    else:
+                        self.log_test("GET /api/scheduler/status", False, 
+                                     error="daily_auto_apply job not found or missing next_run_time")
                 else:
-                    self.log_test("Download Word Document", False, 
-                                 error=f"Unexpected content type: {content_type}")
+                    self.log_test("GET /api/scheduler/status", False, 
+                                 error=f"scheduler_running not true or missing. Data: {data}")
             else:
-                self.log_test("Download Word Document", False, 
-                             error=f"Status: {response.status_code}")
+                self.log_test("GET /api/scheduler/status", False, 
+                             error=f"Status: {response.status_code}, Response: {response.text}")
         except Exception as e:
-            self.log_test("Download Word Document", False, 
+            self.log_test("GET /api/scheduler/status", False, 
                          error=f"Exception: {str(e)}")
 
-    def test_get_specific_resume(self):
-        """Test GET /api/resumes/{resume_id} for the specific resume"""
-        if not self.resume_id:
-            self.log_test("GET specific resume", False, 
-                         error="No resume ID available for testing")
+    def test_scheduler_logs_authenticated(self):
+        """Test GET /api/scheduler/logs - Authenticated endpoint for user's scheduler logs"""
+        if not self.token:
+            self.log_test("GET /api/scheduler/logs", False, 
+                         error="No authentication token available")
             return
 
-        success, data, status = self.test_api_call('GET', f'resumes/{self.resume_id}', 200)
+        success, data, status = self.test_api_call('GET', 'scheduler/logs', 200)
         
-        if success and data.get('resume_id') == self.resume_id:
-            # Check if it has ATS optimization data
-            has_ats_data = 'ats_optimized' in data or 'ats_optimized_content' in data
-            self.log_test("GET specific resume", True, 
-                         f"Resume retrieved, ATS optimized: {has_ats_data}")
+        if success and isinstance(data, list):
+            self.log_test("GET /api/scheduler/logs", True, 
+                         f"Retrieved {len(data)} scheduler log entries")
         else:
-            self.log_test("GET specific resume", False, 
+            self.log_test("GET /api/scheduler/logs", False, 
+                         error=f"Status: {status}, Data: {data}")
+
+    def test_scheduler_trigger_authenticated(self):
+        """Test POST /api/scheduler/trigger - Authenticated endpoint to manually trigger auto-apply"""
+        if not self.token:
+            self.log_test("POST /api/scheduler/trigger", False, 
+                         error="No authentication token available")
+            return
+
+        # First, we need to ensure the user has auto-apply enabled
+        # Check current auto-apply settings
+        success, settings_data, status = self.test_api_call('GET', 'auto-apply/settings', 200)
+        
+        if not success:
+            self.log_test("POST /api/scheduler/trigger", False, 
+                         error=f"Could not get auto-apply settings. Status: {status}")
+            return
+
+        # If auto-apply is not enabled, try to enable it first
+        if not settings_data.get('enabled', False):
+            # Try to enable auto-apply with basic settings
+            enable_data = {
+                "enabled": True,
+                "job_keywords": ["python", "developer"],
+                "locations": ["United States"],
+                "employment_types": ["FULL_TIME"],
+                "max_applications_per_day": 5
+            }
+            
+            enable_success, enable_response, enable_status = self.test_api_call(
+                'POST', 'auto-apply/settings', 200, enable_data
+            )
+            
+            if not enable_success:
+                self.log_test("POST /api/scheduler/trigger", False, 
+                             error=f"Could not enable auto-apply. Status: {enable_status}")
+                return
+
+        # Now try to trigger the scheduler
+        success, data, status = self.test_api_call('POST', 'scheduler/trigger', 200)
+        
+        if success:
+            if 'message' in data and 'triggered successfully' in data['message']:
+                self.log_test("POST /api/scheduler/trigger", True, 
+                             f"Scheduler triggered successfully: {data['message']}")
+            else:
+                self.log_test("POST /api/scheduler/trigger", False, 
+                             error=f"Unexpected response format: {data}")
+        else:
+            self.log_test("POST /api/scheduler/trigger", False, 
+                         error=f"Status: {status}, Data: {data}")
+
+    def test_auto_apply_schedule_settings(self):
+        """Test POST /api/auto-apply/schedule-settings - Update user's preferred schedule time"""
+        if not self.token:
+            self.log_test("POST /api/auto-apply/schedule-settings", False, 
+                         error="No authentication token available")
+            return
+
+        schedule_data = {
+            "preferred_hour": 6
+        }
+
+        success, data, status = self.test_api_call(
+            'POST', 'auto-apply/schedule-settings', 200, schedule_data
+        )
+        
+        if success:
+            if 'message' in data and 'updated' in data['message'].lower():
+                self.log_test("POST /api/auto-apply/schedule-settings", True, 
+                             f"Schedule settings updated: {data['message']}")
+            else:
+                self.log_test("POST /api/auto-apply/schedule-settings", False, 
+                             error=f"Unexpected response format: {data}")
+        else:
+            self.log_test("POST /api/auto-apply/schedule-settings", False, 
+                         error=f"Status: {status}, Data: {data}")
+
+    def test_auto_apply_status(self):
+        """Test GET /api/auto-apply/status - Check auto-apply status with scheduler info"""
+        if not self.token:
+            self.log_test("GET /api/auto-apply/status", False, 
+                         error="No authentication token available")
+            return
+
+        success, data, status = self.test_api_call('GET', 'auto-apply/status', 200)
+        
+        if success:
+            # Check if response contains scheduler-related information
+            has_scheduler_info = any(key in data for key in ['enabled', 'settings', 'today_applications'])
+            
+            if has_scheduler_info:
+                self.log_test("GET /api/auto-apply/status", True, 
+                             f"Auto-apply status retrieved with scheduler info")
+            else:
+                self.log_test("GET /api/auto-apply/status", False, 
+                             error=f"Missing scheduler info in response: {data}")
+        else:
+            self.log_test("GET /api/auto-apply/status", False, 
                          error=f"Status: {status}, Data: {data}")
 
     def run_all_tests(self):
-        """Run ATS Resume Optimizer focused tests"""
-        print("🚀 Starting ATS Resume Optimizer Backend API Tests")
+        """Run Daily Auto-Apply Scheduler focused tests"""
+        print("🚀 Starting Daily Auto-Apply Scheduler Backend API Tests")
         print(f"📍 Testing against: {self.base_url}")
         print(f"👤 Test user: {self.test_email}")
         print("=" * 60)
 
-        # Test authentication with provided credentials
+        # Test 1: Verify scheduler is running via status endpoint (public)
+        print("\n🔍 Testing scheduler status (public endpoint)...")
+        self.test_scheduler_status_public()
+
+        # Test 2: Login to get token for authenticated endpoints
+        print("\n🔐 Testing authentication...")
         self.test_user_login()
         
         if self.token:
-            print("\n🔐 Authentication successful, testing ATS features...")
+            print("\n✅ Authentication successful, testing authenticated scheduler endpoints...")
             
-            # Test ATS Resume Optimizer specific endpoints
-            self.test_get_resumes()
+            # Test 3: Check scheduler logs endpoint
+            print("\n📋 Testing scheduler logs...")
+            self.test_scheduler_logs_authenticated()
             
-            if self.resume_id:
-                print(f"\n📄 Testing with resume ID: {self.resume_id}")
-                self.test_get_specific_resume()
-                self.test_ats_optimize_without_versions()
-                self.test_ats_optimize_with_versions()
-                self.test_download_word_document()
-            else:
-                print("❌ No resume found for testing ATS optimization")
+            # Test 4: Verify auto-apply status endpoint shows scheduler info
+            print("\n📊 Testing auto-apply status...")
+            self.test_auto_apply_status()
+            
+            # Test 5: Configure auto-apply settings for the user
+            print("\n⚙️ Testing schedule settings configuration...")
+            self.test_auto_apply_schedule_settings()
+            
+            # Test 6: Try triggering manual scheduler run
+            print("\n🎯 Testing manual scheduler trigger...")
+            self.test_scheduler_trigger_authenticated()
+            
         else:
-            print("❌ Authentication failed - cannot test ATS features")
+            print("❌ Authentication failed - cannot test authenticated scheduler features")
 
         # Print summary
         print("\n" + "=" * 60)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 All ATS Resume Optimizer tests passed!")
+            print("🎉 All Daily Auto-Apply Scheduler tests passed!")
             return 0
         else:
             print(f"⚠️  {self.tests_run - self.tests_passed} tests failed")
