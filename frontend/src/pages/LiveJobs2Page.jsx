@@ -68,6 +68,7 @@ const liveJobs2API = {
 
 export function LiveJobs2Page() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -78,6 +79,7 @@ export function LiveJobs2Page() {
   const [showTailorDialog, setShowTailorDialog] = useState(false);
   const [showAutoApplyDialog, setShowAutoApplyDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showProfileWarning, setShowProfileWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingCover, setIsGeneratingCover] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
@@ -87,6 +89,7 @@ export function LiveJobs2Page() {
   const [extractedKeywords, setExtractedKeywords] = useState('');
   const [selectedVersion, setSelectedVersion] = useState('default');
   const [activeTab, setActiveTab] = useState('recommendations');
+  const [profileCompleteness, setProfileCompleteness] = useState(null);
   
   // Auto-apply state
   const [autoApplyStatus, setAutoApplyStatus] = useState(null);
