@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AI Resume Tailor Backend API Testing Suite - ATS Resume Optimizer Focus
-Tests ATS Resume Optimizer feature endpoints using the external URL
+AI Resume Tailor Backend API Testing Suite - Daily Auto-Apply Scheduler Focus
+Tests Daily Auto-Apply Scheduler feature endpoints using the external URL
 """
 
 import requests
@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 import time
 
-class ATSResumeOptimizerTester:
+class SchedulerTester:
     def __init__(self, base_url="https://job-craft-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
