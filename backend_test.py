@@ -22,10 +22,9 @@ class SchedulerTester:
         self.test_results = []
         self.session = requests.Session()
         
-        # Test credentials from review request
-        self.test_email = "testuser_dashboard@test.com"
-        self.test_password = "Test123!"
-        self.test_resume_id = "resume_0dbaaaa25be6"  # From review request
+        # Test credentials from review request for scheduler testing
+        self.test_email = "scheduler@test.com"
+        self.test_password = "test123"
 
     def log_test(self, name, success, details="", error=""):
         """Log test result"""
