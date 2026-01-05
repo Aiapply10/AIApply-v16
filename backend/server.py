@@ -16,6 +16,11 @@ from io import BytesIO
 import aiofiles
 import base64
 import httpx
+import asyncio
+
+# Scheduler imports
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # Document processing
 from docx import Document
