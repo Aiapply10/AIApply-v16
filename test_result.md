@@ -11,6 +11,42 @@ backend:
         agent: "testing"
         comment: "Authentication successful with test credentials testuser_dashboard@test.com"
 
+  - task: "GET /api/scheduler/status - Scheduler Status"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Scheduler status endpoint working. Returns scheduler_running: true, daily_auto_apply job scheduled for 6:00 AM UTC"
+
+  - task: "POST /api/scheduler/trigger - Manual Trigger"
+    implemented: true
+    working: "NA"
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint implemented to manually trigger scheduled auto-apply for testing"
+
+  - task: "GET /api/scheduler/logs - Scheduler Logs"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Returns scheduler run logs for the current user"
+
   - task: "GET /api/resumes - Get list of resumes"
     implemented: true
     working: true
