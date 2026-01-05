@@ -590,24 +590,6 @@ export function RegisterPage() {
     </div>
   );
 }
-                <div className="text-3xl font-bold text-gradient-neon">10K+</div>
-                <div className="text-sm text-muted-foreground">Resumes Tailored</div>
-              </div>
-              <div className="glass rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-gradient-cyber">24/7</div>
-                <div className="text-sm text-muted-foreground">AI Support</div>
-              </div>
-            </div>
-            <div className="flex justify-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-6 h-6 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-              ))}
-            </div>
-            <p className="text-center text-muted-foreground text-sm">Rated 4.9/5 by our users</p>
-          </div>
-        </div>
       </div>
     </div>
   );
