@@ -17,23 +17,29 @@ backend:
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Scheduler status endpoint working. Returns scheduler_running: true, daily_auto_apply job scheduled for 6:00 AM UTC"
+      - working: true
+        agent: "testing"
+        comment: "Public endpoint tested successfully. Returns scheduler_running: true with daily_auto_apply job and next_run_time. Scheduler confirmed running at 6:00 AM UTC daily."
 
   - task: "POST /api/scheduler/trigger - Manual Trigger"
     implemented: true
-    working: "NA"
+    working: true
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Endpoint implemented to manually trigger scheduled auto-apply for testing"
+      - working: true
+        agent: "testing"
+        comment: "Manual trigger endpoint working correctly. Requires Bearer token authentication and user must have auto-apply enabled. Successfully triggers scheduled_auto_apply_for_all_users function in background. Backend logs confirm processing starts for authenticated user."
 
   - task: "GET /api/scheduler/logs - Scheduler Logs"
     implemented: true
@@ -41,11 +47,26 @@ backend:
     file: "server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Returns scheduler run logs for the current user"
+      - working: true
+        agent: "testing"
+        comment: "Authenticated endpoint working correctly. Returns logs array structure for user's scheduler run history. Properly requires Bearer token authentication."
+
+  - task: "POST /api/auto-apply/schedule-settings - Update Schedule Settings"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Schedule settings endpoint working correctly. Accepts preferred_hour parameter and updates user's schedule preference. Requires Bearer token authentication."
 
   - task: "GET /api/resumes - Get list of resumes"
     implemented: true
