@@ -1,8 +1,8 @@
 {
   "total_tests": 6,
-  "passed_tests": 5,
-  "failed_tests": 1,
-  "success_rate": 83.33333333333334,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "success_rate": 100.0,
   "test_results": [
     {
       "test": "GET /api/scheduler/status",
@@ -18,9 +18,9 @@
     },
     {
       "test": "GET /api/scheduler/logs",
-      "success": false,
-      "details": "",
-      "error": "Status: 200, Data: {'logs': []}"
+      "success": true,
+      "details": "Retrieved 0 scheduler log entries",
+      "error": ""
     },
     {
       "test": "GET /api/auto-apply/status",
