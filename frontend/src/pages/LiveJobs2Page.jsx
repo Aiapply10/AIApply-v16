@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI } from '../lib/api';
+import { resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI, authAPI } from '../lib/api';
 import { useAuthStore } from '../store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -47,10 +47,14 @@ import {
   CheckCircle2,
   AlertCircle,
   Rocket,
-  Bot
+  Bot,
+  AlertTriangle,
+  ChevronRight,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 
 // API functions for Live Jobs 2
 const liveJobs2API = {
