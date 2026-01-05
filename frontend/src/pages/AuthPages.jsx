@@ -590,7 +590,3 @@ export function RegisterPage() {
     </div>
   );
 }
-      </div>
-    </div>
-  );
-}
