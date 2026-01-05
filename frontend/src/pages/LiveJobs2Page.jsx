@@ -672,6 +672,7 @@ export function LiveJobs2Page() {
                 <Switch
                   checked={autoApplyStatus?.enabled || false}
                   onCheckedChange={handleToggleAutoApply}
+                  disabled={profileCompleteness && profileCompleteness.percentage < 80}
                 />
               </div>
             </div>
