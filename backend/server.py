@@ -2638,6 +2638,289 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============ SCHEDULER FUNCTIONS ============
+
+async def scheduled_auto_apply_for_all_users():
+    """
+    Scheduled task that runs daily to auto-apply for all users with enabled auto-apply.
+    This function processes each user who has auto-apply enabled.
+    """
+    logger.info("Starting scheduled auto-apply job for all users...")
+    
+    try:
+        # Find all users with auto-apply enabled
+        enabled_settings = await db.auto_apply_settings.find(
+            {"enabled": True},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        if not enabled_settings:
+            logger.info("No users have auto-apply enabled. Skipping.")
+            return
+        
+        logger.info(f"Found {len(enabled_settings)} users with auto-apply enabled")
+        
+        for settings in enabled_settings:
+            user_id = settings.get("user_id")
+            if not user_id:
+                continue
+                
+            try:
+                await process_auto_apply_for_user(user_id, settings)
+            except Exception as e:
+                logger.error(f"Error processing auto-apply for user {user_id}: {str(e)}")
+                continue
+                
+        logger.info("Scheduled auto-apply job completed")
+        
+    except Exception as e:
+        logger.error(f"Error in scheduled auto-apply job: {str(e)}")
+
+
+async def process_auto_apply_for_user(user_id: str, settings: dict):
+    """
+    Process auto-apply for a single user.
+    """
+    logger.info(f"Processing auto-apply for user: {user_id}")
+    
+    if not settings.get("resume_id"):
+        logger.warning(f"User {user_id} has no resume selected. Skipping.")
+        return
+    
+    # Get the user's resume
+    resume = await db.resumes.find_one(
+        {"resume_id": settings["resume_id"], "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not resume:
+        logger.warning(f"Resume not found for user {user_id}. Skipping.")
+        return
+    
+    # Check daily limit
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_applications = await db.auto_applications.count_documents({
+        "user_id": user_id,
+        "applied_at": {"$gte": today_start.isoformat()}
+    })
+    
+    max_daily = settings.get("max_applications_per_day", 10)
+    remaining = max_daily - today_applications
+    
+    if remaining <= 0:
+        logger.info(f"User {user_id} has reached daily limit of {max_daily}. Skipping.")
+        return
+    
+    # Fetch jobs from LinkedIn API
+    api_key = os.environ.get('LIVEJOBS2_API_KEY')
+    api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
+    
+    if not api_key:
+        logger.error("Job search API not configured")
+        return
+    
+    job_keywords = settings.get("job_keywords", ["Software Developer"])
+    locations = settings.get("locations", ["United States"])
+    
+    all_jobs = []
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            for keyword in job_keywords[:2]:
+                for location in locations[:2]:
+                    response = await http_client.get(
+                        f"https://{api_host}/active-jb-24h",
+                        params={
+                            "limit": 10,
+                            "offset": 0,
+                            "title_filter": f'"{keyword}"',
+                            "location_filter": f'"{location}"',
+                            "description_type": "text"
+                        },
+                        headers={
+                            "X-RapidAPI-Key": api_key,
+                            "X-RapidAPI-Host": api_host
+                        }
+                    )
+                    
+                    if response.status_code == 200:
+                        jobs_data = response.json()
+                        if isinstance(jobs_data, list):
+                            all_jobs.extend(jobs_data)
+    except Exception as e:
+        logger.error(f"Error fetching jobs for user {user_id}: {str(e)}")
+        return
+    
+    # Filter out already applied jobs
+    applied_job_ids = await db.auto_applications.distinct(
+        "job_id",
+        {"user_id": user_id}
+    )
+    
+    new_jobs = [j for j in all_jobs if j.get("id") not in applied_job_ids][:remaining]
+    
+    if not new_jobs:
+        logger.info(f"No new jobs found for user {user_id}")
+        return
+    
+    applications_count = 0
+    original_content = resume.get('original_content', '')
+    
+    # Process each job
+    for job in new_jobs:
+        try:
+            job_id = job.get("id", str(uuid.uuid4()))
+            job_title = job.get("title", "")
+            company = job.get("organization", "")
+            description = job.get("description_text", "")[:2000]
+            
+            location_str = ""
+            if job.get("locations_derived"):
+                location_str = job["locations_derived"][0]
+            elif job.get("cities_derived"):
+                location_str = job["cities_derived"][0]
+            
+            salary_info = ""
+            if job.get("salary_raw") and job["salary_raw"].get("value"):
+                salary_value = job["salary_raw"]["value"]
+                if salary_value.get("minValue") and salary_value.get("maxValue"):
+                    salary_info = f"${salary_value['minValue']:,} - ${salary_value['maxValue']:,}"
+            
+            tailored_content = original_content
+            keywords_extracted = ""
+            
+            # Auto-tailor resume if enabled
+            if settings.get("auto_tailor_resume", True) and description:
+                try:
+                    system_message = """You are an expert ATS resume optimizer. Transform resumes to match job requirements while maintaining authenticity."""
+                    
+                    chat = LlmChat(
+                        api_key=EMERGENT_LLM_KEY,
+                        session_id=f"scheduled_auto_{job_id}_{uuid.uuid4().hex[:8]}",
+                        system_message=system_message
+                    ).with_model("openai", "gpt-5.2")
+                    
+                    keywords_prompt = f"""Extract the top 15 most important keywords from this job posting:
+
+Job Title: {job_title}
+Company: {company}
+Description: {description[:1500]}
+
+Return ONLY a comma-separated list of keywords."""
+                    
+                    keywords_message = UserMessage(text=keywords_prompt)
+                    keywords_extracted = await chat.send_message(keywords_message)
+                    
+                    tailor_prompt = f"""Tailor this resume for the following job. Make it ATS-friendly.
+
+JOB: {job_title} at {company}
+Key Requirements: {description[:1000]}
+
+KEYWORDS: {keywords_extracted}
+
+RESUME:
+{original_content}
+
+Return ONLY the tailored resume content."""
+                    
+                    tailor_message = UserMessage(text=tailor_prompt)
+                    tailored_content = await chat.send_message(tailor_message)
+                    
+                except Exception as e:
+                    logger.error(f"Error tailoring resume for job {job_id}: {str(e)}")
+                    tailored_content = original_content
+            
+            # Create auto-application record
+            application_record = {
+                "application_id": f"scheduled_{uuid.uuid4().hex[:12]}",
+                "user_id": user_id,
+                "job_id": job_id,
+                "job_title": job_title,
+                "company": company,
+                "location": location_str,
+                "salary_info": salary_info,
+                "job_description": description[:500],
+                "apply_link": job.get("url") or job.get("external_apply_url", ""),
+                "resume_id": settings["resume_id"],
+                "tailored_content": tailored_content,
+                "keywords_extracted": keywords_extracted,
+                "status": "ready_to_apply",
+                "applied_at": datetime.now(timezone.utc).isoformat(),
+                "source": "LinkedIn_Scheduled",
+                "auto_applied": True,
+                "scheduled": True
+            }
+            
+            await db.auto_applications.insert_one(application_record)
+            
+            await db.applications.insert_one({
+                "application_id": application_record["application_id"],
+                "user_id": user_id,
+                "job_portal_id": "linkedin_scheduled",
+                "job_title": job_title,
+                "company_name": company,
+                "job_description": description[:500],
+                "resume_id": settings["resume_id"],
+                "cover_letter": "",
+                "status": "ready_to_apply",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "auto_applied": True,
+                "scheduled": True,
+                "apply_link": application_record["apply_link"]
+            })
+            
+            applications_count += 1
+            
+        except Exception as e:
+            logger.error(f"Error processing job {job.get('id')} for user {user_id}: {str(e)}")
+            continue
+    
+    # Update settings with last run info
+    await db.auto_apply_settings.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "last_scheduled_run": datetime.now(timezone.utc).isoformat(),
+                "last_run": datetime.now(timezone.utc).isoformat()
+            },
+            "$inc": {"total_applications": applications_count}
+        }
+    )
+    
+    # Log the scheduled run
+    await db.scheduler_logs.insert_one({
+        "log_id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "run_type": "scheduled_auto_apply",
+        "applications_count": applications_count,
+        "run_at": datetime.now(timezone.utc).isoformat(),
+        "status": "completed"
+    })
+    
+    logger.info(f"Completed auto-apply for user {user_id}: {applications_count} applications")
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the scheduler when the app starts."""
+    logger.info("Starting application and scheduler...")
+    
+    # Schedule the auto-apply job to run daily at 6:00 AM UTC
+    scheduler.add_job(
+        scheduled_auto_apply_for_all_users,
+        CronTrigger(hour=6, minute=0),  # Run at 6:00 AM UTC daily
+        id="daily_auto_apply",
+        name="Daily Auto-Apply Job",
+        replace_existing=True
+    )
+    
+    scheduler.start()
+    logger.info("Scheduler started. Daily auto-apply job scheduled for 6:00 AM UTC")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    """Shutdown the scheduler and close DB connection."""
+    logger.info("Shutting down scheduler...")
+    scheduler.shutdown(wait=False)
     client.close()
