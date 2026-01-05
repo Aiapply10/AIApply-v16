@@ -182,9 +182,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "POST /api/resumes/{resume_id}/optimize - ATS optimization without versions"
-    - "POST /api/resumes/{resume_id}/optimize - ATS optimization with versions"
-    - "POST /api/resumes/{resume_id}/generate-word - Download Word document"
+    - "GET /api/scheduler/status - Scheduler Status"
+    - "POST /api/scheduler/trigger - Manual Trigger"
+    - "GET /api/scheduler/logs - Scheduler Logs"
+    - "POST /api/auto-apply/schedule-settings - Update Schedule Settings"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
