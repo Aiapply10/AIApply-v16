@@ -615,6 +615,31 @@ export function LiveJobs2Page() {
           </div>
         </div>
 
+        {/* Profile Incomplete Banner */}
+        {profileCompleteness && profileCompleteness.percentage < 80 && (
+          <Card className="border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <CardContent className="flex items-center gap-4 py-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-amber-800">
+                  Profile Incomplete ({profileCompleteness.percentage}%)
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Complete your profile to at least 80% to enable Auto-Apply feature.
+                </p>
+              </div>
+              <Button 
+                className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                onClick={() => setShowProfileWarning(true)}
+              >
+                View Missing Fields
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Auto-Apply Control Panel */}
         <Card className="border-2 border-violet-200 bg-gradient-to-r from-violet-50 via-purple-50 to-indigo-50 shadow-xl">
           <CardHeader className="pb-3">
@@ -626,12 +651,17 @@ export function LiveJobs2Page() {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-slate-800">
                     Auto-Apply AI Agent
-                    {autoApplyStatus?.enabled && (
+                    {profileCompleteness && profileCompleteness.percentage < 80 ? (
+                      <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Profile Incomplete
+                      </Badge>
+                    ) : autoApplyStatus?.enabled ? (
                       <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                         Active
                       </Badge>
-                    )}
+                    ) : null}
                   </CardTitle>
                   <CardDescription className="text-slate-600">
                     Automatically tailor your resume and apply to matching jobs daily
