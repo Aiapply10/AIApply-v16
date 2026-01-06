@@ -2272,7 +2272,18 @@ async def get_live_jobs_2_recommendations(request: Request):
                             "company_size": job.get("linkedin_org_size", ""),
                         })
         
-        return {"recommendations": all_recommendations[:10]}
+        # Check if we got API error
+        if api_error and not all_recommendations:
+            return {
+                "recommendations": [],
+                "message": "Job search API quota exceeded. Please try Live Jobs (JSearch) or try again later.",
+                "api_error": True
+            }
+        
+        return {
+            "recommendations": all_recommendations[:10],
+            "user_technology": user.get('primary_technology')
+        }
         
     except Exception as e:
         logger.error(f"Error getting Live Jobs 2 recommendations: {str(e)}")
