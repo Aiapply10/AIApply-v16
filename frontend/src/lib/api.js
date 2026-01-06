@@ -37,6 +37,14 @@ export const authAPI = {
     code,
     redirect_uri: redirectUri
   }),
+  uploadProfilePhoto: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/auth/profile-photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  deleteProfilePhoto: () => api.delete('/auth/profile-photo'),
 };
 
 // Resume API
