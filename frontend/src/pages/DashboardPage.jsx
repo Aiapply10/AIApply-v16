@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { ProfileCompleteness } from '../components/ProfileCompleteness';
 import { useAuthStore } from '../store';
 import { reportAPI, resumeAPI, authAPI } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
