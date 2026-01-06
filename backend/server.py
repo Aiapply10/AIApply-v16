@@ -1868,8 +1868,18 @@ async def search_live_jobs(
 async def get_job_recommendations(request: Request):
     """
     Get personalized job recommendations based on user's primary and sub technologies.
+    Requires user to have primary_technology set.
     """
     user = await get_current_user(request)
+    
+    # Check if user has required profile fields
+    if not user.get('primary_technology'):
+        return {
+            "recommendations": [],
+            "message": "Please update your profile with Primary Technology to get personalized job recommendations.",
+            "requires_profile_update": True,
+            "missing_fields": ["primary_technology"]
+        }
     
     # Get API keys at request time
     rapidapi_key = os.environ.get('RAPIDAPI_KEY')
@@ -1892,9 +1902,6 @@ async def get_job_recommendations(request: Request):
     # Add sub-technology searches
     for sub_tech in sub_techs[:2]:
         search_queries.append(f"{sub_tech} developer")
-    
-    if not search_queries:
-        search_queries = ["software developer"]
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
