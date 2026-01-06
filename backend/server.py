@@ -2657,8 +2657,9 @@ Return ONLY the tailored resume content."""
                 "keywords_extracted": keywords_extracted,
                 "status": "ready_to_apply",
                 "applied_at": datetime.now(timezone.utc).isoformat(),
-                "source": "LinkedIn",
-                "auto_applied": True
+                "source": api_source,
+                "auto_applied": True,
+                "ats_optimized": True if tailored_content != original_content else False
             }
             
             await db.auto_applications.insert_one(application_record)
