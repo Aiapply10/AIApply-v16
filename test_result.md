@@ -194,10 +194,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "GET /api/scheduler/status - Scheduler Status"
-    - "POST /api/scheduler/trigger - Manual Trigger"
-    - "GET /api/scheduler/logs - Scheduler Logs"
-    - "POST /api/auto-apply/schedule-settings - Update Schedule Settings"
+    - "Profile Photo Upload Feature"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -209,3 +206,5 @@ agent_communication:
     message: "ATS Resume Optimizer UI testing completed successfully after fixing CORS configuration. Fixed backend CORS_ORIGINS from '*' to specific origins including localhost:3000. All frontend functionality working: 1) Login with test credentials successful, 2) Resumes page loads with resume cards, 3) ATS Optimize dialog opens with all required elements (title, subtitle, Selected Resume section, Target Role input, Generate Multiple Versions checkbox, Optimize button), 4) AI processing working with loading spinner and completion, 5) Results display with optimized content and extracted keywords, 6) Copy button working (minor clipboard permission issue in browser but functionality confirmed), 7) Download Word button working, 8) Optimize Again functionality working, 9) Multiple versions generation working with 3 tabs, 10) Tab switching between versions working. All test requirements from review request satisfied. Minor issues: clipboard permission error in browser environment, Playwright selector syntax issue with ':first' - both don't affect actual functionality."
   - agent: "testing"
     message: "Daily Auto-Apply Scheduler backend testing completed successfully. All 6 scheduler-related API tests passed with 100% success rate using test credentials scheduler@test.com. Key findings: 1) GET /api/scheduler/status (public endpoint) working - returns scheduler_running: true with daily_auto_apply job scheduled for 6:00 AM UTC, 2) Authentication working with provided test credentials, 3) GET /api/scheduler/logs (authenticated) working - returns proper logs array structure, 4) GET /api/auto-apply/status working - shows scheduler info and user settings, 5) POST /api/auto-apply/schedule-settings working - updates preferred schedule time, 6) POST /api/scheduler/trigger (authenticated) working - manually triggers scheduled auto-apply process in background. Backend logs confirm scheduler starts correctly on application startup and manual trigger processes users properly. The scheduled_auto_apply_for_all_users function runs async without crashing. All endpoints require proper authentication except status endpoint."
+  - agent: "testing"
+    message: "Profile Photo Upload feature testing completed successfully. Tested with scheduler@test.com credentials on /profile page. All required UI elements present and functional: 1) Avatar displays user initials 'ST' for 'Scheduler Test' with green background, 2) 'Change Photo' button visible with camera icon and clickable (opens file picker), 3) 'Remove' button present for existing photos, 4) Avatar hover effect working with camera overlay, 5) User name 'Scheduler Test' and email 'scheduler@test.com' displayed correctly, 6) Basic Information section present, 7) Profile Completeness section showing 18% completion. Backend integration working with /auth/profile-photo endpoints for upload (POST) and delete (DELETE). File validation implemented for image types (JPEG, PNG, GIF, WebP) and 5MB size limit. Feature fully implemented and working as expected. Minor: Session timeout during extended testing but core functionality verified."
