@@ -2457,44 +2457,97 @@ async def run_auto_apply(request: Request):
             "applications": []
         }
     
-    # Fetch jobs from LinkedIn API
+    # Fetch jobs from LinkedIn API or fallback to JSearch
     api_key = os.environ.get('LIVEJOBS2_API_KEY')
     api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
-    
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Job search API not configured")
+    jsearch_api_key = os.environ.get('RAPIDAPI_KEY')
     
     job_keywords = settings.get("job_keywords", ["Software Developer"])
     locations = settings.get("locations", ["United States"])
     
     all_jobs = []
+    api_source = "LinkedIn"
     
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as http_client:
-            for keyword in job_keywords[:2]:  # Limit keywords
-                for location in locations[:2]:  # Limit locations
+    # Try LinkedIn API first
+    if api_key:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as http_client:
+                for keyword in job_keywords[:2]:
+                    for location in locations[:2]:
+                        response = await http_client.get(
+                            f"https://{api_host}/active-jb-24h",
+                            params={
+                                "limit": 10,
+                                "offset": 0,
+                                "title_filter": f'"{keyword}"',
+                                "location_filter": f'"{location}"',
+                                "description_type": "text"
+                            },
+                            headers={
+                                "X-RapidAPI-Key": api_key,
+                                "X-RapidAPI-Host": api_host
+                            }
+                        )
+                        
+                        if response.status_code == 200:
+                            jobs_data = response.json()
+                            # Check for quota exceeded error
+                            if isinstance(jobs_data, dict) and 'message' in jobs_data:
+                                logger.warning(f"LinkedIn API error: {jobs_data.get('message')}")
+                                break
+                            if isinstance(jobs_data, list):
+                                all_jobs.extend(jobs_data)
+        except Exception as e:
+            logger.error(f"Error fetching from LinkedIn API: {str(e)}")
+    
+    # Fallback to JSearch API if LinkedIn fails or returns no jobs
+    if not all_jobs and jsearch_api_key:
+        api_source = "JSearch"
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as http_client:
+                for keyword in job_keywords[:2]:
                     response = await http_client.get(
-                        f"https://{api_host}/active-jb-24h",
+                        "https://jsearch.p.rapidapi.com/search",
                         params={
-                            "limit": 10,
-                            "offset": 0,
-                            "title_filter": f'"{keyword}"',
-                            "location_filter": f'"{location}"',
-                            "description_type": "text"
+                            "query": f"{keyword} in {locations[0] if locations else 'United States'}",
+                            "page": "1",
+                            "num_pages": "1"
                         },
                         headers={
-                            "X-RapidAPI-Key": api_key,
-                            "X-RapidAPI-Host": api_host
+                            "X-RapidAPI-Key": jsearch_api_key,
+                            "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
                         }
                     )
                     
                     if response.status_code == 200:
-                        jobs_data = response.json()
-                        if isinstance(jobs_data, list):
-                            all_jobs.extend(jobs_data)
-    except Exception as e:
-        logger.error(f"Error fetching jobs for auto-apply: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch jobs: {str(e)}")
+                        data = response.json()
+                        jobs_from_jsearch = data.get("data", [])[:10]
+                        # Transform JSearch format to match our processing
+                        for job in jobs_from_jsearch:
+                            all_jobs.append({
+                                "id": job.get("job_id"),
+                                "title": job.get("job_title"),
+                                "organization": job.get("employer_name"),
+                                "description_text": job.get("job_description", ""),
+                                "locations_derived": [f"{job.get('job_city', '')}, {job.get('job_state', '')}"],
+                                "url": job.get("job_apply_link"),
+                                "external_apply_url": job.get("job_apply_link"),
+                                "salary_raw": {
+                                    "value": {
+                                        "minValue": job.get("job_min_salary"),
+                                        "maxValue": job.get("job_max_salary")
+                                    }
+                                } if job.get("job_min_salary") else None
+                            })
+        except Exception as e:
+            logger.error(f"Error fetching from JSearch API: {str(e)}")
+    
+    if not all_jobs:
+        return {
+            "message": "No jobs found. Both LinkedIn and JSearch APIs returned no results.",
+            "applied_count": 0,
+            "applications": []
+        }
     
     # Filter out already applied jobs
     applied_job_ids = await db.auto_applications.distinct(
