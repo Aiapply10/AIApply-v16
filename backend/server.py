@@ -2081,7 +2081,16 @@ async def get_job_recommendations(request: Request):
             
     except Exception as e:
         logger.error(f"Error getting recommendations: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+        # Return sample jobs on any error
+        return {
+            "recommendations": get_sample_jobs(primary_tech),
+            "total": 5,
+            "based_on": {
+                "primary_technology": primary_tech,
+                "sub_technologies": sub_techs
+            },
+            "api_status": f"Using sample data - API error: {str(e)}"
+        }
 
 @api_router.get("/live-jobs/{job_id}")
 async def get_live_job_details(job_id: str, request: Request):
