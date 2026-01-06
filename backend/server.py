@@ -2300,19 +2300,114 @@ async def get_live_jobs_2_recommendations(request: Request):
             "missing_fields": ["primary_technology"]
         }
     
+    primary_tech = user.get('primary_technology')
+    sub_techs = user.get('sub_technologies', [])
+    
+    # Sample jobs fallback when API is unavailable
+    def get_sample_jobs_linkedin(tech):
+        sample_jobs = [
+            {
+                "job_id": f"linkedin_sample_1_{tech.lower()}",
+                "title": f"Senior {tech} Engineer",
+                "company": "Meta Platforms",
+                "company_logo": "https://ui-avatars.com/api/?name=MP&background=0866ff&color=fff",
+                "location": "Menlo Park, CA",
+                "employment_type": "Full-time",
+                "salary_min": 180000,
+                "salary_max": 250000,
+                "description": f"Join Meta as a Senior {tech} Engineer. Work on products that connect billions of people worldwide.",
+                "apply_link": "https://careers.meta.com",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "LinkedIn (Sample)",
+                "industry": "Technology"
+            },
+            {
+                "job_id": f"linkedin_sample_2_{tech.lower()}",
+                "title": f"{tech} Developer - Remote",
+                "company": "Google LLC",
+                "company_logo": "https://ui-avatars.com/api/?name=G&background=4285f4&color=fff",
+                "location": "Mountain View, CA",
+                "employment_type": "Full-time",
+                "salary_min": 170000,
+                "salary_max": 240000,
+                "description": f"Google is hiring {tech} Developers to build next-generation products. Remote-friendly position with excellent benefits.",
+                "apply_link": "https://careers.google.com",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "LinkedIn (Sample)",
+                "industry": "Technology"
+            },
+            {
+                "job_id": f"linkedin_sample_3_{tech.lower()}",
+                "title": f"Staff {tech} Engineer",
+                "company": "Amazon",
+                "company_logo": "https://ui-avatars.com/api/?name=A&background=ff9900&color=fff",
+                "location": "Seattle, WA",
+                "employment_type": "Full-time",
+                "salary_min": 200000,
+                "salary_max": 300000,
+                "description": f"Amazon Web Services is looking for a Staff {tech} Engineer to drive technical initiatives and mentor teams.",
+                "apply_link": "https://amazon.jobs",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": False,
+                "matched_technology": tech,
+                "source": "LinkedIn (Sample)",
+                "industry": "Cloud Computing"
+            },
+            {
+                "job_id": f"linkedin_sample_4_{tech.lower()}",
+                "title": f"{tech} Software Architect",
+                "company": "Microsoft",
+                "company_logo": "https://ui-avatars.com/api/?name=MS&background=00a4ef&color=fff",
+                "location": "Redmond, WA",
+                "employment_type": "Full-time",
+                "salary_min": 190000,
+                "salary_max": 280000,
+                "description": f"Design and implement {tech} solutions at scale. Lead architectural decisions for cloud-native applications.",
+                "apply_link": "https://careers.microsoft.com",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "LinkedIn (Sample)",
+                "industry": "Technology"
+            },
+            {
+                "job_id": f"linkedin_sample_5_{tech.lower()}",
+                "title": f"Principal {tech} Engineer",
+                "company": "Netflix",
+                "company_logo": "https://ui-avatars.com/api/?name=N&background=e50914&color=fff",
+                "location": "Los Gatos, CA",
+                "employment_type": "Full-time",
+                "salary_min": 220000,
+                "salary_max": 350000,
+                "description": f"Netflix is seeking a Principal {tech} Engineer to lead streaming infrastructure development.",
+                "apply_link": "https://jobs.netflix.com",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "LinkedIn (Sample)",
+                "industry": "Entertainment"
+            }
+        ]
+        return sample_jobs
+    
     api_key = os.environ.get('LIVEJOBS2_API_KEY')
     api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
     
     if not api_key:
         return {
-            "recommendations": [],
-            "message": "Live Jobs 2 API not configured. Please provide LIVEJOBS2_API_KEY in backend/.env"
+            "recommendations": get_sample_jobs_linkedin(primary_tech),
+            "user_technology": primary_tech,
+            "api_status": "Sample data - API not configured"
         }
     
     # Get user's technologies
-    user_technologies = [user.get('primary_technology')]
-    if user.get('sub_technologies'):
-        user_technologies.extend(user['sub_technologies'][:2])
+    user_technologies = [primary_tech]
+    if sub_techs:
+        user_technologies.extend(sub_techs[:2])
     
     all_recommendations = []
     api_error = None
