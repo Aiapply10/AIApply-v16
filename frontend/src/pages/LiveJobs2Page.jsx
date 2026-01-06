@@ -851,7 +851,26 @@ export function LiveJobs2Page() {
           </TabsList>
 
           <TabsContent value="recommendations" className="mt-6">
-            {recommendations.length > 0 ? (
+            {requiresProfileUpdate || !user?.primary_technology ? (
+              <Card className="border-2 border-amber-200 bg-amber-50">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">Profile Update Required</h3>
+                  <p className="text-slate-600 text-center max-w-md mb-4">
+                    {apiMessage || "Please update your profile with Primary Technology and Skills to get personalized job recommendations."}
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/profile')}
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Update Profile
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : recommendations.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm text-slate-500 bg-violet-50 p-3 rounded-lg border border-violet-100">
                   <Zap className="w-4 h-4 text-violet-600" />
@@ -868,10 +887,19 @@ export function LiveJobs2Page() {
                   <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
                     <Briefcase className="w-8 h-8 text-slate-400" />
                   </div>
-                  <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">No Recommendations Yet</h3>
+                  <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">No Recommendations Available</h3>
                   <p className="text-slate-500 text-center max-w-md">
-                    Update your profile with your primary technology and skills to get personalized job recommendations.
+                    {apiMessage || "No jobs found matching your profile. Try searching manually or check back later."}
                   </p>
+                  {apiMessage && apiMessage.includes('quota') && (
+                    <Button 
+                      onClick={() => navigate('/live-jobs')}
+                      variant="outline"
+                      className="mt-4"
+                    >
+                      Try Live Jobs (JSearch)
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
