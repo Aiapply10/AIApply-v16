@@ -1,0 +1,49 @@
+{
+  "total_tests": 5,
+  "passed_tests": 5,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "POST /api/auth/login",
+      "success": true,
+      "details": "Login successful for scheduler@test.com",
+      "error": ""
+    },
+    {
+      "test": "Profile Setup",
+      "success": true,
+      "details": "Profile already has correct values: primary_technology=Python, sub_technologies=['Django', 'FastAPI']",
+      "error": ""
+    },
+    {
+      "test": "GET /api/live-jobs/recommendations (valid profile)",
+      "success": true,
+      "details": "Retrieved 10 job recommendations based on Python technology",
+      "error": ""
+    },
+    {
+      "test": "GET /api/live-jobs-2/recommendations",
+      "success": true,
+      "details": "Retrieved 0 LinkedIn job recommendations",
+      "error": ""
+    },
+    {
+      "test": "Profile Validation Test",
+      "success": true,
+      "details": "Successfully validated profile requirement and restored functionality",
+      "error": ""
+    }
+  ],
+  "test_user": {
+    "email": "scheduler@test.com",
+    "user_id": "user_e30942787ada"
+  },
+  "expected_profile": {
+    "primary_technology": "Python",
+    "sub_technologies": [
+      "Django",
+      "FastAPI"
+    ]
+  }
+}
