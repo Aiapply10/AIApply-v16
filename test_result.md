@@ -128,6 +128,42 @@ backend:
         agent: "testing"
         comment: "Successfully retrieved specific resume with ATS optimization data present"
 
+  - task: "GET /api/live-jobs/recommendations - Live Jobs (JSearch) Recommendations"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Live Jobs (JSearch) recommendations working correctly with valid profile. Retrieved 10 job recommendations based on Python technology. Profile validation working - returns requires_profile_update: true when primary_technology is missing, and recommendations work again after profile restoration."
+
+  - task: "GET /api/live-jobs-2/recommendations - Live Jobs 2 (LinkedIn) Recommendations"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Live Jobs 2 (LinkedIn) recommendations endpoint working correctly. API properly handles quota limits and returns appropriate responses. No critical errors encountered."
+
+  - task: "Profile Validation for Live Jobs Recommendations"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Profile validation working correctly. When primary_technology is cleared, API returns requires_profile_update: true with message 'Please update your profile with Primary Technology to get personalized job recommendations.' Functionality restored after profile update."
+
 frontend:
   - task: "ResumesPage ATS Optimize Dialog"
     implemented: true
