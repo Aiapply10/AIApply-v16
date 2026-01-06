@@ -331,11 +331,15 @@ class LiveJobsTester:
             "test_user": {
                 "email": self.test_email,
                 "user_id": self.user_id
+            },
+            "expected_profile": {
+                "primary_technology": self.expected_primary_tech,
+                "sub_technologies": self.expected_sub_techs
             }
         }
 
 def main():
-    tester = SchedulerTester()
+    tester = LiveJobsTester()
     exit_code = tester.run_all_tests()
     
     # Save detailed results
@@ -345,10 +349,10 @@ def main():
     import os
     os.makedirs('/app/test_reports', exist_ok=True)
     
-    with open('/app/test_reports/scheduler_test_results.json', 'w') as f:
+    with open('/app/test_reports/live_jobs_test_results.json', 'w') as f:
         json.dump(summary, f, indent=2)
     
-    print(f"\n📄 Detailed results saved to: /app/test_reports/scheduler_test_results.json")
+    print(f"\n📄 Detailed results saved to: /app/test_reports/live_jobs_test_results.json")
     return exit_code
 
 if __name__ == "__main__":
