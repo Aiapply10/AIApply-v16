@@ -235,6 +235,54 @@ export function ProfilePage() {
     }
   };
 
+  const handleProfilePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPEG, PNG, GIF, or WebP image');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    try {
+      const response = await authAPI.uploadProfilePhoto(file);
+      if (response.data.user) {
+        setUser(response.data.user);
+      }
+      toast.success('Profile photo updated!');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error(error.response?.data?.detail || 'Failed to upload photo');
+    } finally {
+      setIsUploadingPhoto(false);
+      // Reset file input
+      if (profilePicInputRef.current) {
+        profilePicInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveProfilePhoto = async () => {
+    try {
+      await authAPI.deleteProfilePhoto();
+      // Update local user state
+      const updatedUser = { ...user, profile_picture: null, picture: null };
+      setUser(updatedUser);
+      toast.success('Profile photo removed');
+    } catch (error) {
+      toast.error('Failed to remove photo');
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
