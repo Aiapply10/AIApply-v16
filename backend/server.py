@@ -2494,22 +2494,26 @@ async def get_live_jobs_2_recommendations(request: Request):
                             "company_size": job.get("linkedin_org_size", ""),
                         })
         
-        # Check if we got API error
-        if api_error and not all_recommendations:
+        # Check if we got API error or no results - fall back to sample data
+        if api_error or not all_recommendations:
             return {
-                "recommendations": [],
-                "message": "Job search API quota exceeded. Please try Live Jobs (JSearch) or try again later.",
-                "api_error": True
+                "recommendations": get_sample_jobs_linkedin(primary_tech),
+                "user_technology": primary_tech,
+                "api_status": f"Using sample data - {api_error or 'No jobs found from API'}"
             }
         
         return {
             "recommendations": all_recommendations[:10],
-            "user_technology": user.get('primary_technology')
+            "user_technology": primary_tech
         }
         
     except Exception as e:
         logger.error(f"Error getting Live Jobs 2 recommendations: {str(e)}")
-        return {"recommendations": [], "error": str(e)}
+        return {
+            "recommendations": get_sample_jobs_linkedin(primary_tech),
+            "user_technology": primary_tech,
+            "api_status": f"Using sample data - API error: {str(e)}"
+        }
 
 @api_router.get("/live-jobs-2/{job_id}")
 async def get_live_job_2_details(job_id: str, request: Request):
