@@ -22,9 +22,12 @@ class LiveJobsTester:
         self.test_results = []
         self.session = requests.Session()
         
-        # Test credentials from review request for scheduler testing
+        # Test credentials from review request for Live Jobs testing
         self.test_email = "scheduler@test.com"
         self.test_password = "test123"
+        # Expected user profile for testing
+        self.expected_primary_tech = "Python"
+        self.expected_sub_techs = ["Django", "FastAPI"]
 
     def log_test(self, name, success, details="", error=""):
         """Log test result"""
