@@ -97,6 +97,14 @@ export function LiveJobsPage() {
       ]);
       setRecommendations(recsRes.data.recommendations || []);
       setResumes(resumesRes.data || []);
+      
+      // Handle API messages
+      if (recsRes.data.message) {
+        setApiMessage(recsRes.data.message);
+      }
+      if (recsRes.data.requires_profile_update) {
+        setRequiresProfileUpdate(true);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load job recommendations');
