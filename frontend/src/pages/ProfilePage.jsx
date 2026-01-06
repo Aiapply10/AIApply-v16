@@ -339,24 +339,69 @@ export function ProfilePage() {
             <CardDescription>Your personal details and contact information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Avatar */}
+            {/* Avatar with upload option */}
             <div className="flex items-center gap-6">
-              <div className="relative">
+              <div className="relative group">
                 <Avatar className="w-24 h-24 ring-4 ring-violet-500/30">
                   <AvatarImage src={user?.picture || user?.profile_picture} />
                   <AvatarFallback className="text-2xl bg-gradient-to-br from-violet-600 to-purple-600 text-white">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
+                {/* Upload overlay */}
+                <input
+                  type="file"
+                  ref={profilePicInputRef}
+                  onChange={handleProfilePhotoUpload}
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                />
+                <button
+                  onClick={() => profilePicInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  {isUploadingPhoto ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-white" />
+                  )}
+                </button>
               </div>
-              <div>
+              <div className="space-y-2">
                 <h3 className="font-semibold text-lg">{user?.name}</h3>
                 <p className="text-muted-foreground">{user?.email}</p>
                 {user?.linkedin_profile && (
-                  <a href={user.linkedin_profile} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline flex items-center gap-1 mt-1">
+                  <a href={user.linkedin_profile} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline flex items-center gap-1">
                     <Linkedin className="w-3 h-3" /> LinkedIn Profile
                   </a>
                 )}
+                <div className="flex gap-2 pt-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => profilePicInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                  >
+                    {isUploadingPhoto ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4 mr-1" />
+                    )}
+                    {user?.profile_picture || user?.picture ? 'Change Photo' : 'Upload Photo'}
+                  </Button>
+                  {(user?.profile_picture || user?.picture) && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleRemoveProfilePhoto}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
