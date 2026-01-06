@@ -96,207 +96,225 @@ class LiveJobsTester:
             self.log_test("POST /api/auth/login", False, 
                          error=f"Status: {status}, Data: {data}")
 
-    def test_scheduler_status_public(self):
-        """Test GET /api/scheduler/status - Public endpoint that returns scheduler status"""
-        # This endpoint should not require authentication
-        url = f"{self.base_url}/api/scheduler/status"
-        
-        try:
-            response = self.session.get(url)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Check required fields
-                if 'scheduler_running' in data and data['scheduler_running'] is True:
-                    # Look for daily_auto_apply job
-                    jobs = data.get('jobs', [])
-                    daily_job_found = False
-                    
-                    for job in jobs:
-                        if job.get('id') == 'daily_auto_apply' and 'next_run_time' in job:
-                            daily_job_found = True
-                            break
-                    
-                    if daily_job_found:
-                        self.log_test("GET /api/scheduler/status", True, 
-                                     f"Scheduler running: {data['scheduler_running']}, daily_auto_apply job found")
-                    else:
-                        self.log_test("GET /api/scheduler/status", False, 
-                                     error="daily_auto_apply job not found or missing next_run_time")
-                else:
-                    self.log_test("GET /api/scheduler/status", False, 
-                                 error=f"scheduler_running not true or missing. Data: {data}")
-            else:
-                self.log_test("GET /api/scheduler/status", False, 
-                             error=f"Status: {response.status_code}, Response: {response.text}")
-        except Exception as e:
-            self.log_test("GET /api/scheduler/status", False, 
-                         error=f"Exception: {str(e)}")
-
-    def test_scheduler_logs_authenticated(self):
-        """Test GET /api/scheduler/logs - Authenticated endpoint for user's scheduler logs"""
+    def test_user_profile_setup(self):
+        """Ensure user profile has the expected primary_technology and sub_technologies"""
         if not self.token:
-            self.log_test("GET /api/scheduler/logs", False, 
-                         error="No authentication token available")
+            self.log_test("Profile Setup", False, error="No authentication token available")
             return
 
-        success, data, status = self.test_api_call('GET', 'scheduler/logs', 200)
-        
-        if success:
-            # Check if response has the expected structure (logs array)
-            if 'logs' in data and isinstance(data['logs'], list):
-                self.log_test("GET /api/scheduler/logs", True, 
-                             f"Retrieved {len(data['logs'])} scheduler log entries")
-            else:
-                self.log_test("GET /api/scheduler/logs", False, 
-                             error=f"Expected 'logs' array in response, got: {data}")
-        else:
-            self.log_test("GET /api/scheduler/logs", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_scheduler_trigger_authenticated(self):
-        """Test POST /api/scheduler/trigger - Authenticated endpoint to manually trigger auto-apply"""
-        if not self.token:
-            self.log_test("POST /api/scheduler/trigger", False, 
-                         error="No authentication token available")
-            return
-
-        # First, we need to ensure the user has auto-apply enabled
-        # Check current auto-apply settings
-        success, settings_data, status = self.test_api_call('GET', 'auto-apply/settings', 200)
+        # First get current profile
+        success, data, status = self.test_api_call('GET', 'auth/me', 200)
         
         if not success:
-            self.log_test("POST /api/scheduler/trigger", False, 
-                         error=f"Could not get auto-apply settings. Status: {status}")
+            self.log_test("Profile Setup", False, error=f"Could not get user profile. Status: {status}")
             return
 
-        # If auto-apply is not enabled, try to enable it first
-        if not settings_data.get('enabled', False):
-            # Try to enable auto-apply with basic settings
-            enable_data = {
-                "enabled": True,
-                "job_keywords": ["python", "developer"],
-                "locations": ["United States"],
-                "employment_types": ["FULL_TIME"],
-                "max_applications_per_day": 5
+        # Check if profile needs updating
+        current_primary = data.get('primary_technology', '')
+        current_sub = data.get('sub_technologies', [])
+        
+        needs_update = (current_primary != self.expected_primary_tech or 
+                       set(current_sub) != set(self.expected_sub_techs))
+        
+        if needs_update:
+            # Update profile with expected values
+            profile_data = {
+                "primary_technology": self.expected_primary_tech,
+                "sub_technologies": self.expected_sub_techs
             }
             
-            enable_success, enable_response, enable_status = self.test_api_call(
-                'POST', 'auto-apply/settings', 200, enable_data
-            )
+            success, update_data, status = self.test_api_call('PUT', 'auth/profile', 200, profile_data)
             
-            if not enable_success:
-                self.log_test("POST /api/scheduler/trigger", False, 
-                             error=f"Could not enable auto-apply. Status: {enable_status}")
-                return
-
-        # Now try to trigger the scheduler
-        success, data, status = self.test_api_call('POST', 'scheduler/trigger', 200)
-        
-        if success:
-            if 'message' in data and 'triggered successfully' in data['message']:
-                self.log_test("POST /api/scheduler/trigger", True, 
-                             f"Scheduler triggered successfully: {data['message']}")
+            if success:
+                self.log_test("Profile Setup", True, 
+                             f"Profile updated: primary_technology={self.expected_primary_tech}, sub_technologies={self.expected_sub_techs}")
             else:
-                self.log_test("POST /api/scheduler/trigger", False, 
-                             error=f"Unexpected response format: {data}")
+                self.log_test("Profile Setup", False, 
+                             error=f"Could not update profile. Status: {status}, Data: {update_data}")
         else:
-            self.log_test("POST /api/scheduler/trigger", False, 
-                         error=f"Status: {status}, Data: {data}")
+            self.log_test("Profile Setup", True, 
+                         f"Profile already has correct values: primary_technology={current_primary}, sub_technologies={current_sub}")
 
-    def test_auto_apply_schedule_settings(self):
-        """Test POST /api/auto-apply/schedule-settings - Update user's preferred schedule time"""
+    def test_live_jobs_recommendations_with_valid_profile(self):
+        """Test GET /api/live-jobs/recommendations with valid profile (JSearch API)"""
         if not self.token:
-            self.log_test("POST /api/auto-apply/schedule-settings", False, 
+            self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
                          error="No authentication token available")
             return
 
-        schedule_data = {
-            "preferred_hour": 6
+        success, data, status = self.test_api_call('GET', 'live-jobs/recommendations', 200)
+        
+        if success:
+            # Check if response has recommendations array
+            if 'recommendations' in data and isinstance(data['recommendations'], list):
+                recommendations_count = len(data['recommendations'])
+                
+                # Should return up to 10 recommendations based on Python technology
+                if recommendations_count > 0:
+                    self.log_test("GET /api/live-jobs/recommendations (valid profile)", True, 
+                                 f"Retrieved {recommendations_count} job recommendations based on Python technology")
+                    
+                    # Check if recommendations contain Python-related jobs
+                    python_related = False
+                    for job in data['recommendations'][:3]:  # Check first 3 jobs
+                        job_title = job.get('job_title', '').lower()
+                        job_description = job.get('job_description', '').lower()
+                        if 'python' in job_title or 'python' in job_description:
+                            python_related = True
+                            break
+                    
+                    if python_related:
+                        print(f"    ✓ Recommendations contain Python-related jobs as expected")
+                    else:
+                        print(f"    ⚠ Note: First 3 recommendations may not contain Python-specific jobs")
+                        
+                else:
+                    self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+                                 error="No recommendations returned despite valid profile")
+            else:
+                self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+                             error=f"Expected 'recommendations' array in response, got: {data}")
+        else:
+            self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+                         error=f"Status: {status}, Data: {data}")
+
+    def test_live_jobs_2_recommendations(self):
+        """Test GET /api/live-jobs-2/recommendations (LinkedIn API)"""
+        if not self.token:
+            self.log_test("GET /api/live-jobs-2/recommendations", False, 
+                         error="No authentication token available")
+            return
+
+        success, data, status = self.test_api_call('GET', 'live-jobs-2/recommendations', 200)
+        
+        if success:
+            # Check if response has recommendations or quota exceeded message
+            if 'recommendations' in data and isinstance(data['recommendations'], list):
+                recommendations_count = len(data['recommendations'])
+                self.log_test("GET /api/live-jobs-2/recommendations", True, 
+                             f"Retrieved {recommendations_count} LinkedIn job recommendations")
+            elif 'message' in data and 'quota' in data['message'].lower():
+                self.log_test("GET /api/live-jobs-2/recommendations", True, 
+                             f"API quota exceeded (expected): {data['message']}")
+            else:
+                self.log_test("GET /api/live-jobs-2/recommendations", False, 
+                             error=f"Unexpected response format: {data}")
+        else:
+            # Status might be 429 (quota exceeded) or other error - check if it's expected
+            if status == 429:
+                self.log_test("GET /api/live-jobs-2/recommendations", True, 
+                             f"API quota exceeded (expected): Status {status}")
+            else:
+                self.log_test("GET /api/live-jobs-2/recommendations", False, 
+                             error=f"Status: {status}, Data: {data}")
+
+    def test_profile_validation_without_primary_technology(self):
+        """Test profile validation by temporarily clearing primary_technology"""
+        if not self.token:
+            self.log_test("Profile Validation Test", False, 
+                         error="No authentication token available")
+            return
+
+        # Step 1: Clear primary_technology
+        clear_profile_data = {
+            "primary_technology": ""
         }
-
-        success, data, status = self.test_api_call(
-            'POST', 'auto-apply/schedule-settings', 200, schedule_data
-        )
         
-        if success:
-            if 'message' in data and 'updated' in data['message'].lower():
-                self.log_test("POST /api/auto-apply/schedule-settings", True, 
-                             f"Schedule settings updated: {data['message']}")
-            else:
-                self.log_test("POST /api/auto-apply/schedule-settings", False, 
-                             error=f"Unexpected response format: {data}")
-        else:
-            self.log_test("POST /api/auto-apply/schedule-settings", False, 
-                         error=f"Status: {status}, Data: {data}")
-
-    def test_auto_apply_status(self):
-        """Test GET /api/auto-apply/status - Check auto-apply status with scheduler info"""
-        if not self.token:
-            self.log_test("GET /api/auto-apply/status", False, 
-                         error="No authentication token available")
+        success, data, status = self.test_api_call('PUT', 'auth/profile', 200, clear_profile_data)
+        
+        if not success:
+            self.log_test("Profile Validation Test", False, 
+                         error=f"Could not clear primary_technology. Status: {status}")
             return
 
-        success, data, status = self.test_api_call('GET', 'auto-apply/status', 200)
+        print("    ✓ Cleared primary_technology from profile")
+
+        # Step 2: Test live-jobs/recommendations - should return error
+        success, data, status = self.test_api_call('GET', 'live-jobs/recommendations', 200)
         
+        validation_passed = False
         if success:
-            # Check if response contains scheduler-related information
-            has_scheduler_info = any(key in data for key in ['enabled', 'settings', 'today_applications'])
-            
-            if has_scheduler_info:
-                self.log_test("GET /api/auto-apply/status", True, 
-                             f"Auto-apply status retrieved with scheduler info")
+            # Check if response indicates profile update required
+            if ('requires_profile_update' in data and data['requires_profile_update'] is True and
+                'message' in data and 'profile' in data['message'].lower()):
+                validation_passed = True
+                print(f"    ✓ Correctly returned profile update requirement: {data['message']}")
             else:
-                self.log_test("GET /api/auto-apply/status", False, 
-                             error=f"Missing scheduler info in response: {data}")
+                print(f"    ❌ Expected requires_profile_update=true with profile message, got: {data}")
         else:
-            self.log_test("GET /api/auto-apply/status", False, 
-                         error=f"Status: {status}, Data: {data}")
+            print(f"    ❌ API call failed. Status: {status}, Data: {data}")
+
+        # Step 3: Restore profile with correct values
+        restore_profile_data = {
+            "primary_technology": self.expected_primary_tech,
+            "sub_technologies": self.expected_sub_techs
+        }
+        
+        restore_success, restore_data, restore_status = self.test_api_call('PUT', 'auth/profile', 200, restore_profile_data)
+        
+        if restore_success:
+            print(f"    ✓ Restored profile: primary_technology={self.expected_primary_tech}")
+            
+            # Verify recommendations work again
+            verify_success, verify_data, verify_status = self.test_api_call('GET', 'live-jobs/recommendations', 200)
+            
+            if verify_success and 'recommendations' in verify_data:
+                print(f"    ✓ Recommendations working again after profile restore")
+                validation_passed = validation_passed and True
+            else:
+                print(f"    ❌ Recommendations not working after profile restore")
+                validation_passed = False
+        else:
+            print(f"    ❌ Could not restore profile. Status: {restore_status}")
+            validation_passed = False
+
+        if validation_passed:
+            self.log_test("Profile Validation Test", True, 
+                         "Successfully validated profile requirement and restored functionality")
+        else:
+            self.log_test("Profile Validation Test", False, 
+                         error="Profile validation test failed - see details above")
 
     def run_all_tests(self):
-        """Run Daily Auto-Apply Scheduler focused tests"""
-        print("🚀 Starting Daily Auto-Apply Scheduler Backend API Tests")
+        """Run Live Jobs Recommendations focused tests"""
+        print("🚀 Starting Live Jobs Recommendations Backend API Tests")
         print(f"📍 Testing against: {self.base_url}")
         print(f"👤 Test user: {self.test_email}")
-        print("=" * 60)
+        print(f"🎯 Expected profile: Primary Technology = {self.expected_primary_tech}, Sub Technologies = {self.expected_sub_techs}")
+        print("=" * 80)
 
-        # Test 1: Verify scheduler is running via status endpoint (public)
-        print("\n🔍 Testing scheduler status (public endpoint)...")
-        self.test_scheduler_status_public()
-
-        # Test 2: Login to get token for authenticated endpoints
+        # Test 1: Login to get token for authenticated endpoints
         print("\n🔐 Testing authentication...")
         self.test_user_login()
         
         if self.token:
-            print("\n✅ Authentication successful, testing authenticated scheduler endpoints...")
+            print("\n✅ Authentication successful, testing Live Jobs features...")
             
-            # Test 3: Check scheduler logs endpoint
-            print("\n📋 Testing scheduler logs...")
-            self.test_scheduler_logs_authenticated()
+            # Test 2: Ensure user profile is set up correctly
+            print("\n👤 Setting up user profile...")
+            self.test_user_profile_setup()
             
-            # Test 4: Verify auto-apply status endpoint shows scheduler info
-            print("\n📊 Testing auto-apply status...")
-            self.test_auto_apply_status()
+            # Test 3: Test Live Jobs (JSearch) Recommendations with valid profile
+            print("\n🔍 Testing Live Jobs (JSearch) Recommendations with valid profile...")
+            self.test_live_jobs_recommendations_with_valid_profile()
             
-            # Test 5: Configure auto-apply settings for the user
-            print("\n⚙️ Testing schedule settings configuration...")
-            self.test_auto_apply_schedule_settings()
+            # Test 4: Test Live Jobs 2 (LinkedIn) Recommendations
+            print("\n🔗 Testing Live Jobs 2 (LinkedIn) Recommendations...")
+            self.test_live_jobs_2_recommendations()
             
-            # Test 6: Try triggering manual scheduler run
-            print("\n🎯 Testing manual scheduler trigger...")
-            self.test_scheduler_trigger_authenticated()
+            # Test 5: Test profile validation by clearing primary_technology
+            print("\n⚠️  Testing profile validation (clearing primary_technology)...")
+            self.test_profile_validation_without_primary_technology()
             
         else:
-            print("❌ Authentication failed - cannot test authenticated scheduler features")
+            print("❌ Authentication failed - cannot test Live Jobs features")
 
         # Print summary
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 80)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 All Daily Auto-Apply Scheduler tests passed!")
+            print("🎉 All Live Jobs Recommendations tests passed!")
             return 0
         else:
             print(f"⚠️  {self.tests_run - self.tests_passed} tests failed")
