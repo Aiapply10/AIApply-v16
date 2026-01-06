@@ -350,21 +350,6 @@ export function DashboardPage() {
           </Card>
         )}
 
-        {/* Profile Completeness Quick Access */}
-        <Card className="bg-white border-slate-200 shadow-lg">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg text-slate-800">
-              <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
-                <User className="w-4 h-4 text-pink-600" />
-              </div>
-              Profile Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProfileCompleteness compact />
-          </CardContent>
-        </Card>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((stat, index) => (
