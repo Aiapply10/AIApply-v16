@@ -416,6 +416,72 @@ async def update_profile(data: UserProfileUpdate, request: Request):
     
     return {"message": "Profile updated successfully", "user": updated_user}
 
+
+@api_router.post("/auth/profile-photo")
+async def upload_profile_photo(request: Request, file: UploadFile = File(...)):
+    """Upload and update user profile photo."""
+    user = await get_current_user(request)
+    
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image."
+        )
+    
+    # Validate file size (max 5MB)
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+    
+    # Convert to base64 data URL for storage
+    import base64
+    file_extension = file.content_type.split('/')[-1]
+    base64_data = base64.b64encode(contents).decode('utf-8')
+    data_url = f"data:{file.content_type};base64,{base64_data}"
+    
+    # Update user profile with the photo
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {
+            "$set": {
+                "profile_picture": data_url,
+                "picture": data_url,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Fetch updated user
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password": 0})
+    
+    return {
+        "message": "Profile photo updated successfully",
+        "profile_picture": data_url,
+        "user": updated_user
+    }
+
+
+@api_router.delete("/auth/profile-photo")
+async def delete_profile_photo(request: Request):
+    """Remove user profile photo."""
+    user = await get_current_user(request)
+    
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {
+            "$set": {
+                "profile_picture": None,
+                "picture": None,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Profile photo removed successfully"}
+
+
 @api_router.get("/auth/profile-completeness")
 async def get_profile_completeness(request: Request):
     user = await get_current_user(request)
