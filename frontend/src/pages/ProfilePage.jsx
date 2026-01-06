@@ -71,6 +71,7 @@ export function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [resumes, setResumes] = useState([]);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef(null);
   const profilePicInputRef = useRef(null);
   
