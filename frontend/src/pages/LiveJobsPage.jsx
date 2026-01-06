@@ -39,12 +39,16 @@ import {
   Filter,
   RefreshCw,
   FileEdit,
-  Target
+  Target,
+  AlertTriangle,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export function LiveJobsPage() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -61,6 +65,8 @@ export function LiveJobsPage() {
   const [extractedKeywords, setExtractedKeywords] = useState('');
   const [selectedVersion, setSelectedVersion] = useState('default');
   const [activeTab, setActiveTab] = useState('recommendations');
+  const [apiMessage, setApiMessage] = useState('');
+  const [requiresProfileUpdate, setRequiresProfileUpdate] = useState(false);
 
   const [searchForm, setSearchForm] = useState({
     query: '',
