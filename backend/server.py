@@ -1885,16 +1885,108 @@ async def get_job_recommendations(request: Request):
     rapidapi_key = os.environ.get('RAPIDAPI_KEY')
     rapidapi_host = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
     
-    if not rapidapi_key:
-        raise HTTPException(status_code=500, detail="JSearch API key not configured")
-    
-    # Build search queries based on user's technology stack
-    recommendations = []
-    
     primary_tech = user.get("primary_technology", "")
     sub_techs = user.get("sub_technologies", [])
     
-    # Search based on primary technology
+    # Sample jobs fallback when API is unavailable
+    def get_sample_jobs(tech):
+        sample_jobs = [
+            {
+                "job_id": f"sample_1_{tech.lower()}",
+                "title": f"Senior {tech} Developer",
+                "company": "TechCorp Inc.",
+                "company_logo": "https://ui-avatars.com/api/?name=TC&background=6366f1&color=fff",
+                "location": "San Francisco, CA",
+                "employment_type": "Full-time",
+                "salary_min": 150000,
+                "salary_max": 200000,
+                "description": f"We are looking for an experienced {tech} developer to join our team. You will be working on cutting-edge projects with modern technologies.",
+                "apply_link": "https://example.com/apply",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "Sample"
+            },
+            {
+                "job_id": f"sample_2_{tech.lower()}",
+                "title": f"{tech} Software Engineer",
+                "company": "Innovation Labs",
+                "company_logo": "https://ui-avatars.com/api/?name=IL&background=8b5cf6&color=fff",
+                "location": "New York, NY",
+                "employment_type": "Full-time",
+                "salary_min": 130000,
+                "salary_max": 180000,
+                "description": f"Join our dynamic team as a {tech} Software Engineer. Work on scalable solutions and collaborate with talented engineers.",
+                "apply_link": "https://example.com/apply",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": False,
+                "matched_technology": tech,
+                "source": "Sample"
+            },
+            {
+                "job_id": f"sample_3_{tech.lower()}",
+                "title": f"Lead {tech} Engineer",
+                "company": "StartupX",
+                "company_logo": "https://ui-avatars.com/api/?name=SX&background=ec4899&color=fff",
+                "location": "Austin, TX",
+                "employment_type": "Full-time",
+                "salary_min": 160000,
+                "salary_max": 220000,
+                "description": f"Looking for a Lead {tech} Engineer to drive technical decisions and mentor junior developers. Remote-friendly position.",
+                "apply_link": "https://example.com/apply",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "Sample"
+            },
+            {
+                "job_id": f"sample_4_{tech.lower()}",
+                "title": f"{tech} Backend Developer",
+                "company": "CloudScale Systems",
+                "company_logo": "https://ui-avatars.com/api/?name=CS&background=14b8a6&color=fff",
+                "location": "Seattle, WA",
+                "employment_type": "Full-time",
+                "salary_min": 140000,
+                "salary_max": 190000,
+                "description": f"Build robust backend services using {tech}. Experience with cloud platforms and microservices architecture preferred.",
+                "apply_link": "https://example.com/apply",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "Sample"
+            },
+            {
+                "job_id": f"sample_5_{tech.lower()}",
+                "title": f"Full Stack {tech} Developer",
+                "company": "Digital Solutions Co",
+                "company_logo": "https://ui-avatars.com/api/?name=DS&background=f59e0b&color=fff",
+                "location": "Remote",
+                "employment_type": "Full-time",
+                "salary_min": 120000,
+                "salary_max": 170000,
+                "description": f"Full stack role focusing on {tech} for backend with React frontend. Great benefits and flexible work schedule.",
+                "apply_link": "https://example.com/apply",
+                "posted_date": datetime.now(timezone.utc).isoformat(),
+                "is_remote": True,
+                "matched_technology": tech,
+                "source": "Sample"
+            }
+        ]
+        return sample_jobs
+    
+    if not rapidapi_key:
+        # Return sample jobs when API not configured
+        return {
+            "recommendations": get_sample_jobs(primary_tech),
+            "total": 5,
+            "based_on": {
+                "primary_technology": primary_tech,
+                "sub_technologies": sub_techs
+            },
+            "api_status": "Sample data - API not configured"
+        }
+    
+    # Build search queries based on user's technology stack
     search_queries = []
     if primary_tech:
         search_queries.append(f"{primary_tech} developer")
@@ -1906,6 +1998,7 @@ async def get_job_recommendations(request: Request):
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
             all_jobs = []
+            api_error = None
             
             for search_query in search_queries[:2]:  # Limit to 2 searches to save API calls
                 params = {
