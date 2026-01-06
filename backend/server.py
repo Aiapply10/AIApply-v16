@@ -2018,6 +2018,12 @@ async def get_job_recommendations(request: Request):
                 
                 if response.status_code == 200:
                     data = response.json()
+                    
+                    # Check for API quota exceeded
+                    if data.get("status") == "error" or "exceeded" in str(data.get("message", "")).lower():
+                        api_error = data.get("message", "API quota exceeded")
+                        break
+                    
                     jobs = data.get("data", [])[:5]  # Get top 5 from each search
                     
                     for job in jobs:
@@ -2043,6 +2049,18 @@ async def get_job_recommendations(request: Request):
                             "source": job.get("job_publisher"),
                             "matched_technology": search_query.replace(" developer", "")
                         })
+            
+            # If API failed or returned no jobs, use sample data
+            if api_error or not all_jobs:
+                return {
+                    "recommendations": get_sample_jobs(primary_tech),
+                    "total": 5,
+                    "based_on": {
+                        "primary_technology": primary_tech,
+                        "sub_technologies": sub_techs
+                    },
+                    "api_status": f"Using sample data - {api_error or 'No jobs found'}"
+                }
             
             # Remove duplicates by job_id
             seen_ids = set()
