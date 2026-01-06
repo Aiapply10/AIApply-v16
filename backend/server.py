@@ -2160,8 +2160,18 @@ async def search_live_jobs_2(
 async def get_live_jobs_2_recommendations(request: Request):
     """
     Get job recommendations from LinkedIn Job Search API based on user's profile.
+    Requires user to have primary_technology set.
     """
     user = await get_current_user(request)
+    
+    # Check if user has required profile fields
+    if not user.get('primary_technology'):
+        return {
+            "recommendations": [],
+            "message": "Please update your profile with Primary Technology to get personalized job recommendations.",
+            "requires_profile_update": True,
+            "missing_fields": ["primary_technology"]
+        }
     
     api_key = os.environ.get('LIVEJOBS2_API_KEY')
     api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
@@ -2173,11 +2183,12 @@ async def get_live_jobs_2_recommendations(request: Request):
         }
     
     # Get user's technologies
-    user_technologies = [user.get('primary_technology', 'Software Developer')]
+    user_technologies = [user.get('primary_technology')]
     if user.get('sub_technologies'):
         user_technologies.extend(user['sub_technologies'][:2])
     
     all_recommendations = []
+    api_error = None
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as http_client:
@@ -2199,6 +2210,12 @@ async def get_live_jobs_2_recommendations(request: Request):
                 
                 if response.status_code == 200:
                     jobs_data = response.json()
+                    
+                    # Check for quota exceeded error
+                    if isinstance(jobs_data, dict) and 'message' in jobs_data:
+                        api_error = jobs_data.get('message', 'API error')
+                        break
+                    
                     if not isinstance(jobs_data, list):
                         jobs_data = jobs_data.get("data", [])
                     
