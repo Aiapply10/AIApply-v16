@@ -1155,9 +1155,19 @@ Keep it ATS-friendly. Return ONLY the resume content."""
     return response_data
 
 @api_router.post("/resumes/{resume_id}/generate-word")
-async def generate_word_resume(resume_id: str, request: Request, version: str = "default"):
+async def generate_word_resume(resume_id: str, request: Request):
     """Generate a Word document from the tailored resume"""
     user = await get_current_user(request)
+    
+    # Try to get custom content from request body
+    body = {}
+    try:
+        body = await request.json()
+    except:
+        pass
+    
+    custom_content = body.get("content")
+    version = body.get("version", "default")
     
     resume = await db.resumes.find_one(
         {"resume_id": resume_id, "user_id": user["user_id"]},
@@ -1166,8 +1176,10 @@ async def generate_word_resume(resume_id: str, request: Request, version: str = 
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     
-    # Get content based on version
-    if version != "default" and resume.get("versions"):
+    # Get content - priority: custom_content > version > tailored > original
+    if custom_content:
+        content = custom_content
+    elif version != "default" and resume.get("versions"):
         content = None
         for v in resume["versions"]:
             if v["name"] == version:
