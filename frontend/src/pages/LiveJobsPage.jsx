@@ -736,90 +736,342 @@ ${job?.description || job?.full_description || 'N/A'}
           </TabsContent>
         </Tabs>
 
-        {/* Apply Dialog */}
-        <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Apply to {selectedJob?.title}</DialogTitle>
+        {/* Step-by-Step Apply Wizard Dialog */}
+        <Dialog open={showApplyDialog} onOpenChange={(open) => {
+          setShowApplyDialog(open);
+          if (!open) resetApplyWizard();
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-violet-500" />
+                Apply to {selectedJob?.title}
+              </DialogTitle>
               <DialogDescription>
-                at {selectedJob?.company}
+                at {selectedJob?.company} • {selectedJob?.location}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Select Resume *</Label>
-                <Select
-                  value={applicationForm.resume_id}
-                  onValueChange={(value) => setApplicationForm({ ...applicationForm, resume_id: value })}
-                >
-                  <SelectTrigger data-testid="apply-resume-select">
-                    <SelectValue placeholder="Choose a resume" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resumes.map((resume) => (
-                      <SelectItem key={resume.resume_id} value={resume.resume_id}>
-                        {resume.file_name}
-                        {resume.tailored_content && ' (AI Tailored)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {resumes.length === 0 && (
-                  <p className="text-sm text-destructive">
-                    No resumes uploaded. Please upload a resume first.
-                  </p>
+            
+            {/* Step Progress Indicator */}
+            <div className="flex items-center justify-center gap-2 py-4 shrink-0">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                    applyStep === step 
+                      ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30' 
+                      : applyStep > step 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    {applyStep > step ? <Check className="w-5 h-5" /> : step}
+                  </div>
+                  <div className="ml-2 hidden sm:block">
+                    <p className={`text-sm font-medium ${applyStep >= step ? 'text-slate-800' : 'text-slate-400'}`}>
+                      {step === 1 ? 'AI Command' : step === 2 ? 'Review Resume' : 'Apply'}
+                    </p>
+                  </div>
+                  {step < 3 && (
+                    <ChevronRight className={`w-5 h-5 mx-3 ${applyStep > step ? 'text-green-500' : 'text-slate-300'}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <ScrollArea className="flex-1 px-1">
+              <div className="space-y-4 py-4">
+                {/* Step 1: AI Command Configuration */}
+                {applyStep === 1 && (
+                  <div className="space-y-4">
+                    <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-violet-800 flex items-center gap-2 mb-2">
+                        <Wand2 className="w-4 h-4" />
+                        Step 1: Configure AI Command
+                      </h4>
+                      <p className="text-sm text-violet-700">
+                        The AI will use this command to tailor your resume for this specific job. You can customize it if needed.
+                      </p>
+                    </div>
+
+                    {/* Resume Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-base font-semibold">Select Your Resume *</Label>
+                      <Select
+                        value={applicationForm.resume_id}
+                        onValueChange={(value) => setApplicationForm({ ...applicationForm, resume_id: value })}
+                      >
+                        <SelectTrigger data-testid="apply-resume-select">
+                          <SelectValue placeholder="Choose a resume" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {resumes.map((resume) => (
+                            <SelectItem key={resume.resume_id} value={resume.resume_id}>
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4" />
+                                {resume.file_name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {resumes.length === 0 && (
+                        <p className="text-sm text-destructive">
+                          No resumes uploaded. Please upload a resume first.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* AI Command Editor */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">AI Command (Editable)</Label>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(aiCommand)}
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={aiCommand}
+                        onChange={(e) => setAiCommand(e.target.value)}
+                        rows={12}
+                        className="font-mono text-sm bg-slate-900 text-green-400 border-slate-700"
+                        placeholder="AI command will be generated based on job details..."
+                      />
+                      <p className="text-xs text-slate-500">
+                        This command tells the AI how to tailor your resume. Modify it to emphasize specific skills or experiences.
+                      </p>
+                    </div>
+
+                    {/* Job Summary */}
+                    <div className="bg-slate-50 border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2">Job Summary</h5>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div><span className="text-slate-500">Title:</span> {selectedJob?.title}</div>
+                        <div><span className="text-slate-500">Company:</span> {selectedJob?.company}</div>
+                        <div><span className="text-slate-500">Location:</span> {selectedJob?.location}</div>
+                        <div><span className="text-slate-500">Type:</span> {selectedJob?.employment_type || 'Full-time'}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Review Tailored Resume */}
+                {applyStep === 2 && (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-green-800 flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Step 2: Review AI-Tailored Resume
+                      </h4>
+                      <p className="text-sm text-green-700">
+                        Review the AI-optimized resume below. This version is ATS-friendly and tailored for this specific job.
+                      </p>
+                    </div>
+
+                    {/* Keywords Extracted */}
+                    {extractedKeywords && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <h5 className="font-medium text-amber-800 text-sm mb-2">Keywords Incorporated</h5>
+                        <p className="text-sm text-amber-700">{extractedKeywords}</p>
+                      </div>
+                    )}
+
+                    {/* Tailored Resume Content */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">Tailored Resume (Editable)</Label>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPreview('resume', tailoredContent)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Preview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleDownloadWord}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download Word
+                          </Button>
+                        </div>
+                      </div>
+                      <Textarea
+                        value={tailoredContent}
+                        onChange={(e) => setTailoredContent(e.target.value)}
+                        rows={15}
+                        className="font-mono text-sm"
+                        placeholder="Tailored resume content will appear here..."
+                      />
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h5 className="font-medium text-blue-800 text-sm mb-2">💡 Pro Tip</h5>
+                      <p className="text-sm text-blue-700">
+                        Download the Word document and save it for the application. You can make additional edits before submitting.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Add Cover Letter & Apply */}
+                {applyStep === 3 && (
+                  <div className="space-y-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-800 flex items-center gap-2 mb-2">
+                        <Send className="w-4 h-4" />
+                        Step 3: Cover Letter & Apply
+                      </h4>
+                      <p className="text-sm text-purple-700">
+                        Add a cover letter and review everything before applying. Your tailored resume is ready!
+                      </p>
+                    </div>
+
+                    {/* Cover Letter */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">Cover Letter</Label>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateCoverLetter}
+                            disabled={isGeneratingCover}
+                          >
+                            {isGeneratingCover ? (
+                              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                            ) : (
+                              <Sparkles className="w-4 h-4 mr-1" />
+                            )}
+                            Generate with AI
+                          </Button>
+                          {applicationForm.cover_letter && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPreview('cover_letter', applicationForm.cover_letter)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Preview
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <Textarea
+                        placeholder="Write your cover letter or generate one with AI..."
+                        rows={10}
+                        value={applicationForm.cover_letter}
+                        onChange={(e) => setApplicationForm({ ...applicationForm, cover_letter: e.target.value })}
+                      />
+                    </div>
+
+                    {/* Application Summary */}
+                    <div className="bg-slate-50 border rounded-lg p-4 space-y-3">
+                      <h5 className="font-semibold">Application Summary</h5>
+                      <div className="grid gap-2 text-sm">
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-slate-500">Position</span>
+                          <span className="font-medium">{selectedJob?.title}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-slate-500">Company</span>
+                          <span className="font-medium">{selectedJob?.company}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-slate-500">Resume</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="bg-green-100 text-green-700">
+                              AI Tailored ✓
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openPreview('resume', tailoredContent)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-slate-500">Cover Letter</span>
+                          <Badge variant={applicationForm.cover_letter ? 'secondary' : 'outline'}>
+                            {applicationForm.cover_letter ? 'Added ✓' : 'Optional'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <h5 className="font-medium text-amber-800 text-sm mb-2">What happens next?</h5>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        <li>• Your application will be recorded in the Applications page</li>
+                        <li>• The job posting will open in a new tab</li>
+                        <li>• Upload your tailored resume on the employer's website</li>
+                      </ul>
+                    </div>
+                  </div>
                 )}
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Cover Letter (Optional)</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGenerateCoverLetter}
-                    disabled={isGeneratingCover || !applicationForm.resume_id}
-                    data-testid="generate-cover-btn"
-                  >
-                    {isGeneratingCover ? (
-                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-4 h-4 mr-1" />
-                    )}
-                    Generate with AI
-                  </Button>
-                </div>
-                <Textarea
-                  placeholder="Write your cover letter or generate one with AI..."
-                  rows={8}
-                  value={applicationForm.cover_letter}
-                  onChange={(e) => setApplicationForm({ ...applicationForm, cover_letter: e.target.value })}
-                  data-testid="apply-cover-letter"
-                />
-              </div>
+            </ScrollArea>
 
-              <div className="bg-muted p-4 rounded-lg">
-                <h4 className="font-medium mb-2">What happens next?</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Your application will be tracked in the Applications page</li>
-                  <li>• The original job posting will open in a new tab</li>
-                  <li>• Complete the application on the employer's website</li>
-                </ul>
-              </div>
-
-              <div className="flex gap-3 pt-4">
+            {/* Navigation Buttons */}
+            <div className="flex gap-3 pt-4 border-t shrink-0">
+              {applyStep > 1 && (
                 <Button
                   variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowApplyDialog(false)}
+                  onClick={() => setApplyStep(applyStep - 1)}
                 >
-                  Cancel
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Back
                 </Button>
+              )}
+              <div className="flex-1" />
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowApplyDialog(false);
+                  resetApplyWizard();
+                }}
+              >
+                Cancel
+              </Button>
+              
+              {applyStep === 1 && (
                 <Button
-                  className="flex-1"
+                  className="bg-gradient-to-r from-violet-600 to-purple-600"
+                  onClick={handleStep1GenerateResume}
+                  disabled={isTailoring || !applicationForm.resume_id}
+                >
+                  {isTailoring ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4 mr-2" />
+                  )}
+                  Generate Tailored Resume
+                </Button>
+              )}
+              
+              {applyStep === 2 && (
+                <Button
+                  className="bg-gradient-to-r from-green-600 to-emerald-600"
+                  onClick={handleStep2Confirm}
+                >
+                  Confirm & Continue
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
+              
+              {applyStep === 3 && (
+                <Button
+                  className="bg-gradient-to-r from-violet-600 to-purple-600"
                   onClick={handleApply}
-                  disabled={isSubmitting || !applicationForm.resume_id}
-                  data-testid="submit-live-application"
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -828,7 +1080,35 @@ ${job?.description || job?.full_description || 'N/A'}
                   )}
                   Apply & Open Job Page
                 </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Preview Dialog */}
+        <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-violet-500" />
+                {previewContent.type === 'resume' ? 'Resume Preview' : 'Cover Letter Preview'}
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="flex-1 mt-4">
+              <div className="bg-white border rounded-lg p-6 shadow-inner">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                  {previewContent.content}
+                </pre>
               </div>
+            </ScrollArea>
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => copyToClipboard(previewContent.content)}>
+                <Copy className="w-4 h-4 mr-1" />
+                Copy
+              </Button>
+              <Button onClick={() => setShowPreviewDialog(false)}>
+                Close
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
