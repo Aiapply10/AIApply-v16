@@ -879,7 +879,8 @@ ATS Optimization Rules:
     keywords_prompt = f"""Analyze this job description and extract the top 15-20 most important keywords and phrases that an ATS would look for:
 
 Job Title: {data.job_title}
-Technologies: {', '.join(data.technologies)}
+Company: {data.company_name or 'Not specified'}
+Technologies: {', '.join(data.technologies) if data.technologies else 'Not specified'}
 
 Job Description:
 {data.job_description}
@@ -889,14 +890,26 @@ Return ONLY a comma-separated list of keywords, nothing else."""
     keywords_message = UserMessage(text=keywords_prompt)
     extracted_keywords = await chat.send_message(keywords_message)
     
-    # Main tailoring prompt
-    prompt = f"""Tailor the following resume for the position of {data.job_title}.
+    # Use custom prompt if provided, otherwise use default
+    if data.custom_prompt:
+        prompt = f"""{data.custom_prompt}
+
+ORIGINAL RESUME:
+{resume['original_content']}
+
+TARGET KEYWORDS (incorporate these naturally):
+{extracted_keywords}
+
+Return ONLY the tailored resume content, formatted as plain text with clear section headers."""
+    else:
+        # Main tailoring prompt
+        prompt = f"""Tailor the following resume for the position of {data.job_title} at {data.company_name or 'the company'}.
 
 TARGET KEYWORDS TO INCORPORATE (from job description):
 {extracted_keywords}
 
 REQUIRED TECHNOLOGIES TO HIGHLIGHT:
-{', '.join(data.technologies)}
+{', '.join(data.technologies) if data.technologies else 'As mentioned in the job description'}
 
 JOB DESCRIPTION:
 {data.job_description}
