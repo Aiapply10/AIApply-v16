@@ -538,10 +538,7 @@ ${job?.description || job?.full_description || 'N/A'}
               </Button>
               <Button 
                 size="sm"
-                onClick={() => {
-                  setSelectedJob(job);
-                  setShowApplyDialog(true);
-                }}
+                onClick={() => openApplyWizard(job)}
                 data-testid={`apply-${job.job_id}`}
               >
                 <Send className="w-4 h-4 mr-1" />
