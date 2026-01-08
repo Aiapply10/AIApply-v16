@@ -166,6 +166,7 @@ export function LiveJobsPage() {
         company_name: selectedJob.company,
         resume_id: applicationForm.resume_id,
         cover_letter: applicationForm.cover_letter,
+        tailored_content: tailoredContent,
       });
       
       toast.success('Application recorded! Opening job application page...');
@@ -176,12 +177,127 @@ export function LiveJobsPage() {
       }
       
       setShowApplyDialog(false);
-      setApplicationForm({ resume_id: '', cover_letter: '' });
+      resetApplyWizard();
     } catch (error) {
       toast.error('Failed to record application');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Reset the apply wizard to initial state
+  const resetApplyWizard = () => {
+    setApplyStep(1);
+    setApplicationForm({ resume_id: '', cover_letter: '' });
+    setTailoredContent('');
+    setExtractedKeywords('');
+    setAiCommand('');
+  };
+
+  // Initialize AI Command when job is selected
+  const initializeAiCommand = (job) => {
+    const command = `You are an expert ATS resume optimizer. Transform my resume to match the following job requirements:
+
+**Job Title:** ${job?.title || 'N/A'}
+**Company:** ${job?.company || 'N/A'}
+**Location:** ${job?.location || 'N/A'}
+
+**Job Description:**
+${job?.description || job?.full_description || 'N/A'}
+
+**My Technologies/Skills:** ${user?.primary_technology || 'N/A'}${user?.sub_technologies?.length ? ', ' + user.sub_technologies.join(', ') : ''}
+
+**Instructions:**
+1. Highlight relevant experience that matches the job requirements
+2. Incorporate keywords from the job description naturally
+3. Ensure ATS-friendly formatting
+4. Quantify achievements where possible
+5. Focus on skills mentioned in the job posting`;
+    
+    setAiCommand(command);
+  };
+
+  // Open apply dialog with step 1
+  const openApplyWizard = (job) => {
+    setSelectedJob(job);
+    initializeAiCommand(job);
+    setApplyStep(1);
+    setShowApplyDialog(true);
+  };
+
+  // Step 1: Generate tailored resume using AI command
+  const handleStep1GenerateResume = async () => {
+    if (!applicationForm.resume_id) {
+      toast.error('Please select a resume first');
+      return;
+    }
+
+    setIsTailoring(true);
+    try {
+      const response = await resumeAPI.tailor({
+        resume_id: applicationForm.resume_id,
+        job_title: selectedJob.title,
+        job_description: selectedJob.full_description || selectedJob.description || '',
+        company_name: selectedJob.company,
+        custom_prompt: aiCommand,
+      });
+      
+      setTailoredContent(response.data.tailored_content);
+      setExtractedKeywords(response.data.keywords || '');
+      toast.success('Resume tailored successfully!');
+      setApplyStep(2);
+    } catch (error) {
+      console.error('Error tailoring resume:', error);
+      toast.error('Failed to tailor resume');
+    } finally {
+      setIsTailoring(false);
+    }
+  };
+
+  // Step 2: Confirm tailored resume and move to step 3
+  const handleStep2Confirm = () => {
+    if (!tailoredContent) {
+      toast.error('Please generate a tailored resume first');
+      return;
+    }
+    setApplyStep(3);
+  };
+
+  // Download tailored resume as Word document
+  const handleDownloadWord = async () => {
+    try {
+      const response = await resumeAPI.generateWord(applicationForm.resume_id, {
+        content: tailoredContent,
+        filename: `${selectedJob?.title?.replace(/\s+/g, '_')}_Resume.docx`
+      });
+      
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedJob?.title?.replace(/\s+/g, '_')}_Resume.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Resume downloaded!');
+    } catch (error) {
+      toast.error('Failed to download resume');
+    }
+  };
+
+  // Preview content in modal
+  const openPreview = (type, content) => {
+    setPreviewContent({ type, content });
+    setShowPreviewDialog(true);
+  };
+
+  // Copy to clipboard
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
   };
 
   const handleGenerateCoverLetter = async () => {
