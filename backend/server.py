@@ -157,7 +157,9 @@ class TailorResumeRequest(BaseModel):
     resume_id: str
     job_title: str
     job_description: str
-    technologies: List[str]
+    technologies: List[str] = []
+    company_name: Optional[str] = ""
+    custom_prompt: Optional[str] = None  # Custom AI command/prompt
     generate_versions: bool = False  # Optional: generate 2-3 ATS versions
     ats_optimize: bool = True  # ATS-friendly optimization
 
