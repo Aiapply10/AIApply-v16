@@ -222,6 +222,18 @@ frontend:
         agent: "testing"
         comment: "Profile Photo Upload feature fully functional. Successfully tested with scheduler@test.com credentials. All required UI elements present and working: 1) Avatar displays user initials 'ST' for 'Scheduler Test' with green background, 2) 'Change Photo' button visible with camera icon and clickable (triggers file picker), 3) 'Remove' button present for existing photos, 4) Avatar hover effect working with camera overlay, 5) User name 'Scheduler Test' and email 'scheduler@test.com' displayed correctly, 6) Basic Information section present, 7) Profile Completeness section showing 18% completion. File upload validation implemented for image types (JPEG, PNG, GIF, WebP) and 5MB size limit. Backend API endpoints /auth/profile-photo (POST) and /auth/profile-photo (DELETE) integrated correctly. Minor: Session timeout occurred during extended testing but core functionality verified working."
 
+  - task: "3-Step Apply Wizard on Live Jobs Page"
+    implemented: true
+    working: true
+    file: "LiveJobsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "3-Step Apply Wizard fully functional and tested successfully with scheduler@test.com credentials. STEP 1 (AI Command): Progress indicator showing steps 1,2,3 ✓, Resume selection dropdown with available resumes ✓, Editable AI Command textarea pre-filled with job details (681 chars) ✓, Generate Tailored Resume button ✓, Job Summary section with position/company/location ✓. STEP 2 (Review Resume): AI-tailored resume content generated (1973 chars) ✓, Keywords Incorporated section with extracted keywords ✓, Preview dialog functionality working ✓, Download Word button present ✓, Pro Tip section ✓, Confirm & Continue button ✓. STEP 3 (Apply): Cover Letter section ✓, Generate with AI button ✓, Application Summary with job details ✓, Resume marked as 'AI Tailored ✓' badge ✓, 'What happens next?' section ✓, Apply & Open Job Page button ✓. Navigation: Back/Cancel/Next buttons working ✓, Step progression functional ✓, AI integration with GPT-5.2 working ✓. All test requirements from review request satisfied. Minor: Preview dialog close button has overlay interception issue but doesn't affect core functionality."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
