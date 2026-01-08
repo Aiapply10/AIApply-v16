@@ -64,7 +64,7 @@ export const resumeAPI = {
     responseType: 'blob',
   }),
   remove: (id) => api.delete(`/resumes/${id}`),
-  generateWord: (id, version = 'default') => api.post(`/resumes/${id}/generate-word?version=${encodeURIComponent(version)}`, {}, {
+  generateWord: (id, data) => api.post(`/resumes/${id}/generate-word`, data, {
     responseType: 'blob',
   }),
 };
