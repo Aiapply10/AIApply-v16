@@ -242,9 +242,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "GET /api/live-jobs/recommendations - Live Jobs (JSearch) Recommendations"
-    - "GET /api/live-jobs-2/recommendations - Live Jobs 2 (LinkedIn) Recommendations"
-    - "Profile Validation for Live Jobs Recommendations"
+    - "3-Step Apply Wizard on Live Jobs Page"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
