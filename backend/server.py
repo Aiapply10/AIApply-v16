@@ -22,6 +22,9 @@ import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+# Job Scraper
+from utils.job_scraper import job_scraper
+
 # Document processing
 from docx import Document
 from docx.shared import Pt, Inches
