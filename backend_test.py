@@ -136,10 +136,10 @@ class LiveJobsWebScrapingTester:
             self.log_test("Profile Setup", True, 
                          f"Profile already has correct values: primary_technology={current_primary}, sub_technologies={current_sub}")
 
-    def test_live_jobs_recommendations_with_valid_profile(self):
-        """Test GET /api/live-jobs/recommendations with valid profile (JSearch API)"""
+    def test_live_jobs_recommendations_web_scraping(self):
+        """Test GET /api/live-jobs/recommendations with web scraping (NEW FEATURE)"""
         if not self.token:
-            self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+            self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
                          error="No authentication token available")
             return
 
@@ -150,33 +150,126 @@ class LiveJobsWebScrapingTester:
             if 'recommendations' in data and isinstance(data['recommendations'], list):
                 recommendations_count = len(data['recommendations'])
                 
-                # Should return up to 10 recommendations based on Python technology
-                if recommendations_count > 0:
-                    self.log_test("GET /api/live-jobs/recommendations (valid profile)", True, 
-                                 f"Retrieved {recommendations_count} job recommendations based on Python technology")
+                # Verify it's using web scraping
+                data_source = data.get('data_source')
+                sources = data.get('sources', [])
+                
+                if data_source == "live_scraping":
+                    print(f"    ✓ Confirmed data_source: 'live_scraping'")
                     
-                    # Check if recommendations contain Python-related jobs
-                    python_related = False
-                    for job in data['recommendations'][:3]:  # Check first 3 jobs
-                        job_title = job.get('job_title', '').lower()
-                        job_description = job.get('job_description', '').lower()
-                        if 'python' in job_title or 'python' in job_description:
-                            python_related = True
-                            break
-                    
-                    if python_related:
-                        print(f"    ✓ Recommendations contain Python-related jobs as expected")
+                    # Check if sources include expected job boards
+                    expected_sources = ["Indeed", "Dice", "RemoteOK", "Arbeitnow"]
+                    if all(source in sources for source in expected_sources):
+                        print(f"    ✓ All expected sources present: {sources}")
                     else:
-                        print(f"    ⚠ Note: First 3 recommendations may not contain Python-specific jobs")
+                        print(f"    ⚠ Some sources missing. Expected: {expected_sources}, Got: {sources}")
+                    
+                    if recommendations_count > 0:
+                        # Check job structure
+                        sample_job = data['recommendations'][0]
+                        required_fields = ['job_id', 'title', 'company', 'location', 'description', 'apply_link', 'source']
+                        missing_fields = [field for field in required_fields if field not in sample_job]
                         
+                        if not missing_fields:
+                            print(f"    ✓ Job structure complete with all required fields")
+                            
+                            # Check if jobs have real company names (not sample data)
+                            real_companies = []
+                            for job in data['recommendations'][:3]:
+                                company = job.get('company', '')
+                                if company and not company.startswith('Sample') and company != 'TechCorp Inc.':
+                                    real_companies.append(company)
+                            
+                            if real_companies:
+                                print(f"    ✓ Real company names found: {real_companies[:3]}")
+                            else:
+                                print(f"    ⚠ No real company names detected in first 3 jobs")
+                            
+                            self.log_test("GET /api/live-jobs/recommendations (web scraping)", True, 
+                                         f"Retrieved {recommendations_count} jobs from web scraping with data_source: live_scraping, sources: {sources}")
+                        else:
+                            self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
+                                         error=f"Job structure missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
+                                     error="No recommendations returned from web scraping")
                 else:
-                    self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
-                                 error="No recommendations returned despite valid profile")
+                    self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
+                                 error=f"Expected data_source: 'live_scraping', got: {data_source}")
             else:
-                self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+                self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
                              error=f"Expected 'recommendations' array in response, got: {data}")
         else:
-            self.log_test("GET /api/live-jobs/recommendations (valid profile)", False, 
+            self.log_test("GET /api/live-jobs/recommendations (web scraping)", False, 
+                         error=f"Status: {status}, Data: {data}")
+
+    def test_live_jobs_search_web_scraping(self):
+        """Test GET /api/live-jobs/search with web scraping (NEW FEATURE)"""
+        if not self.token:
+            self.log_test("GET /api/live-jobs/search (web scraping)", False, 
+                         error="No authentication token available")
+            return
+
+        # Test with specific query and location as per review request
+        search_params = "query=Python&location=United States"
+        success, data, status = self.test_api_call('GET', f'live-jobs/search?{search_params}', 200)
+        
+        if success:
+            # Check if response has jobs array
+            if 'jobs' in data and isinstance(data['jobs'], list):
+                jobs_count = len(data['jobs'])
+                
+                # Verify it's using web scraping
+                data_source = data.get('data_source')
+                sources = data.get('sources', [])
+                query_used = data.get('query_used')
+                location_used = data.get('location')
+                
+                if data_source == "live_scraping":
+                    print(f"    ✓ Confirmed data_source: 'live_scraping'")
+                    print(f"    ✓ Query used: {query_used}, Location: {location_used}")
+                    
+                    # Check if sources include expected job boards
+                    expected_sources = ["Indeed", "Dice", "RemoteOK", "Arbeitnow"]
+                    if all(source in sources for source in expected_sources):
+                        print(f"    ✓ All expected sources present: {sources}")
+                    else:
+                        print(f"    ⚠ Some sources missing. Expected: {expected_sources}, Got: {sources}")
+                    
+                    if jobs_count > 0:
+                        # Check job structure
+                        sample_job = data['jobs'][0]
+                        required_fields = ['job_id', 'title', 'company', 'location', 'description', 'apply_link', 'source']
+                        missing_fields = [field for field in required_fields if field not in sample_job]
+                        
+                        if not missing_fields:
+                            print(f"    ✓ Job structure complete with all required fields")
+                            
+                            # Verify source field contains one of expected sources
+                            job_sources = [job.get('source') for job in data['jobs'][:5]]
+                            valid_sources = [src for src in job_sources if src in expected_sources]
+                            
+                            if valid_sources:
+                                print(f"    ✓ Jobs have valid sources: {set(valid_sources)}")
+                            else:
+                                print(f"    ⚠ No valid sources found in job source fields: {job_sources}")
+                            
+                            self.log_test("GET /api/live-jobs/search (web scraping)", True, 
+                                         f"Retrieved {jobs_count} jobs from web scraping search with query=Python, location=United States")
+                        else:
+                            self.log_test("GET /api/live-jobs/search (web scraping)", False, 
+                                         error=f"Job structure missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("GET /api/live-jobs/search (web scraping)", False, 
+                                     error="No jobs returned from web scraping search")
+                else:
+                    self.log_test("GET /api/live-jobs/search (web scraping)", False, 
+                                 error=f"Expected data_source: 'live_scraping', got: {data_source}")
+            else:
+                self.log_test("GET /api/live-jobs/search (web scraping)", False, 
+                             error=f"Expected 'jobs' array in response, got: {data}")
+        else:
+            self.log_test("GET /api/live-jobs/search (web scraping)", False, 
                          error=f"Status: {status}, Data: {data}")
 
     def test_live_jobs_2_recommendations(self):
