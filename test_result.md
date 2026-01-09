@@ -164,6 +164,30 @@ backend:
         agent: "testing"
         comment: "Profile validation working correctly. When primary_technology is cleared, API returns requires_profile_update: true with message 'Please update your profile with Primary Technology to get personalized job recommendations.' Functionality restored after profile update."
 
+  - task: "GET /api/live-jobs/recommendations - Live Jobs Web Scraping Recommendations"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Live Jobs Web Scraping recommendations working perfectly. Retrieved 16 jobs with data_source: 'live_scraping' from all expected sources: Indeed, Dice, RemoteOK, Arbeitnow. Jobs have complete structure with all required fields (job_id, title, company, location, description, apply_link, source). Real company names confirmed (Visual Concepts, Bayesian Health Inc., Tech Solutions Inc.). No API keys required - pure web scraping implementation successful."
+
+  - task: "GET /api/live-jobs/search - Live Jobs Web Scraping Search"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Live Jobs Web Scraping search working perfectly. Successfully tested with query=Python&location=United States. Retrieved 16 jobs with data_source: 'live_scraping' from all expected sources: Indeed, Dice, RemoteOK, Arbeitnow. Jobs have complete structure with all required fields and valid source attribution. Query and location parameters properly processed and returned in response."
+
 frontend:
   - task: "ResumesPage ATS Optimize Dialog"
     implemented: true
