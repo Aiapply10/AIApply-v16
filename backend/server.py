@@ -1799,17 +1799,10 @@ async def search_live_jobs(
     page: int = 1
 ):
     """
-    Search for live job listings from LinkedIn, Indeed, Glassdoor, ZipRecruiter.
-    If no query provided, uses user's primary and sub technologies.
+    Search for live job listings from Indeed, Dice, RemoteOK, and other job boards.
+    Uses web scraping to get real-time jobs without API dependencies.
     """
     user = await get_current_user(request)
-    
-    # Get API keys at request time
-    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
-    rapidapi_host = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
-    
-    if not rapidapi_key:
-        raise HTTPException(status_code=500, detail="JSearch API key not configured")
     
     # Build search query from user's technologies if not provided
     if not query:
@@ -1817,82 +1810,51 @@ async def search_live_jobs(
         if user.get("primary_technology"):
             technologies.append(user["primary_technology"])
         if user.get("sub_technologies"):
-            technologies.extend(user["sub_technologies"][:2])  # Add up to 2 sub-technologies
+            technologies.extend(user["sub_technologies"][:2])
         
         if technologies:
-            query = " OR ".join(technologies) + " developer"
+            query = technologies[0]  # Use primary technology for search
         else:
             query = "software developer"
     
     try:
-        async with httpx.AsyncClient(timeout=30.0) as http_client:
-            params = {
-                "query": f"{query} in {location}",
-                "page": str(page),
-                "num_pages": "1"
-            }
-            
-            if employment_type:
-                params["employment_types"] = employment_type
-            
-            response = await http_client.get(
-                "https://jsearch.p.rapidapi.com/search",
-                params=params,
-                headers={
-                    "X-RapidAPI-Key": rapidapi_key,
-                    "X-RapidAPI-Host": rapidapi_host
-                }
-            )
-            
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail="Failed to fetch jobs from JSearch API")
-            
-            data = response.json()
-            jobs = data.get("data", [])
-            
-            # Transform jobs to a consistent format
-            formatted_jobs = []
-            for job in jobs:
-                # Handle location safely
-                city = job.get("job_city") or ""
-                state = job.get("job_state") or ""
-                location = city + (", " + state if state and city else state)
-                
-                formatted_jobs.append({
-                    "job_id": job.get("job_id"),
-                    "title": job.get("job_title"),
-                    "company": job.get("employer_name"),
-                    "company_logo": job.get("employer_logo"),
-                    "location": location,
-                    "country": job.get("job_country"),
-                    "description": job.get("job_description", "")[:500] + "..." if job.get("job_description") and len(job.get("job_description", "")) > 500 else job.get("job_description"),
-                    "full_description": job.get("job_description"),
-                    "employment_type": job.get("job_employment_type"),
-                    "is_remote": job.get("job_is_remote", False),
-                    "apply_link": job.get("job_apply_link"),
-                    "posted_at": job.get("job_posted_at_datetime_utc"),
-                    "salary_min": job.get("job_min_salary"),
-                    "salary_max": job.get("job_max_salary"),
-                    "salary_currency": job.get("job_salary_currency"),
-                    "salary_period": job.get("job_salary_period"),
-                    "source": job.get("job_publisher"),
-                    "highlights": job.get("job_highlights", {}),
-                    "required_skills": job.get("job_required_skills", []),
-                })
-            
-            return {
-                "jobs": formatted_jobs,
-                "total": len(formatted_jobs),
-                "page": page,
-                "query_used": query,
-                "location": location
-            }
-            
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="Job search request timed out")
+        # Use web scraper to fetch jobs
+        logger.info(f"Searching jobs for: {query} in {location}")
+        
+        scraped_jobs = await job_scraper.scrape_all_sources(
+            query=query,
+            location=location,
+            limit_per_source=10
+        )
+        
+        # Filter by employment type if specified
+        if employment_type:
+            employment_type_lower = employment_type.lower()
+            scraped_jobs = [
+                job for job in scraped_jobs 
+                if employment_type_lower in (job.get('employment_type', '') or '').lower()
+            ]
+        
+        return {
+            "jobs": scraped_jobs,
+            "total": len(scraped_jobs),
+            "page": page,
+            "query_used": query,
+            "location": location,
+            "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
+            "data_source": "live_scraping"
+        }
+        
     except Exception as e:
         logger.error(f"Error searching jobs: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to search jobs: {str(e)}")
+        return {
+            "jobs": [],
+            "total": 0,
+            "page": page,
+            "query_used": query,
+            "location": location,
+            "error": str(e)
+        }
 
 @api_router.get("/live-jobs/recommendations")
 async def get_job_recommendations(request: Request):
