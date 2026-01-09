@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-AI Resume Tailor Backend API Testing Suite - Live Jobs Recommendations Focus
-Tests Live Jobs recommendations feature with profile validation using the external URL
+AI Resume Tailor Backend API Testing Suite - Live Jobs Web Scraping Focus
+Tests new Live Jobs web scraping feature that fetches real-time jobs from multiple job boards
+(Indeed, Dice, RemoteOK, Arbeitnow) without using paid APIs
 """
 
 import requests
@@ -11,7 +12,7 @@ from datetime import datetime
 import uuid
 import time
 
-class LiveJobsTester:
+class LiveJobsWebScrapingTester:
     def __init__(self, base_url="https://job-craft-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
