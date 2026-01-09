@@ -1911,14 +1911,68 @@ async def get_job_recommendations(request: Request):
             "missing_fields": ["primary_technology"]
         }
     
-    # Get API keys at request time
-    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
-    rapidapi_host = os.environ.get('RAPIDAPI_HOST', 'jsearch.p.rapidapi.com')
-    
     primary_tech = user.get("primary_technology", "")
     sub_techs = user.get("sub_technologies", [])
+    user_location = user.get("location", "United States")
     
-    # Sample jobs fallback when API is unavailable
+    try:
+        # Use web scraper to fetch real jobs from multiple sources
+        logger.info(f"Scraping jobs for: {primary_tech} in {user_location}")
+        
+        # Scrape from all sources
+        scraped_jobs = await job_scraper.scrape_all_sources(
+            query=primary_tech,
+            location=user_location,
+            limit_per_source=10
+        )
+        
+        if scraped_jobs:
+            logger.info(f"Found {len(scraped_jobs)} jobs from web scraping")
+            return {
+                "recommendations": scraped_jobs[:20],  # Limit to 20 jobs
+                "total": len(scraped_jobs),
+                "based_on": {
+                    "primary_technology": primary_tech,
+                    "sub_technologies": sub_techs
+                },
+                "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
+                "data_source": "live_scraping"
+            }
+        
+        # If scraping returned nothing, try sub-technologies
+        if sub_techs:
+            for sub_tech in sub_techs[:2]:
+                more_jobs = await job_scraper.scrape_all_sources(
+                    query=sub_tech,
+                    location=user_location,
+                    limit_per_source=5
+                )
+                scraped_jobs.extend(more_jobs)
+        
+        if scraped_jobs:
+            # Remove duplicates
+            seen_ids = set()
+            unique_jobs = []
+            for job in scraped_jobs:
+                if job['job_id'] not in seen_ids:
+                    seen_ids.add(job['job_id'])
+                    unique_jobs.append(job)
+            
+            return {
+                "recommendations": unique_jobs[:20],
+                "total": len(unique_jobs),
+                "based_on": {
+                    "primary_technology": primary_tech,
+                    "sub_technologies": sub_techs
+                },
+                "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
+                "data_source": "live_scraping"
+            }
+    
+    except Exception as e:
+        logger.error(f"Error scraping jobs: {str(e)}")
+    
+    # Fallback to sample jobs if scraping fails
     def get_sample_jobs(tech):
         sample_jobs = [
             {
@@ -2004,20 +2058,16 @@ async def get_job_recommendations(request: Request):
         ]
         return sample_jobs
     
-    if not rapidapi_key:
-        # Return sample jobs when API not configured
-        return {
-            "recommendations": get_sample_jobs(primary_tech),
-            "total": 5,
-            "based_on": {
-                "primary_technology": primary_tech,
-                "sub_technologies": sub_techs
-            },
-            "api_status": "Sample data - API not configured"
-        }
-    
-    # Build search queries based on user's technology stack
-    search_queries = []
+    return {
+        "recommendations": get_sample_jobs(primary_tech),
+        "total": 5,
+        "based_on": {
+            "primary_technology": primary_tech,
+            "sub_technologies": sub_techs
+        },
+        "data_source": "sample_fallback",
+        "message": "Showing sample jobs. Live job scraping temporarily unavailable."
+    }
     if primary_tech:
         search_queries.append(f"{primary_tech} developer")
     
