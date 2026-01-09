@@ -370,11 +370,12 @@ class LiveJobsWebScrapingTester:
                          error="Profile validation test failed - see details above")
 
     def run_all_tests(self):
-        """Run Live Jobs Recommendations focused tests"""
-        print("🚀 Starting Live Jobs Recommendations Backend API Tests")
+        """Run Live Jobs Web Scraping focused tests"""
+        print("🚀 Starting Live Jobs Web Scraping Backend API Tests")
         print(f"📍 Testing against: {self.base_url}")
         print(f"👤 Test user: {self.test_email}")
         print(f"🎯 Expected profile: Primary Technology = {self.expected_primary_tech}, Sub Technologies = {self.expected_sub_techs}")
+        print("🕷️  Testing NEW web scraping feature (Indeed, Dice, RemoteOK, Arbeitnow)")
         print("=" * 80)
 
         # Test 1: Login to get token for authenticated endpoints
@@ -382,33 +383,33 @@ class LiveJobsWebScrapingTester:
         self.test_user_login()
         
         if self.token:
-            print("\n✅ Authentication successful, testing Live Jobs features...")
+            print("\n✅ Authentication successful, testing Live Jobs Web Scraping features...")
             
             # Test 2: Ensure user profile is set up correctly
             print("\n👤 Setting up user profile...")
             self.test_user_profile_setup()
             
-            # Test 3: Test Live Jobs (JSearch) Recommendations with valid profile
-            print("\n🔍 Testing Live Jobs (JSearch) Recommendations with valid profile...")
-            self.test_live_jobs_recommendations_with_valid_profile()
+            # Test 3: Test Live Jobs Recommendations with Web Scraping (NEW FEATURE)
+            print("\n🕷️  Testing Live Jobs Recommendations with Web Scraping (NEW)...")
+            self.test_live_jobs_recommendations_web_scraping()
             
-            # Test 4: Test Live Jobs 2 (LinkedIn) Recommendations
-            print("\n🔗 Testing Live Jobs 2 (LinkedIn) Recommendations...")
-            self.test_live_jobs_2_recommendations()
+            # Test 4: Test Live Jobs Search with Web Scraping (NEW FEATURE)
+            print("\n🔍 Testing Live Jobs Search with Web Scraping (NEW)...")
+            self.test_live_jobs_search_web_scraping()
             
             # Test 5: Test profile validation by clearing primary_technology
             print("\n⚠️  Testing profile validation (clearing primary_technology)...")
             self.test_profile_validation_without_primary_technology()
             
         else:
-            print("❌ Authentication failed - cannot test Live Jobs features")
+            print("❌ Authentication failed - cannot test Live Jobs Web Scraping features")
 
         # Print summary
         print("\n" + "=" * 80)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.tests_passed == self.tests_run:
-            print("🎉 All Live Jobs Recommendations tests passed!")
+            print("🎉 All Live Jobs Web Scraping tests passed!")
             return 0
         else:
             print(f"⚠️  {self.tests_run - self.tests_passed} tests failed")
