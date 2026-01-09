@@ -266,7 +266,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "3-Step Apply Wizard on Live Jobs Page"
+    - "Live Jobs Web Scraping feature testing completed"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
