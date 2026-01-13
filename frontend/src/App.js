@@ -97,6 +97,14 @@ function AppRouter() {
         }
       />
       <Route
+        path="/email-center"
+        element={
+          <ProtectedRoute>
+            <EmailCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/reports"
         element={
           <ProtectedRoute>
