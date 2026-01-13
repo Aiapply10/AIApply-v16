@@ -36,7 +36,10 @@ Build a website where a job seeker can:
 - Sample job data fallback
 
 ### 5. Email Communication
-- AI agent for handling email replies (FUTURE)
+- **Email Center with AI-powered emails** (DONE - Jan 13, 2026)
+- Connect user's own email (Gmail, Outlook, IMAP)
+- AI composes job application emails
+- AI drafts replies to recruiters
 
 ### 6. Reporting Portals
 - Company-level dashboard (TODO)
@@ -49,7 +52,7 @@ Build a website where a job seeker can:
 ### Authentication & User Management
 - [x] JWT-based authentication
 - [x] Emergent-managed Google SSO
-- [x] **Email OTP Verification for signup** (NEW - Jan 13)
+- [x] **Email OTP Verification for signup** (Jan 13)
 - [x] Profile management with photo upload
 - [x] Profile completeness meter
 - [ ] LinkedIn SSO (BLOCKED - needs credentials)
@@ -67,6 +70,14 @@ Build a website where a job seeker can:
 - [x] Auto-Apply AI Agent panel with daily scheduler
 - [x] Profile gating (must have tech & resume to see jobs)
 
+### Email Center (NEW - Jan 13, 2026)
+- [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
+- [x] View inbox messages
+- [x] AI compose job application emails
+- [x] AI draft replies to recruiters
+- [x] Email history tracking
+- [x] Settings (auto-compose, approval required, signature)
+
 ### Infrastructure
 - [x] APScheduler for background jobs
 - [x] Sample job data fallback when scraping fails
@@ -77,7 +88,8 @@ Build a website where a job seeker can:
 ## In Progress / Pending
 
 ### P0 - Critical
-- [x] ~~OTP Email Verification~~ **COMPLETED Jan 13, 2026**
+- [x] ~~OTP Email Verification~~ **COMPLETED Jan 13**
+- [x] ~~Email Center~~ **COMPLETED Jan 13**
 
 ### P1 - High Priority
 - [ ] Flaky frontend login during automated testing (recurring issue)
@@ -87,8 +99,8 @@ Build a website where a job seeker can:
 - [ ] Reporting dashboards (company & candidate views)
 
 ### P2 - Future
-- [ ] AI Email Agent for recruiter communication
 - [ ] LinkedIn SSO (needs user credentials)
+- [ ] System-generated mailbox (e.g., user@careerquest-mail.com)
 
 ---
 
@@ -99,7 +111,7 @@ Build a website where a job seeker can:
 - Database: MongoDB (motor)
 - Authentication: JWT + Google OAuth
 - Background Jobs: APScheduler
-- Email: Resend (DEMO MODE - no valid API key)
+- Email: IMAP/SMTP for user email integration
 
 ### Frontend
 - Framework: React
@@ -108,30 +120,57 @@ Build a website where a job seeker can:
 - UI Components: Shadcn/UI
 
 ### Integrations
-- OpenAI (via emergentintegrations) - Resume tailoring
+- OpenAI (via emergentintegrations) - Resume tailoring, Email composition
 - Web Scraper (BeautifulSoup) - Job sourcing
-- Resend - Email OTP (MOCKED in demo)
+- Resend - Email OTP (MOCKED in demo without valid key)
+- IMAP/SMTP - User email integration
 
 ### Key Files
 - `/app/backend/server.py` - Main backend (needs refactoring)
 - `/app/backend/utils/job_scraper.py` - Web scraper for jobs
 - `/app/frontend/src/pages/AuthPages.jsx` - Login/Register with OTP
 - `/app/frontend/src/pages/LiveJobsPage.jsx` - Job listings and auto-apply
+- `/app/frontend/src/pages/EmailCenterPage.jsx` - **NEW** Email Center
+
+---
+
+## API Endpoints (Email Center)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/email-center/accounts | List connected email accounts |
+| POST | /api/email-center/connect/imap | Connect email via IMAP/SMTP |
+| POST | /api/email-center/connect/gmail/init | Get Gmail IMAP setup instructions |
+| POST | /api/email-center/connect/outlook/init | Get Outlook IMAP setup instructions |
+| DELETE | /api/email-center/accounts/{id} | Disconnect email account |
+| PUT | /api/email-center/accounts/{id}/primary | Set as primary account |
+| GET | /api/email-center/inbox | Get inbox messages |
+| POST | /api/email-center/send | Send email |
+| POST | /api/email-center/ai/compose-application | AI compose job application |
+| POST | /api/email-center/ai/draft-reply | AI draft reply to recruiter |
+| GET | /api/email-center/settings | Get email settings |
+| POST | /api/email-center/settings | Update email settings |
+| GET | /api/email-center/history | Get email history |
 
 ---
 
 ## Known Issues & Limitations
 
-1. **Email Service (MOCKED)**: Resend API key not configured. OTPs are logged to console for demo/testing.
+1. **OTP Email Service (MOCKED)**: Resend API key not configured. OTPs logged to console.
 2. **LinkedIn SSO (BLOCKED)**: Requires LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET.
 3. **Job Scraping**: Web scrapers can be brittle if site layouts change.
 4. **Flaky Tests**: Frontend login flow unreliable in automated testing.
+5. **Email Integration**: Requires App Password (not regular password) for Gmail/Outlook.
 
 ---
 
 ## Test Credentials
-- OTP Test User: `TEST_complete_1768343875@example.com` / `testpassword123`
+- Test User: `TEST_complete_1768343875@example.com` / `testpassword123`
 - Note: OTPs logged to backend console in demo mode
+
+## Test Reports
+- `/app/test_reports/iteration_4.json` - OTP verification tests
+- `/app/test_reports/iteration_5.json` - Email Center tests (23 tests passed)
 
 ---
 
