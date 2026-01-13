@@ -1597,6 +1597,241 @@ ${job?.description || job?.full_description || 'N/A'}
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Auto-Apply Settings Dialog */}
+        <Dialog open={showAutoApplyDialog} onOpenChange={setShowAutoApplyDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-violet-500" />
+                Auto-Apply Settings
+              </DialogTitle>
+              <DialogDescription>
+                Configure how the AI agent should automatically apply to jobs on your behalf.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              {/* Resume Selection */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Select Resume *</Label>
+                <Select
+                  value={autoApplySettings.resume_id}
+                  onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, resume_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a resume for applications" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {resumes.map((resume) => (
+                      <SelectItem key={resume.resume_id} value={resume.resume_id}>
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          {resume.file_name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Job Keywords */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Job Title Keywords</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g., Python Developer"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
+                  />
+                  <Button type="button" onClick={addKeyword} variant="outline">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {autoApplySettings.job_keywords.map((keyword) => (
+                    <Badge key={keyword} variant="secondary" className="flex items-center gap-1">
+                      {keyword}
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-destructive"
+                        onClick={() => removeKeyword(keyword)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Locations */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Preferred Locations</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g., Remote, New York"
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLocation())}
+                  />
+                  <Button type="button" onClick={addLocation} variant="outline">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {autoApplySettings.locations.map((location) => (
+                    <Badge key={location} variant="outline" className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {location}
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-destructive"
+                        onClick={() => removeLocation(location)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Max Applications */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Max Applications Per Day</Label>
+                <Select
+                  value={autoApplySettings.max_applications_per_day.toString()}
+                  onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, max_applications_per_day: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[5, 10, 15, 20, 25].map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} applications
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Auto Tailor Resume */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <Label className="font-semibold">Auto-Tailor Resume</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically customize resume for each job using AI
+                  </p>
+                </div>
+                <Switch
+                  checked={autoApplySettings.auto_tailor_resume}
+                  onCheckedChange={(checked) => setAutoApplySettings({ ...autoApplySettings, auto_tailor_resume: checked })}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setShowAutoApplyDialog(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveAutoApplySettings}
+                  className="flex-1 bg-gradient-to-r from-violet-600 to-purple-600"
+                >
+                  Save Settings
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Auto-Apply History Dialog */}
+        <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <History className="w-5 h-5 text-violet-500" />
+                Application History
+              </DialogTitle>
+              <DialogDescription>
+                Jobs that the AI agent has applied to on your behalf
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="flex-1 mt-4">
+              {autoApplyHistory.length > 0 ? (
+                <div className="space-y-3">
+                  {autoApplyHistory.map((item, index) => (
+                    <div key={index} className="p-4 border rounded-lg bg-white">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-semibold">{item.job_title}</h4>
+                          <p className="text-sm text-muted-foreground">{item.company}</p>
+                        </div>
+                        <Badge variant={item.status === 'applied' ? 'default' : 'secondary'}>
+                          {item.status}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {item.location || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDate(item.applied_at)}
+                        </span>
+                      </div>
+                      {item.apply_link && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 mt-2"
+                          onClick={() => window.open(item.apply_link, '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          View Job
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">No application history yet</p>
+                </div>
+              )}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Profile Warning Dialog */}
+        <Dialog open={showProfileWarning} onOpenChange={setShowProfileWarning}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+                Profile Incomplete
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="mb-4">
+                Your profile is less than 80% complete. Please update your profile before using the auto-apply feature.
+              </p>
+              {profileCompleteness?.missing_fields && (
+                <div className="bg-amber-50 p-4 rounded-lg mb-4">
+                  <p className="font-medium text-amber-800 mb-2">Missing fields:</p>
+                  <ul className="list-disc list-inside text-sm text-amber-700">
+                    {profileCompleteness.missing_fields.map((field, i) => (
+                      <li key={i}>{field}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowProfileWarning(false)} className="flex-1">
+                  Later
+                </Button>
+                <Button onClick={() => navigate('/profile')} className="flex-1">
+                  Update Profile
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
