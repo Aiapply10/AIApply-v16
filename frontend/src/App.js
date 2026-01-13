@@ -10,6 +10,7 @@ import { LiveJobsPage } from './pages/LiveJobsPage';
 import { LiveJobs2Page } from './pages/LiveJobs2Page';
 import { ApplicationsPage } from './pages/ApplicationsPage';
 import { EmailsPage } from './pages/EmailsPage';
+import { EmailCenterPage } from './pages/EmailCenterPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ProfilePage } from './pages/ProfilePage';
