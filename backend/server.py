@@ -17,6 +17,8 @@ import aiofiles
 import base64
 import httpx
 import asyncio
+import random
+import string
 
 # Scheduler imports
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -24,6 +26,9 @@ from apscheduler.triggers.cron import CronTrigger
 
 # Job Scraper
 from utils.job_scraper import job_scraper
+
+# Email (Resend)
+import resend
 
 # Document processing
 from docx import Document
