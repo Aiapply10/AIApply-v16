@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { authAPI } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { FileText, Loader2, ArrowLeft, Sparkles, Zap, Rocket } from 'lucide-react';
+import { FileText, Loader2, ArrowLeft, Sparkles, Zap, Rocket, Mail, Lock, CheckCircle2, RefreshCw, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 // LinkedIn OAuth Configuration
