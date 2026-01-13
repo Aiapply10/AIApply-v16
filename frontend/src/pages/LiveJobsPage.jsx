@@ -129,6 +129,8 @@ export function LiveJobsPage() {
 
   useEffect(() => {
     loadInitialData();
+    loadAutoApplyStatus();
+    loadProfileCompleteness();
   }, []);
 
   const loadInitialData = async () => {
@@ -153,6 +155,138 @@ export function LiveJobsPage() {
       toast.error('Failed to load job recommendations');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadAutoApplyStatus = async () => {
+    try {
+      const [statusRes, settingsRes] = await Promise.all([
+        autoApplyAPI.getStatus(),
+        autoApplyAPI.getSettings()
+      ]);
+      setAutoApplyStatus(statusRes.data);
+      if (settingsRes.data) {
+        setAutoApplySettings(prev => ({ ...prev, ...settingsRes.data }));
+      }
+    } catch (error) {
+      console.error('Error loading auto-apply status:', error);
+    }
+  };
+
+  const loadProfileCompleteness = async () => {
+    try {
+      const res = await authAPI.getProfileCompleteness();
+      setProfileCompleteness(res.data);
+    } catch (error) {
+      console.error('Error loading profile completeness:', error);
+    }
+  };
+
+  const loadAutoApplyHistory = async () => {
+    try {
+      const res = await autoApplyAPI.getHistory(50);
+      setAutoApplyHistory(res.data.history || []);
+    } catch (error) {
+      console.error('Error loading history:', error);
+    }
+  };
+
+  const handleRunAutoApply = async () => {
+    if (!profileCompleteness || profileCompleteness.percentage < 80) {
+      setShowProfileWarning(true);
+      return;
+    }
+
+    if (!autoApplySettings.resume_id) {
+      toast.error('Please select a resume in auto-apply settings');
+      return;
+    }
+    
+    if (!autoApplySettings.enabled) {
+      toast.error('Please enable auto-apply first');
+      return;
+    }
+
+    setIsRunningAutoApply(true);
+    try {
+      const response = await autoApplyAPI.run();
+      toast.success(response.data.message);
+      loadAutoApplyStatus();
+      loadAutoApplyHistory();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to run auto-apply');
+    } finally {
+      setIsRunningAutoApply(false);
+    }
+  };
+
+  const handleSaveAutoApplySettings = async () => {
+    try {
+      await autoApplyAPI.updateSettings(autoApplySettings);
+      toast.success('Auto-apply settings saved');
+      loadAutoApplyStatus();
+      setShowAutoApplyDialog(false);
+    } catch (error) {
+      toast.error('Failed to save settings');
+    }
+  };
+
+  const handleToggleAutoApply = async () => {
+    if (!autoApplyStatus?.enabled && (!profileCompleteness || profileCompleteness.percentage < 80)) {
+      setShowProfileWarning(true);
+      return;
+    }
+
+    try {
+      const res = await autoApplyAPI.toggle();
+      setAutoApplySettings({ ...autoApplySettings, enabled: res.data.enabled });
+      setAutoApplyStatus({ ...autoApplyStatus, enabled: res.data.enabled });
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error('Failed to toggle auto-apply');
+    }
+  };
+
+  const addKeyword = () => {
+    if (newKeyword && !autoApplySettings.job_keywords.includes(newKeyword)) {
+      setAutoApplySettings({
+        ...autoApplySettings,
+        job_keywords: [...autoApplySettings.job_keywords, newKeyword]
+      });
+      setNewKeyword('');
+    }
+  };
+
+  const removeKeyword = (keyword) => {
+    setAutoApplySettings({
+      ...autoApplySettings,
+      job_keywords: autoApplySettings.job_keywords.filter(k => k !== keyword)
+    });
+  };
+
+  const addLocation = () => {
+    if (newLocation && !autoApplySettings.locations.includes(newLocation)) {
+      setAutoApplySettings({
+        ...autoApplySettings,
+        locations: [...autoApplySettings.locations, newLocation]
+      });
+      setNewLocation('');
+    }
+  };
+
+  const removeLocation = (location) => {
+    setAutoApplySettings({
+      ...autoApplySettings,
+      locations: autoApplySettings.locations.filter(l => l !== location)
+    });
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    try {
+      return new Date(dateStr).toLocaleString();
+    } catch {
+      return dateStr;
     }
   };
 
