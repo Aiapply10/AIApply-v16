@@ -232,6 +232,70 @@ class AutoApplySettingsUpdate(BaseModel):
     max_applications_per_day: Optional[int] = None
     auto_tailor_resume: Optional[bool] = None
 
+# ============ EMAIL CENTER MODELS ============
+
+class EmailAccountConnect(BaseModel):
+    provider: str  # gmail, outlook, imap
+    # For IMAP/SMTP
+    imap_host: Optional[str] = None
+    imap_port: Optional[int] = 993
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    email_address: Optional[str] = None
+    password: Optional[str] = None  # App password for IMAP
+    use_ssl: bool = True
+
+class EmailAccountResponse(BaseModel):
+    account_id: str
+    provider: str
+    email_address: str
+    is_connected: bool
+    is_primary: bool
+    connected_at: datetime
+    last_sync: Optional[datetime] = None
+
+class InboxMessage(BaseModel):
+    message_id: str
+    from_email: str
+    from_name: Optional[str] = None
+    to_email: str
+    subject: str
+    body_preview: str
+    body: Optional[str] = None
+    received_at: datetime
+    is_read: bool
+    is_recruiter: bool = False
+    labels: List[str] = []
+
+class SendEmailRequest(BaseModel):
+    to_addresses: List[EmailStr]
+    subject: str
+    body: str
+    body_type: str = "text"  # text or html
+    account_id: Optional[str] = None  # Use primary if not specified
+    
+class AIComposeRequest(BaseModel):
+    job_title: str
+    company_name: str
+    job_description: str
+    resume_id: str
+    recipient_email: EmailStr
+    tone: str = "professional"  # professional, friendly, formal
+    
+class AIReplyRequest(BaseModel):
+    original_email: str
+    original_subject: str
+    sender_email: str
+    context: str = ""
+    tone: str = "professional"
+    account_id: Optional[str] = None
+
+class EmailCenterSettings(BaseModel):
+    auto_reply_enabled: bool = False
+    auto_apply_compose: bool = True
+    reply_approval_required: bool = True  # Require approval before sending AI replies
+    signature: Optional[str] = None
+
 # ============ AUTH HELPERS ============
 
 def hash_password(password: str) -> str:
