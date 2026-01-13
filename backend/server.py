@@ -3728,7 +3728,8 @@ async def connect_imap_email(
     
     # Return without sensitive data
     del account_doc["password"]
-    del account_doc["_id"] if "_id" in account_doc else None
+    if "_id" in account_doc:
+        del account_doc["_id"]
     
     return {"message": "Email account connected successfully", "account": account_doc}
 
