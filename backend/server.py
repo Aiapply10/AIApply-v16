@@ -4166,6 +4166,10 @@ async def get_email_history(
     return history
 
 
+# Include router AFTER all routes are defined
+app.include_router(api_router)
+
+
 @app.on_event("startup")
 async def startup_event():
     """Start the scheduler when the app starts."""
