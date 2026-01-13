@@ -669,7 +669,7 @@ ${job?.description || job?.full_description || 'N/A'}
               {job.posted_at && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {formatDate(job.posted_at)}
+                  {formatDateRelative(job.posted_at)}
                 </span>
               )}
             </div>
