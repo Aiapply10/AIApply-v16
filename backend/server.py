@@ -299,6 +299,262 @@ async def get_admin_user(request: Request) -> dict:
 
 # ============ AUTH ROUTES ============
 
+# OTP Helper Functions
+def generate_otp() -> str:
+    """Generate a 6-digit OTP"""
+    return ''.join(random.choices(string.digits, k=6))
+
+async def send_otp_email(email: str, otp: str, name: str) -> bool:
+    """Send OTP email using Resend"""
+    if not RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not configured, skipping email")
+        return True  # Return True for testing without email
+    
+    try:
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }}
+                .container {{ max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }}
+                .header {{ background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white; padding: 30px; text-align: center; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .content {{ padding: 40px 30px; text-align: center; }}
+                .otp-box {{ background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 2px dashed #7c3aed; border-radius: 12px; padding: 30px; margin: 30px 0; }}
+                .otp-code {{ font-size: 42px; font-weight: bold; letter-spacing: 12px; color: #7c3aed; font-family: 'Courier New', monospace; }}
+                .message {{ color: #64748b; font-size: 16px; line-height: 1.6; }}
+                .warning {{ background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-top: 20px; text-align: left; border-radius: 4px; }}
+                .footer {{ background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 14px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🚀 CareerQuest</h1>
+                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Email Verification</p>
+                </div>
+                <div class="content">
+                    <p class="message">Hi <strong>{name}</strong>,</p>
+                    <p class="message">Welcome to CareerQuest! Use the verification code below to complete your registration:</p>
+                    <div class="otp-box">
+                        <div class="otp-code">{otp}</div>
+                    </div>
+                    <p class="message">This code will expire in <strong>10 minutes</strong>.</p>
+                    <div class="warning">
+                        ⚠️ <strong>Security Notice:</strong> Never share this code with anyone. CareerQuest will never ask for your OTP.
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>© 2025 CareerQuest. All rights reserved.</p>
+                    <p>If you didn't request this code, please ignore this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [email],
+            "subject": f"🔐 Your CareerQuest Verification Code: {otp}",
+            "html": html_content
+        }
+        
+        email_response = resend.Emails.send(params)
+        logger.info(f"OTP email sent to {email}: {email_response}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send OTP email: {str(e)}")
+        return False
+
+
+@api_router.post("/auth/send-otp")
+async def send_otp(data: SendOTPRequest):
+    """Send OTP to email for verification"""
+    # Check if email is already registered
+    existing = await db.users.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered. Please login instead.")
+    
+    # Generate OTP
+    otp = generate_otp()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    
+    # Store OTP in database (upsert to handle resends)
+    await db.otp_verifications.update_one(
+        {"email": data.email},
+        {
+            "$set": {
+                "otp": otp,
+                "name": data.name,
+                "expires_at": expires_at.isoformat(),
+                "verified": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    # Send OTP email
+    email_sent = await send_otp_email(data.email, otp, data.name)
+    
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
+    
+    return {
+        "message": "Verification code sent to your email",
+        "email": data.email,
+        "expires_in_minutes": 10
+    }
+
+
+@api_router.post("/auth/verify-otp")
+async def verify_otp(data: VerifyOTPRequest):
+    """Verify the OTP code"""
+    # Find OTP record
+    otp_record = await db.otp_verifications.find_one(
+        {"email": data.email},
+        {"_id": 0}
+    )
+    
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="No verification code found. Please request a new code.")
+    
+    # Check expiration
+    expires_at = datetime.fromisoformat(otp_record["expires_at"])
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new code.")
+    
+    # Verify OTP
+    if otp_record["otp"] != data.otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please try again.")
+    
+    # Mark as verified
+    await db.otp_verifications.update_one(
+        {"email": data.email},
+        {"$set": {"verified": True}}
+    )
+    
+    return {
+        "message": "Email verified successfully",
+        "email": data.email,
+        "verified": True
+    }
+
+
+@api_router.post("/auth/register-with-otp", response_model=TokenResponse)
+async def register_with_otp(user_data: RegisterWithOTPRequest):
+    """Register a new user after OTP verification"""
+    # Check if email already registered
+    existing = await db.users.find_one({"email": user_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Verify OTP was completed
+    otp_record = await db.otp_verifications.find_one(
+        {"email": user_data.email},
+        {"_id": 0}
+    )
+    
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Please verify your email first")
+    
+    if not otp_record.get("verified"):
+        # Verify the OTP inline
+        if otp_record["otp"] != user_data.otp:
+            raise HTTPException(status_code=400, detail="Invalid verification code")
+        
+        # Check expiration
+        expires_at = datetime.fromisoformat(otp_record["expires_at"])
+        if datetime.now(timezone.utc) > expires_at:
+            raise HTTPException(status_code=400, detail="Verification code has expired")
+    
+    # Create user
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    hashed_password = hash_password(user_data.password)
+    
+    user_doc = {
+        "user_id": user_id,
+        "email": user_data.email,
+        "password": hashed_password,
+        "name": user_data.name,
+        "primary_technology": user_data.primary_technology,
+        "sub_technologies": user_data.sub_technologies,
+        "phone": user_data.phone,
+        "location": user_data.location,
+        "role": "candidate",
+        "email_verified": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Clean up OTP record
+    await db.otp_verifications.delete_one({"email": user_data.email})
+    
+    token = create_access_token({"user_id": user_id, "email": user_data.email})
+    
+    user_response = UserResponse(
+        user_id=user_id,
+        email=user_data.email,
+        name=user_data.name,
+        primary_technology=user_data.primary_technology,
+        sub_technologies=user_data.sub_technologies,
+        phone=user_data.phone,
+        location=user_data.location,
+        role="candidate",
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    return TokenResponse(access_token=token, token_type="bearer", user=user_response)
+
+
+@api_router.post("/auth/resend-otp")
+async def resend_otp(data: SendOTPRequest):
+    """Resend OTP to email"""
+    # Generate new OTP
+    otp = generate_otp()
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+    
+    # Update OTP in database
+    result = await db.otp_verifications.update_one(
+        {"email": data.email},
+        {
+            "$set": {
+                "otp": otp,
+                "expires_at": expires_at.isoformat(),
+                "verified": False
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        # Create new record if doesn't exist
+        await db.otp_verifications.insert_one({
+            "email": data.email,
+            "name": data.name,
+            "otp": otp,
+            "expires_at": expires_at.isoformat(),
+            "verified": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Send OTP email
+    email_sent = await send_otp_email(data.email, otp, data.name)
+    
+    if not email_sent:
+        raise HTTPException(status_code=500, detail="Failed to send verification email")
+    
+    return {
+        "message": "New verification code sent to your email",
+        "email": data.email,
+        "expires_in_minutes": 10
+    }
+
+
+# Keep old register endpoint for backward compatibility (can be removed later)
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserCreate):
     existing = await db.users.find_one({"email": user_data.email})
