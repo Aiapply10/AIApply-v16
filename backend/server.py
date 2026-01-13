@@ -93,6 +93,25 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+# OTP Verification Models
+class SendOTPRequest(BaseModel):
+    email: EmailStr
+    name: str
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class RegisterWithOTPRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    otp: str
+    primary_technology: Optional[str] = ""
+    sub_technologies: List[str] = []
+    phone: Optional[str] = None
+    location: Optional[str] = None
+
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
