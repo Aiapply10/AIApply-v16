@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { liveJobsAPI, resumeAPI, applicationAPI, coverLetterAPI } from '../lib/api';
+import { liveJobsAPI, resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI, authAPI } from '../lib/api';
 import { useAuthStore } from '../store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -9,6 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { Switch } from '../components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -51,7 +52,14 @@ import {
   FileText,
   Wand2,
   Copy,
-  CheckCircle2
+  CheckCircle2,
+  Bot,
+  Rocket,
+  Settings,
+  History,
+  AlertCircle,
+  X,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -83,6 +91,25 @@ export function LiveJobsPage() {
   const [aiCommand, setAiCommand] = useState('');
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [previewContent, setPreviewContent] = useState({ type: '', content: '' });
+
+  // Auto-Apply state
+  const [showAutoApplyDialog, setShowAutoApplyDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [showProfileWarning, setShowProfileWarning] = useState(false);
+  const [isRunningAutoApply, setIsRunningAutoApply] = useState(false);
+  const [profileCompleteness, setProfileCompleteness] = useState(null);
+  const [autoApplyStatus, setAutoApplyStatus] = useState(null);
+  const [autoApplySettings, setAutoApplySettings] = useState({
+    enabled: false,
+    resume_id: '',
+    job_keywords: [],
+    locations: ['United States'],
+    max_applications_per_day: 10,
+    auto_tailor_resume: true
+  });
+  const [autoApplyHistory, setAutoApplyHistory] = useState([]);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [newLocation, setNewLocation] = useState('');
 
   const [searchForm, setSearchForm] = useState({
     query: '',
