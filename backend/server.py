@@ -304,11 +304,17 @@ def generate_otp() -> str:
     """Generate a 6-digit OTP"""
     return ''.join(random.choices(string.digits, k=6))
 
+def is_valid_resend_key() -> bool:
+    """Check if Resend API key is valid (starts with 're_')"""
+    return RESEND_API_KEY and RESEND_API_KEY.startswith('re_')
+
 async def send_otp_email(email: str, otp: str, name: str) -> bool:
     """Send OTP email using Resend"""
-    if not RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not configured, skipping email")
-        return True  # Return True for testing without email
+    # Check if Resend is properly configured
+    if not is_valid_resend_key():
+        logger.warning(f"[DEMO MODE] Resend not configured. OTP for {email}: {otp}")
+        logger.info(f"[DEMO MODE] To enable real emails, add RESEND_API_KEY (starts with 're_') from https://resend.com")
+        return True  # Return True to allow testing without email
     
     try:
         html_content = f"""
@@ -331,7 +337,7 @@ async def send_otp_email(email: str, otp: str, name: str) -> bool:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>🚀 CareerQuest</h1>
+                    <h1>CareerQuest</h1>
                     <p style="margin: 10px 0 0 0; opacity: 0.9;">Email Verification</p>
                 </div>
                 <div class="content">
@@ -342,7 +348,7 @@ async def send_otp_email(email: str, otp: str, name: str) -> bool:
                     </div>
                     <p class="message">This code will expire in <strong>10 minutes</strong>.</p>
                     <div class="warning">
-                        ⚠️ <strong>Security Notice:</strong> Never share this code with anyone. CareerQuest will never ask for your OTP.
+                        <strong>Security Notice:</strong> Never share this code with anyone. CareerQuest will never ask for your OTP.
                     </div>
                 </div>
                 <div class="footer">
@@ -357,16 +363,19 @@ async def send_otp_email(email: str, otp: str, name: str) -> bool:
         params = {
             "from": SENDER_EMAIL,
             "to": [email],
-            "subject": f"🔐 Your CareerQuest Verification Code: {otp}",
+            "subject": f"Your CareerQuest Verification Code: {otp}",
             "html": html_content
         }
         
-        email_response = resend.Emails.send(params)
+        # Use asyncio.to_thread to run synchronous Resend SDK without blocking
+        email_response = await asyncio.to_thread(resend.Emails.send, params)
         logger.info(f"OTP email sent to {email}: {email_response}")
         return True
         
     except Exception as e:
         logger.error(f"Failed to send OTP email: {str(e)}")
+        # In case of failure, log the OTP for demo purposes
+        logger.warning(f"[FALLBACK] OTP for {email}: {otp}")
         return False
 
 
