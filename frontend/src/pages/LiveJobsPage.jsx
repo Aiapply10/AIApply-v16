@@ -740,7 +740,7 @@ ${job?.description || job?.full_description || 'N/A'}
           <div>
             <h1 className="font-heading text-3xl font-bold">Live Job Listings</h1>
             <p className="text-muted-foreground mt-1">
-              Real-time opportunities from LinkedIn, Indeed, Glassdoor & more
+              Real-time opportunities from Indeed, Dice, RemoteOK & more
             </p>
           </div>
           <Button 
@@ -752,6 +752,123 @@ ${job?.description || job?.full_description || 'N/A'}
             Refresh
           </Button>
         </div>
+
+        {/* Auto-Apply AI Agent Panel */}
+        <Card className="bg-gradient-to-r from-violet-50 to-purple-50 border-violet-200 shadow-lg">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                  <Bot className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-slate-800">
+                    Auto-Apply AI Agent
+                    {profileCompleteness && profileCompleteness.percentage < 80 ? (
+                      <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Profile Incomplete
+                      </Badge>
+                    ) : autoApplyStatus?.enabled ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Active
+                      </Badge>
+                    ) : null}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Automatically tailor your resume and apply to matching jobs daily
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={autoApplyStatus?.enabled || false}
+                  onCheckedChange={handleToggleAutoApply}
+                  disabled={profileCompleteness && profileCompleteness.percentage < 80}
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-white rounded-xl p-4 border border-violet-100 shadow-sm">
+                <p className="text-sm text-slate-500">Today's Applications</p>
+                <p className="text-2xl font-bold text-violet-600">
+                  {autoApplyStatus?.today_applications || 0} / {autoApplyStatus?.max_daily || 10}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm">
+                <p className="text-sm text-slate-500">Remaining Today</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {autoApplyStatus?.remaining || 10}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+                <p className="text-sm text-slate-500">Total Applications</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {autoApplyStatus?.total_applications || 0}
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                <p className="text-sm text-slate-500">Last Run</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {autoApplyStatus?.last_run 
+                    ? formatDate(autoApplyStatus.last_run)
+                    : 'Never'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleRunAutoApply}
+                disabled={isRunningAutoApply || !autoApplyStatus?.enabled || !autoApplyStatus?.configured}
+                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30"
+              >
+                {isRunningAutoApply ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Running Auto-Apply...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Run Auto-Apply Now
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAutoApplyDialog(true)}
+                className="border-violet-200 text-violet-700 hover:bg-violet-50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  loadAutoApplyHistory();
+                  setShowHistoryDialog(true);
+                }}
+                className="border-slate-200 text-slate-700 hover:bg-slate-50"
+              >
+                <History className="w-4 h-4 mr-2" />
+                View History
+              </Button>
+            </div>
+            
+            {!autoApplyStatus?.configured && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-700">
+                  Please configure auto-apply settings and select a resume to enable automatic applications.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Search Form */}
         <Card>
