@@ -578,7 +578,7 @@ ${job?.description || job?.full_description || 'N/A'}
     return salary;
   };
 
-  const formatDate = (dateString) => {
+  const formatDateRelative = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
     const now = new Date();
