@@ -45,6 +45,11 @@ export const authAPI = {
     });
   },
   deleteProfilePhoto: () => api.delete('/auth/profile-photo'),
+  // OTP Verification
+  sendOTP: (data) => api.post('/auth/send-otp', data),
+  verifyOTP: (data) => api.post('/auth/verify-otp', data),
+  resendOTP: (data) => api.post('/auth/resend-otp', data),
+  registerWithOTP: (data) => api.post('/auth/register-with-otp', data),
 };
 
 // Resume API
