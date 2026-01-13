@@ -3377,10 +3377,7 @@ async def get_technologies():
 async def root():
     return {"message": "AI Resume Tailor API", "version": "1.0.0"}
 
-# Include router
-app.include_router(api_router)
-
-# CORS
+# CORS - Add before including router
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
