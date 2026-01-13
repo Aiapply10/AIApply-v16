@@ -3658,6 +3658,516 @@ Return ONLY the tailored resume content."""
     logger.info(f"Completed auto-apply for user {user_id}: {applications_count} applications")
 
 
+# ============ EMAIL CENTER ROUTES ============
+
+@api_router.get("/email-center/accounts")
+async def get_email_accounts(current_user: dict = Depends(get_current_user)):
+    """Get all connected email accounts for the user"""
+    accounts = await db.email_accounts.find(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0, "password": 0, "refresh_token": 0, "access_token": 0}
+    ).to_list(None)
+    return accounts
+
+@api_router.post("/email-center/connect/imap")
+async def connect_imap_email(
+    data: EmailAccountConnect,
+    current_user: dict = Depends(get_current_user)
+):
+    """Connect an email account via IMAP/SMTP"""
+    if data.provider != "imap":
+        raise HTTPException(status_code=400, detail="Use this endpoint for IMAP connections only")
+    
+    if not all([data.imap_host, data.smtp_host, data.email_address, data.password]):
+        raise HTTPException(status_code=400, detail="IMAP/SMTP connection requires host, email, and password")
+    
+    # Check if account already exists
+    existing = await db.email_accounts.find_one({
+        "user_id": current_user["user_id"],
+        "email_address": data.email_address
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Email account already connected")
+    
+    # Test IMAP connection
+    import imaplib
+    try:
+        if data.use_ssl:
+            mail = imaplib.IMAP4_SSL(data.imap_host, data.imap_port)
+        else:
+            mail = imaplib.IMAP4(data.imap_host, data.imap_port)
+        mail.login(data.email_address, data.password)
+        mail.logout()
+    except Exception as e:
+        logger.error(f"IMAP connection failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to connect: {str(e)}")
+    
+    # Check if this is the first account (make it primary)
+    account_count = await db.email_accounts.count_documents({"user_id": current_user["user_id"]})
+    
+    account_id = f"email_{uuid.uuid4().hex[:12]}"
+    account_doc = {
+        "account_id": account_id,
+        "user_id": current_user["user_id"],
+        "provider": "imap",
+        "email_address": data.email_address,
+        "imap_host": data.imap_host,
+        "imap_port": data.imap_port,
+        "smtp_host": data.smtp_host,
+        "smtp_port": data.smtp_port,
+        "password": data.password,  # In production, encrypt this
+        "use_ssl": data.use_ssl,
+        "is_connected": True,
+        "is_primary": account_count == 0,
+        "connected_at": datetime.now(timezone.utc).isoformat(),
+        "last_sync": None
+    }
+    
+    await db.email_accounts.insert_one(account_doc)
+    
+    # Return without sensitive data
+    del account_doc["password"]
+    del account_doc["_id"] if "_id" in account_doc else None
+    
+    return {"message": "Email account connected successfully", "account": account_doc}
+
+@api_router.post("/email-center/connect/gmail/init")
+async def init_gmail_oauth(current_user: dict = Depends(get_current_user)):
+    """Initialize Gmail OAuth flow - returns auth URL"""
+    # For Gmail, we'll use the user's Google account if they logged in with Google
+    # Otherwise, they need to authorize Gmail access separately
+    
+    # Check if user has Google OAuth tokens from login
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    
+    if user and user.get("google_access_token"):
+        # User already has Google auth, use that
+        return {
+            "status": "already_connected",
+            "message": "You can use your Google login email for sending applications",
+            "email": user.get("email")
+        }
+    
+    # For now, inform user to use IMAP for Gmail
+    return {
+        "status": "use_imap",
+        "message": "Please use Gmail App Password with IMAP settings",
+        "instructions": {
+            "imap_host": "imap.gmail.com",
+            "imap_port": 993,
+            "smtp_host": "smtp.gmail.com", 
+            "smtp_port": 587,
+            "note": "Enable 2FA and create an App Password at https://myaccount.google.com/apppasswords"
+        }
+    }
+
+@api_router.post("/email-center/connect/outlook/init")
+async def init_outlook_oauth(current_user: dict = Depends(get_current_user)):
+    """Initialize Outlook OAuth flow info"""
+    return {
+        "status": "use_imap",
+        "message": "Please use Outlook App Password with IMAP settings",
+        "instructions": {
+            "imap_host": "outlook.office365.com",
+            "imap_port": 993,
+            "smtp_host": "smtp.office365.com",
+            "smtp_port": 587,
+            "note": "Enable 2FA and create an App Password in your Microsoft account security settings"
+        }
+    }
+
+@api_router.delete("/email-center/accounts/{account_id}")
+async def disconnect_email_account(
+    account_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Disconnect an email account"""
+    result = await db.email_accounts.delete_one({
+        "account_id": account_id,
+        "user_id": current_user["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    return {"message": "Email account disconnected"}
+
+@api_router.put("/email-center/accounts/{account_id}/primary")
+async def set_primary_account(
+    account_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Set an email account as primary"""
+    # First, unset all primary flags for this user
+    await db.email_accounts.update_many(
+        {"user_id": current_user["user_id"]},
+        {"$set": {"is_primary": False}}
+    )
+    
+    # Set the specified account as primary
+    result = await db.email_accounts.update_one(
+        {"account_id": account_id, "user_id": current_user["user_id"]},
+        {"$set": {"is_primary": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    return {"message": "Primary account updated"}
+
+@api_router.get("/email-center/inbox")
+async def get_inbox_messages(
+    account_id: Optional[str] = None,
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get inbox messages from connected email account"""
+    # Find the account to use
+    query = {"user_id": current_user["user_id"]}
+    if account_id:
+        query["account_id"] = account_id
+    else:
+        query["is_primary"] = True
+    
+    account = await db.email_accounts.find_one(query)
+    
+    if not account:
+        return {"messages": [], "message": "No email account connected"}
+    
+    if account["provider"] == "imap":
+        try:
+            import imaplib
+            import email
+            from email.header import decode_header
+            
+            if account.get("use_ssl", True):
+                mail = imaplib.IMAP4_SSL(account["imap_host"], account.get("imap_port", 993))
+            else:
+                mail = imaplib.IMAP4(account["imap_host"], account.get("imap_port", 143))
+            
+            mail.login(account["email_address"], account["password"])
+            mail.select("INBOX")
+            
+            # Search for recent emails
+            _, message_numbers = mail.search(None, "ALL")
+            message_ids = message_numbers[0].split()[-limit:]  # Get last N emails
+            
+            messages = []
+            for num in reversed(message_ids):
+                _, msg_data = mail.fetch(num, "(RFC822)")
+                email_body = msg_data[0][1]
+                msg = email.message_from_bytes(email_body)
+                
+                # Decode subject
+                subject, encoding = decode_header(msg["Subject"])[0]
+                if isinstance(subject, bytes):
+                    subject = subject.decode(encoding or "utf-8")
+                
+                # Decode from
+                from_header = msg.get("From", "")
+                from_name = ""
+                from_email = from_header
+                if "<" in from_header:
+                    parts = from_header.split("<")
+                    from_name = parts[0].strip().strip('"')
+                    from_email = parts[1].strip(">")
+                
+                # Get body preview
+                body_preview = ""
+                if msg.is_multipart():
+                    for part in msg.walk():
+                        if part.get_content_type() == "text/plain":
+                            try:
+                                body_preview = part.get_payload(decode=True).decode()[:200]
+                            except:
+                                pass
+                            break
+                else:
+                    try:
+                        body_preview = msg.get_payload(decode=True).decode()[:200]
+                    except:
+                        pass
+                
+                # Check if from recruiter (simple heuristic)
+                is_recruiter = any(keyword in from_email.lower() or keyword in subject.lower() 
+                    for keyword in ["recruit", "talent", "hr", "hiring", "career", "job", "opportunity"])
+                
+                messages.append({
+                    "message_id": num.decode(),
+                    "from_email": from_email,
+                    "from_name": from_name,
+                    "to_email": account["email_address"],
+                    "subject": subject or "(No Subject)",
+                    "body_preview": body_preview.strip()[:200] if body_preview else "",
+                    "received_at": msg.get("Date", ""),
+                    "is_read": True,  # IMAP doesn't easily provide this
+                    "is_recruiter": is_recruiter
+                })
+            
+            mail.logout()
+            
+            # Update last sync time
+            await db.email_accounts.update_one(
+                {"account_id": account["account_id"]},
+                {"$set": {"last_sync": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            return {"messages": messages, "account_email": account["email_address"]}
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch inbox: {str(e)}")
+            return {"messages": [], "error": str(e)}
+    
+    return {"messages": [], "message": "Unsupported provider"}
+
+@api_router.post("/email-center/send")
+async def send_email(
+    data: SendEmailRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Send an email using connected account"""
+    # Find the account to use
+    query = {"user_id": current_user["user_id"]}
+    if data.account_id:
+        query["account_id"] = data.account_id
+    else:
+        query["is_primary"] = True
+    
+    account = await db.email_accounts.find_one(query)
+    
+    if not account:
+        raise HTTPException(status_code=400, detail="No email account connected")
+    
+    if account["provider"] == "imap":
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            msg = MIMEMultipart()
+            msg["From"] = account["email_address"]
+            msg["To"] = ", ".join(data.to_addresses)
+            msg["Subject"] = data.subject
+            
+            if data.body_type == "html":
+                msg.attach(MIMEText(data.body, "html"))
+            else:
+                msg.attach(MIMEText(data.body, "plain"))
+            
+            # Connect to SMTP
+            if account.get("smtp_port") == 465:
+                server = smtplib.SMTP_SSL(account["smtp_host"], account["smtp_port"])
+            else:
+                server = smtplib.SMTP(account["smtp_host"], account.get("smtp_port", 587))
+                server.starttls()
+            
+            server.login(account["email_address"], account["password"])
+            server.send_message(msg)
+            server.quit()
+            
+            # Log the sent email
+            await db.email_center_history.insert_one({
+                "history_id": f"sent_{uuid.uuid4().hex[:12]}",
+                "user_id": current_user["user_id"],
+                "account_id": account["account_id"],
+                "type": "sent",
+                "to_addresses": data.to_addresses,
+                "subject": data.subject,
+                "body_preview": data.body[:200],
+                "sent_at": datetime.now(timezone.utc).isoformat()
+            })
+            
+            return {"message": "Email sent successfully"}
+            
+        except Exception as e:
+            logger.error(f"Failed to send email: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+    
+    raise HTTPException(status_code=400, detail="Unsupported email provider")
+
+@api_router.post("/email-center/ai/compose-application")
+async def ai_compose_application(
+    data: AIComposeRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """AI composes a job application email"""
+    # Get user's resume
+    resume = await db.resumes.find_one(
+        {"resume_id": data.resume_id, "user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    
+    prompt = f"""You are an expert career coach helping a job seeker write a compelling job application email.
+
+CANDIDATE INFORMATION:
+Name: {user.get('name', 'Candidate')}
+Current Skills: {', '.join(user.get('sub_technologies', []))}
+Primary Technology: {user.get('primary_technology', 'Software Development')}
+
+RESUME SUMMARY:
+{resume.get('original_content', '')[:2000]}
+
+JOB DETAILS:
+Position: {data.job_title}
+Company: {data.company_name}
+Description: {data.job_description[:1500]}
+
+TONE: {data.tone}
+
+Write a professional job application email that:
+1. Has a compelling subject line
+2. Opens with a strong introduction mentioning the specific role
+3. Highlights 2-3 relevant skills/experiences from the resume that match the job
+4. Shows genuine interest in the company
+5. Ends with a clear call to action
+6. Is concise (under 250 words)
+
+Format your response as:
+SUBJECT: [Subject line]
+---
+[Email body]"""
+
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            model="gpt-5.2"
+        )
+        response = await asyncio.to_thread(
+            chat.send_message,
+            UserMessage(content=prompt)
+        )
+        
+        # Parse response
+        response_text = response.content
+        subject = ""
+        body = response_text
+        
+        if "SUBJECT:" in response_text and "---" in response_text:
+            parts = response_text.split("---", 1)
+            subject = parts[0].replace("SUBJECT:", "").strip()
+            body = parts[1].strip()
+        
+        return {
+            "subject": subject or f"Application for {data.job_title} at {data.company_name}",
+            "body": body,
+            "recipient": data.recipient_email,
+            "tone": data.tone
+        }
+        
+    except Exception as e:
+        logger.error(f"AI compose failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate email")
+
+@api_router.post("/email-center/ai/draft-reply")
+async def ai_draft_reply(
+    data: AIReplyRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """AI drafts a reply to a recruiter email"""
+    user = await db.users.find_one({"user_id": current_user["user_id"]}, {"_id": 0})
+    
+    prompt = f"""You are helping a job seeker draft a professional reply to a recruiter email.
+
+CANDIDATE: {user.get('name', 'Candidate')}
+SKILLS: {', '.join(user.get('sub_technologies', []))}
+
+ORIGINAL EMAIL:
+Subject: {data.original_subject}
+From: {data.sender_email}
+Content:
+{data.original_email}
+
+ADDITIONAL CONTEXT FROM CANDIDATE: {data.context or 'None provided'}
+
+TONE: {data.tone}
+
+Draft a professional reply that:
+1. Thanks them for reaching out
+2. Shows interest and enthusiasm
+3. Addresses any questions they asked
+4. Suggests next steps (call, meeting, etc.)
+5. Is concise and professional
+
+Write ONLY the email body (no subject line needed for replies)."""
+
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            model="gpt-5.2"
+        )
+        response = await asyncio.to_thread(
+            chat.send_message,
+            UserMessage(content=prompt)
+        )
+        
+        return {
+            "reply_body": response.content,
+            "original_subject": data.original_subject,
+            "reply_to": data.sender_email,
+            "tone": data.tone
+        }
+        
+    except Exception as e:
+        logger.error(f"AI reply draft failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate reply")
+
+@api_router.get("/email-center/settings")
+async def get_email_center_settings(current_user: dict = Depends(get_current_user)):
+    """Get email center settings"""
+    settings = await db.email_center_settings.find_one(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        settings = {
+            "user_id": current_user["user_id"],
+            "auto_reply_enabled": False,
+            "auto_apply_compose": True,
+            "reply_approval_required": True,
+            "signature": ""
+        }
+    
+    return settings
+
+@api_router.post("/email-center/settings")
+async def update_email_center_settings(
+    data: EmailCenterSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update email center settings"""
+    await db.email_center_settings.update_one(
+        {"user_id": current_user["user_id"]},
+        {"$set": {
+            **data.dict(),
+            "user_id": current_user["user_id"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Settings updated"}
+
+@api_router.get("/email-center/history")
+async def get_email_history(
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get email send/receive history"""
+    history = await db.email_center_history.find(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("sent_at", -1).limit(limit).to_list(None)
+    
+    return history
+
+
 @app.on_event("startup")
 async def startup_event():
     """Start the scheduler when the app starts."""
