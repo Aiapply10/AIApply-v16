@@ -133,4 +133,30 @@ export const autoApplyAPI = {
   getStatus: () => api.get('/auto-apply/status'),
 };
 
+// Email Center API
+export const emailCenterAPI = {
+  // Account Management
+  getAccounts: () => api.get('/email-center/accounts'),
+  connectIMAP: (data) => api.post('/email-center/connect/imap', data),
+  initGmail: () => api.post('/email-center/connect/gmail/init'),
+  initOutlook: () => api.post('/email-center/connect/outlook/init'),
+  disconnectAccount: (accountId) => api.delete(`/email-center/accounts/${accountId}`),
+  setPrimaryAccount: (accountId) => api.put(`/email-center/accounts/${accountId}/primary`),
+  
+  // Inbox & Email Operations
+  getInbox: (accountId, limit = 20) => api.get('/email-center/inbox', { 
+    params: { account_id: accountId, limit } 
+  }),
+  sendEmail: (data) => api.post('/email-center/send', data),
+  
+  // AI Features
+  composeApplication: (data) => api.post('/email-center/ai/compose-application', data),
+  draftReply: (data) => api.post('/email-center/ai/draft-reply', data),
+  
+  // Settings & History
+  getSettings: () => api.get('/email-center/settings'),
+  updateSettings: (data) => api.post('/email-center/settings', data),
+  getHistory: (limit = 50) => api.get('/email-center/history', { params: { limit } }),
+};
+
 export default api;
