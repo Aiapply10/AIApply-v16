@@ -2289,6 +2289,20 @@ async def create_application(data: JobApplicationCreate, request: Request):
     user = await get_current_user(request)
     
     application_id = f"app_{uuid.uuid4().hex[:12]}"
+    
+    # Get the original resume info
+    resume_info = None
+    if data.resume_id:
+        resume = await db.resumes.find_one(
+            {"resume_id": data.resume_id, "user_id": user["user_id"]},
+            {"_id": 0, "file_name": 1, "original_content": 1}
+        )
+        if resume:
+            resume_info = {
+                "file_name": resume.get("file_name"),
+                "original_content": resume.get("original_content", "")[:500]  # Preview
+            }
+    
     application_doc = {
         "application_id": application_id,
         "user_id": user["user_id"],
@@ -2298,7 +2312,12 @@ async def create_application(data: JobApplicationCreate, request: Request):
         "company_name": data.company_name,
         "resume_id": data.resume_id,
         "cover_letter": data.cover_letter,
+        "tailored_content": data.tailored_content,  # Save the tailored resume
+        "job_source": data.job_source,
+        "apply_link": data.apply_link,
+        "resume_info": resume_info,
         "status": "applied",
+        "submission_screenshot": None,  # Will be updated when screenshot is uploaded
         "applied_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -2306,6 +2325,41 @@ async def create_application(data: JobApplicationCreate, request: Request):
     await db.applications.insert_one(application_doc)
     
     return {"application_id": application_id, "message": "Application submitted successfully"}
+
+@api_router.post("/applications/{application_id}/screenshot")
+async def upload_submission_screenshot(
+    application_id: str,
+    request: Request,
+    file: UploadFile = File(...)
+):
+    """Upload a screenshot of the job submission page"""
+    user = await get_current_user(request)
+    
+    # Verify application belongs to user
+    application = await db.applications.find_one({
+        "application_id": application_id,
+        "user_id": user["user_id"]
+    })
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Read and store screenshot
+    content = await file.read()
+    screenshot_data = base64.b64encode(content).decode('utf-8')
+    
+    # Update application with screenshot
+    await db.applications.update_one(
+        {"application_id": application_id},
+        {"$set": {
+            "submission_screenshot": screenshot_data,
+            "screenshot_filename": file.filename,
+            "screenshot_uploaded_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Screenshot uploaded successfully"}
 
 @api_router.get("/applications")
 async def get_applications(request: Request, status: Optional[str] = None):
