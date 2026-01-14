@@ -2618,6 +2618,7 @@ async def search_live_jobs(
     query: Optional[str] = None,
     location: Optional[str] = "United States",
     employment_type: Optional[str] = None,
+    source: Optional[str] = None,  # Filter by source: Indeed, Dice, RemoteOK, Arbeitnow
     page: int = 1
 ):
     """
@@ -2641,13 +2642,21 @@ async def search_live_jobs(
     
     try:
         # Use web scraper to fetch jobs
-        logger.info(f"Searching jobs for: {query} in {location}")
+        logger.info(f"Searching jobs for: {query} in {location}, source filter: {source}")
         
         scraped_jobs = await job_scraper.scrape_all_sources(
             query=query,
             location=location,
             limit_per_source=10
         )
+        
+        # Filter by source if specified
+        if source and source.lower() != 'all':
+            source_lower = source.lower()
+            scraped_jobs = [
+                job for job in scraped_jobs 
+                if source_lower in (job.get('source', '') or '').lower()
+            ]
         
         # Filter by employment type if specified
         if employment_type:
@@ -2663,6 +2672,7 @@ async def search_live_jobs(
             "page": page,
             "query_used": query,
             "location": location,
+            "source_filter": source,
             "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
             "data_source": "live_scraping"
         }
