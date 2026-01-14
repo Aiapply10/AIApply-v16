@@ -78,6 +78,8 @@ export function ResumesPage() {
   const [analysisData, setAnalysisData] = useState(null);
   const [masterResume, setMasterResume] = useState('');
   const [titleVersions, setTitleVersions] = useState([]);
+  const [showAutoResultsDialog, setShowAutoResultsDialog] = useState(false);
+  const [autoResults, setAutoResults] = useState(null);
   const fileInputRef = useRef(null);
 
   const [tailorForm, setTailorForm] = useState({
@@ -121,16 +123,33 @@ export function ResumesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PDF or Word document');
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    if (!allowedTypes.includes(file.type) && !file.name.endsWith('.txt')) {
+      toast.error('Please upload a PDF, Word document, or text file');
       return;
     }
 
     setIsUploading(true);
+    toast.info('Uploading and analyzing your resume... This may take a moment.', { duration: 10000 });
+    
     try {
       const response = await resumeAPI.upload(file);
-      toast.success('Resume uploaded successfully!');
+      
+      // Show automatic results popup
+      if (response.data.auto_processed) {
+        setAutoResults({
+          resume_id: response.data.resume_id,
+          file_name: response.data.file_name,
+          analysis: response.data.analysis,
+          master_resume: response.data.master_resume,
+          title_versions: response.data.title_versions || []
+        });
+        setShowAutoResultsDialog(true);
+        toast.success('Resume analyzed successfully!');
+      } else {
+        toast.success('Resume uploaded successfully!');
+      }
+      
       loadData();
     } catch (error) {
       toast.error('Failed to upload resume');
