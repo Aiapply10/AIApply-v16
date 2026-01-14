@@ -485,7 +485,7 @@ export function ResumesPage() {
                     </p>
                   )}
                   
-                  {/* Action Buttons */}
+                  {/* Action Buttons - Row 1 */}
                   <div className="flex flex-wrap gap-2">
                     <Button 
                       variant="outline" 
@@ -498,6 +498,49 @@ export function ResumesPage() {
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Preview
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                      onClick={() => {
+                        setSelectedResume(resume);
+                        setAnalysisData(resume.analysis || null);
+                        setShowAnalysisDialog(true);
+                      }}
+                      data-testid={`analyze-${resume.resume_id}`}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-1" />
+                      Score & Analyze
+                    </Button>
+                    <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
+                      onClick={() => {
+                        setSelectedResume(resume);
+                        setMasterResume(resume.master_resume || '');
+                        setShowMasterDialog(true);
+                      }}
+                      data-testid={`master-${resume.resume_id}`}
+                    >
+                      <Wand2 className="w-4 h-4 mr-1" />
+                      Fix Resume
+                    </Button>
+                  </div>
+                  
+                  {/* Action Buttons - Row 2 */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                      onClick={() => {
+                        setSelectedResume(resume);
+                        setTitleVersions(resume.title_versions || []);
+                        setShowVersionsDialog(true);
+                      }}
+                      data-testid={`versions-${resume.resume_id}`}
+                    >
+                      <Users className="w-4 h-4 mr-1" />
+                      Generate Titles
                     </Button>
                     <Button 
                       size="sm"
@@ -527,20 +570,6 @@ export function ResumesPage() {
                     >
                       <Sparkles className="w-4 h-4 mr-1" />
                       Tailor for Job
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedResume(resume);
-                        setCoverLetterForm({ job_title: '', company_name: '', job_description: '' });
-                        setCoverLetter('');
-                        setShowCoverLetterDialog(true);
-                      }}
-                      data-testid={`cover-letter-${resume.resume_id}`}
-                    >
-                      <FileText className="w-4 h-4 mr-1" />
-                      Cover Letter
                     </Button>
                   </div>
                   <div className="flex gap-2 pt-2 border-t">
