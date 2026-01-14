@@ -179,6 +179,9 @@ class JobApplicationCreate(BaseModel):
     company_name: str
     resume_id: str
     cover_letter: Optional[str] = None
+    tailored_content: Optional[str] = None  # The tailored resume content used for application
+    job_source: Optional[str] = None  # Indeed, Dice, etc.
+    apply_link: Optional[str] = None  # Job application URL
 
 class EmailCreate(BaseModel):
     application_id: str
