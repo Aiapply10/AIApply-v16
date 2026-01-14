@@ -448,7 +448,7 @@ export function ResumesPage() {
               <FileText className="w-16 h-16 text-muted-foreground/50 mb-4" />
               <h3 className="font-heading text-xl font-semibold mb-2">No Resumes Yet</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Upload your resume to get started. We support PDF and Word documents.
+                Upload your resume to get started. We support PDF, Word documents, and text files.
               </p>
               <Button onClick={() => fileInputRef.current?.click()}>
                 <Upload className="w-4 h-4 mr-2" />
