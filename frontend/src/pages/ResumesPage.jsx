@@ -1362,6 +1362,165 @@ export function ResumesPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Auto Results Dialog */}
+        <Dialog open={showAutoResultsDialog} onOpenChange={setShowAutoResultsDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                Resume Analysis Complete!
+              </DialogTitle>
+              <DialogDescription>
+                Your resume has been automatically analyzed and processed
+              </DialogDescription>
+            </DialogHeader>
+            
+            {autoResults && (
+              <div className="space-y-6 py-4">
+                {/* File Info */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Uploaded File</h4>
+                  <p className="text-sm text-muted-foreground">{autoResults.file_name}</p>
+                </div>
+
+                {/* Analysis Results */}
+                {autoResults.analysis && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-amber-500" />
+                      Analysis Results
+                    </h4>
+                    
+                    {/* Score Card */}
+                    <div className="flex items-center justify-between p-6 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Overall Score</p>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-bold text-amber-500">{autoResults.analysis.score}</span>
+                          <span className="text-xl text-muted-foreground">/100</span>
+                        </div>
+                        <Badge className={`mt-2 ${
+                          autoResults.analysis.grade === 'A' ? 'bg-green-600' :
+                          autoResults.analysis.grade === 'B' ? 'bg-blue-600' :
+                          autoResults.analysis.grade === 'C' ? 'bg-amber-600' :
+                          'bg-red-600'
+                        } text-white`}>
+                          Grade: {autoResults.analysis.grade}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Experience Level</p>
+                        <span className="text-lg font-semibold">{autoResults.analysis.experience_level}</span>
+                      </div>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">{autoResults.analysis.summary}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Master Resume */}
+                {autoResults.master_resume && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Wand2 className="w-4 h-4 text-violet-500" />
+                      Enhanced Resume
+                    </h4>
+                    <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-[30vh] overflow-y-auto">
+                      {autoResults.master_resume}
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(autoResults.master_resume);
+                        toast.success('Enhanced resume copied to clipboard!');
+                      }}
+                      variant="outline"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Enhanced Resume
+                    </Button>
+                  </div>
+                )}
+
+                {/* Title Versions */}
+                {autoResults.title_versions && autoResults.title_versions.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      Job Title Versions ({autoResults.title_versions.length})
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {autoResults.title_versions.map((version, index) => (
+                        <Badge key={index} variant="outline" className="justify-center p-2">
+                          {version.job_title || version.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button 
+                    onClick={() => {
+                      setShowAutoResultsDialog(false);
+                      // Find and select the uploaded resume
+                      const uploadedResume = resumes.find(r => r.resume_id === autoResults.resume_id);
+                      if (uploadedResume) {
+                        setSelectedResume(uploadedResume);
+                        setAnalysisData(autoResults.analysis);
+                        setShowAnalysisDialog(true);
+                      }
+                    }}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    View Full Analysis
+                  </Button>
+                  
+                  {autoResults.master_resume && (
+                    <Button 
+                      onClick={() => {
+                        setShowAutoResultsDialog(false);
+                        const uploadedResume = resumes.find(r => r.resume_id === autoResults.resume_id);
+                        if (uploadedResume) {
+                          setSelectedResume(uploadedResume);
+                          setMasterResume(autoResults.master_resume);
+                          setShowMasterDialog(true);
+                        }
+                      }}
+                      className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      View Enhanced Resume
+                    </Button>
+                  )}
+                  
+                  {autoResults.title_versions && autoResults.title_versions.length > 0 && (
+                    <Button 
+                      onClick={() => {
+                        setShowAutoResultsDialog(false);
+                        const uploadedResume = resumes.find(r => r.resume_id === autoResults.resume_id);
+                        if (uploadedResume) {
+                          setSelectedResume(uploadedResume);
+                          setTitleVersions(autoResults.title_versions);
+                          setShowVersionsDialog(true);
+                        }
+                      }}
+                      className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      View All Versions
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
