@@ -363,8 +363,12 @@ export function RegisterPage() {
     
     setIsSendingOTP(true);
     try {
-      await authAPI.sendOTP({ email: formData.email, name: formData.name });
-      toast.success('Verification code sent to your email!');
+      const response = await authAPI.sendOTP({ email: formData.email, name: formData.name });
+      // Store the OTP from response for display
+      if (response.data.otp) {
+        setGeneratedOTP(response.data.otp);
+      }
+      toast.success('Verification code generated!');
       setOtpSent(true);
       setStep(2);
       setResendTimer(60);
