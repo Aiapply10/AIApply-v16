@@ -423,7 +423,7 @@ export function ResumesPage() {
               type="file"
               ref={fileInputRef}
               onChange={handleFileUpload}
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.txt"
               className="hidden"
             />
             <Button 
