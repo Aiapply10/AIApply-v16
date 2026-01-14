@@ -592,7 +592,7 @@ export function ResumesPage() {
                       data-testid={`analyze-${resume.resume_id}`}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
-                      Score & Analyze
+                      {resume.analysis ? 'View Score' : 'Analyze'}
                     </Button>
                     <Button 
                       size="sm"
@@ -605,7 +605,7 @@ export function ResumesPage() {
                       data-testid={`master-${resume.resume_id}`}
                     >
                       <Wand2 className="w-4 h-4 mr-1" />
-                      Fix Resume
+                      {resume.master_resume ? 'View Enhanced' : 'Fix Resume'}
                     </Button>
                   </div>
                   
@@ -622,7 +622,7 @@ export function ResumesPage() {
                       data-testid={`versions-${resume.resume_id}`}
                     >
                       <Users className="w-4 h-4 mr-1" />
-                      Generate Titles
+                      {resume.title_versions?.length > 0 ? `View ${resume.title_versions.length} Versions` : 'Generate Titles'}
                     </Button>
                     <Button 
                       size="sm"
