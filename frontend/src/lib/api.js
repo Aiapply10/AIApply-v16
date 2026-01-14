@@ -72,6 +72,10 @@ export const resumeAPI = {
   generateWord: (id, data) => api.post(`/resumes/${id}/generate-word`, data, {
     responseType: 'blob',
   }),
+  // New endpoints for resume analysis and enhancement
+  analyze: (id) => api.post(`/resumes/${id}/analyze`),
+  createMaster: (id) => api.post(`/resumes/${id}/create-master`),
+  generateVersions: (id, data) => api.post(`/resumes/${id}/generate-versions`, data),
 };
 
 // Cover Letter API
