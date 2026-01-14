@@ -291,6 +291,91 @@ export function ResumesPage() {
     }
   };
 
+  // Analyze Resume - Score and Missing Info
+  const handleAnalyzeResume = async () => {
+    if (!selectedResume) return;
+    
+    setIsAnalyzing(true);
+    setAnalysisData(null);
+    
+    try {
+      const response = await resumeAPI.analyze(selectedResume.resume_id);
+      setAnalysisData(response.data.analysis);
+      toast.success('Resume analyzed successfully!');
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast.error('Failed to analyze resume');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Create Master Resume
+  const handleCreateMaster = async () => {
+    if (!selectedResume) return;
+    
+    setIsCreatingMaster(true);
+    setMasterResume('');
+    
+    try {
+      const response = await resumeAPI.createMaster(selectedResume.resume_id);
+      setMasterResume(response.data.master_resume);
+      toast.success('Master resume created!');
+      loadData();
+    } catch (error) {
+      console.error('Master creation error:', error);
+      toast.error('Failed to create master resume');
+    } finally {
+      setIsCreatingMaster(false);
+    }
+  };
+
+  // Generate Multiple Versions with Different Titles
+  const handleGenerateVersions = async () => {
+    if (!selectedResume) return;
+    
+    setIsGeneratingVersions(true);
+    setTitleVersions([]);
+    
+    try {
+      const response = await resumeAPI.generateVersions(selectedResume.resume_id, {});
+      setTitleVersions(response.data.versions || []);
+      toast.success(`Generated ${response.data.versions?.length || 0} resume versions!`);
+      loadData();
+    } catch (error) {
+      console.error('Version generation error:', error);
+      toast.error('Failed to generate versions');
+    } finally {
+      setIsGeneratingVersions(false);
+    }
+  };
+
+  // Download version as Word
+  const handleDownloadVersion = async (versionContent, versionName) => {
+    if (!selectedResume) return;
+    
+    try {
+      const response = await resumeAPI.generateWord(selectedResume.resume_id, { 
+        content: versionContent,
+        version: versionName 
+      });
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_${versionName.replace(/\s+/g, '_')}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Resume version downloaded!');
+    } catch (error) {
+      toast.error('Failed to download resume');
+    }
+  };
+
   const allSubTechs = Object.values(technologies.sub_technologies).flat();
 
   if (isLoading) {
