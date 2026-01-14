@@ -490,13 +490,76 @@ export function ResumesPage() {
                         AI Tailored
                       </Badge>
                     )}
+                    {resume.analysis && (
+                      <Badge className={`${
+                        resume.analysis.grade === 'A' ? 'bg-green-600' :
+                        resume.analysis.grade === 'B' ? 'bg-blue-600' :
+                        resume.analysis.grade === 'C' ? 'bg-amber-600' :
+                        'bg-red-600'
+                      } text-white`}>
+                        <BarChart3 className="w-3 h-3 mr-1" />
+                        Score: {resume.analysis.score}/100
+                      </Badge>
+                    )}
+                    {resume.master_resume && (
+                      <Badge className="bg-violet-600 text-white">
+                        <Wand2 className="w-3 h-3 mr-1" />
+                        Enhanced
+                      </Badge>
+                    )}
+                    {resume.title_versions && resume.title_versions.length > 0 && (
+                      <Badge className="bg-blue-600 text-white">
+                        <Users className="w-3 h-3 mr-1" />
+                        {resume.title_versions.length} Versions
+                      </Badge>
+                    )}
                     {resume.versions && resume.versions.length > 0 && (
                       <Badge variant="outline" className="text-violet-400 border-violet-400">
                         <Copy className="w-3 h-3 mr-1" />
-                        {resume.versions.length} Versions
+                        {resume.versions.length} ATS Versions
                       </Badge>
                     )}
                   </div>
+                  
+                  {/* Saved Versions Section */}
+                  {(resume.master_resume || (resume.title_versions && resume.title_versions.length > 0)) && (
+                    <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-2">Saved Versions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {resume.master_resume && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setSelectedResume(resume);
+                              setMasterResume(resume.master_resume);
+                              setShowMasterDialog(true);
+                            }}
+                          >
+                            <Wand2 className="w-3 h-3 mr-1 text-violet-500" />
+                            Enhanced Resume
+                          </Button>
+                        )}
+                        {resume.title_versions && resume.title_versions.map((version, idx) => (
+                          <Button
+                            key={idx}
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setSelectedResume(resume);
+                              setTitleVersions(resume.title_versions);
+                              setShowVersionsDialog(true);
+                            }}
+                          >
+                            <FileText className="w-3 h-3 mr-1 text-blue-500" />
+                            {version.name || version.job_title}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   {resume.target_job_title && (
                     <p className="text-sm text-muted-foreground">
