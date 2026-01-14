@@ -538,16 +538,14 @@ async def resend_otp(data: SendOTPRequest):
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
-    # Send OTP email
-    email_sent = await send_otp_email(data.email, otp, data.name)
-    
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Failed to send verification email")
+    # Return OTP directly (built-in verification system)
+    logger.info(f"OTP regenerated for {data.email}: {otp}")
     
     return {
-        "message": "New verification code sent to your email",
+        "message": "New verification code generated",
         "email": data.email,
-        "expires_in_minutes": 10
+        "expires_in_minutes": 10,
+        "otp": otp  # Return OTP for built-in verification
     }
 
 
