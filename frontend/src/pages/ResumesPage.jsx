@@ -1278,7 +1278,7 @@ export function ResumesPage() {
             {titleVersions.length === 0 ? (
               <div className="py-8 text-center">
                 <div className="mb-6">
-                  <p className="text-muted-foreground mb-4">Based on your technology, we'll create versions for titles like:</p>
+                  <p className="text-muted-foreground mb-4">Based on your technology, we&apos;ll create versions for titles like:</p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     <Badge variant="outline">React Developer</Badge>
                     <Badge variant="outline">Frontend Engineer</Badge>
