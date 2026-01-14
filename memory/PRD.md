@@ -58,25 +58,16 @@ Build a website where a job seeker can:
 - [ ] LinkedIn SSO (BLOCKED - needs credentials)
 
 ### Resume Features
-- [x] Resume upload (PDF/DOCX)
+- [x] Resume upload (PDF/DOCX/TXT)
 - [x] AI-powered resume tailoring with custom prompts
 - [x] Word document generation
 - [x] Resume storage and management
-- [x] **Resume Scoring & Analysis** (NEW - Jan 14)
-  - Overall score (0-100) with letter grade
-  - Missing information detection (phone, address, LinkedIn, etc.)
-  - Strengths and weaknesses analysis
-  - Improvement suggestions
-  - ATS compatibility score
-- [x] **Master Resume Creation** (NEW - Jan 14)
-  - Fix resume without job description
-  - Add professional summary
-  - Improve bullet points with metrics
-  - Organize skills into categories
-- [x] **Multi-Version Generation** (NEW - Jan 14)
-  - Generate 3-4 versions with different job titles
-  - Based on candidate's technology (React, Python, Java, etc.)
-  - Example: React Developer, Frontend Engineer, Web Developer
+- [x] **AUTOMATIC Resume Analysis on Upload** (Jan 14)
+  - Score (0-100) with letter grade shown immediately
+  - Missing info popup (phone, address, LinkedIn, etc.)
+  - Enhanced master resume created automatically
+  - 3-4 job title versions generated automatically
+  - All happens on upload - NO manual button clicks needed
 
 ### Job Features
 - [x] Web scraper for real-time job listings (Indeed, Dice, RemoteOK)
