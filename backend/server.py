@@ -200,6 +200,16 @@ class OptimizeResumeRequest(BaseModel):
     target_role: str = ""  # Optional target role for optimization
     generate_versions: bool = False  # Generate 2-3 versions
 
+class AnalyzeResumeRequest(BaseModel):
+    resume_id: str
+
+class CreateMasterResumeRequest(BaseModel):
+    resume_id: str
+
+class GenerateVersionsRequest(BaseModel):
+    resume_id: str
+    primary_technology: Optional[str] = None
+
 class GenerateCoverLetterRequest(BaseModel):
     resume_id: str
     job_title: str
