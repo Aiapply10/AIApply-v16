@@ -959,6 +959,390 @@ export function ResumesPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Analysis Dialog */}
+        <Dialog open={showAnalysisDialog} onOpenChange={setShowAnalysisDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-amber-500" />
+                Resume Analysis & Score
+              </DialogTitle>
+              <DialogDescription>
+                Get detailed feedback on your resume with missing information alerts
+              </DialogDescription>
+            </DialogHeader>
+            
+            {!analysisData ? (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground mb-4">Click analyze to get your resume score and feedback</p>
+                <Button 
+                  onClick={handleAnalyzeResume}
+                  disabled={isAnalyzing}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analyzing Resume...
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Analyze My Resume
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6 py-4">
+                {/* Score Card */}
+                <div className="flex items-center justify-between p-6 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Overall Score</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold text-amber-500">{analysisData.score}</span>
+                      <span className="text-2xl text-muted-foreground">/100</span>
+                    </div>
+                    <Badge className={`mt-2 ${
+                      analysisData.grade === 'A' ? 'bg-green-600' :
+                      analysisData.grade === 'B' ? 'bg-blue-600' :
+                      analysisData.grade === 'C' ? 'bg-amber-600' :
+                      'bg-red-600'
+                    } text-white`}>
+                      Grade: {analysisData.grade}
+                    </Badge>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">ATS Score</p>
+                    <span className="text-3xl font-bold text-green-500">{analysisData.ats_compatibility?.score || 'N/A'}</span>
+                    <p className="text-sm text-muted-foreground">Experience: {analysisData.experience_level}</p>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm">{analysisData.summary}</p>
+                </div>
+
+                {/* Missing Information Alert */}
+                {analysisData.missing_info && Object.values(analysisData.missing_info).some(v => v) && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <h4 className="font-semibold text-red-500 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Missing Information - Please Add:
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {analysisData.missing_info.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-red-400" />
+                          <span>Phone Number</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4 text-red-400" />
+                          <span>Email Address</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.address_location && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-red-400" />
+                          <span>Location/Address</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.linkedin && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Linkedin className="w-4 h-4 text-red-400" />
+                          <span>LinkedIn Profile</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.professional_summary && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <FileCheck className="w-4 h-4 text-red-400" />
+                          <span>Professional Summary</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.skills_section && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Zap className="w-4 h-4 text-red-400" />
+                          <span>Skills Section</span>
+                        </div>
+                      )}
+                      {analysisData.missing_info.quantifiable_achievements && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <TrendingUp className="w-4 h-4 text-red-400" />
+                          <span>Quantifiable Achievements</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Strengths & Weaknesses */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <h4 className="font-semibold text-green-500 mb-2">Strengths</h4>
+                    <ul className="space-y-1">
+                      {analysisData.strengths?.map((s, i) => (
+                        <li key={i} className="text-sm flex items-start gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <h4 className="font-semibold text-red-500 mb-2">Areas to Improve</h4>
+                    <ul className="space-y-1">
+                      {analysisData.weaknesses?.map((w, i) => (
+                        <li key={i} className="text-sm flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                          {w}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Improvement Suggestions */}
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <h4 className="font-semibold text-blue-500 mb-2">Improvement Suggestions</h4>
+                  <ol className="space-y-2">
+                    {analysisData.improvement_suggestions?.map((s, i) => (
+                      <li key={i} className="text-sm flex items-start gap-2">
+                        <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center flex-shrink-0">
+                          {i + 1}
+                        </span>
+                        {s}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                {/* Detected Skills */}
+                {analysisData.detected_skills?.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Detected Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {analysisData.detected_skills.map((skill, i) => (
+                        <Badge key={i} variant="secondary">{skill}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Re-analyze Button */}
+                <Button 
+                  variant="outline"
+                  onClick={handleAnalyzeResume}
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BarChart3 className="w-4 h-4 mr-2" />}
+                  Re-Analyze
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Master Resume Dialog */}
+        <Dialog open={showMasterDialog} onOpenChange={setShowMasterDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-violet-500" />
+                Create Master Resume
+              </DialogTitle>
+              <DialogDescription>
+                Fix and polish your resume without a specific job description. Creates a strong base for all applications.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {!masterResume ? (
+              <div className="py-8 text-center">
+                <div className="mb-6">
+                  <p className="text-muted-foreground mb-2">This will:</p>
+                  <ul className="text-sm text-left max-w-md mx-auto space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Fix grammar, spelling, and formatting issues
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Add a compelling professional summary
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Organize skills into categories
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Rewrite bullet points with action verbs
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Make it ATS-friendly
+                    </li>
+                  </ul>
+                </div>
+                <Button 
+                  onClick={handleCreateMaster}
+                  disabled={isCreatingMaster}
+                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
+                >
+                  {isCreatingMaster ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Master Resume...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Fix My Resume
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4 py-4">
+                <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-[50vh] overflow-y-auto">
+                  {masterResume}
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => handleDownloadVersion(masterResume, 'Master_Resume')}
+                    className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Master Resume
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(masterResume);
+                      toast.success('Copied to clipboard!');
+                    }}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setMasterResume('');
+                      handleCreateMaster();
+                    }}
+                    disabled={isCreatingMaster}
+                  >
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Generate Versions Dialog */}
+        <Dialog open={showVersionsDialog} onOpenChange={setShowVersionsDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-500" />
+                Generate Job Title Versions
+              </DialogTitle>
+              <DialogDescription>
+                Create 3-4 resume versions optimized for different job titles based on your technology
+              </DialogDescription>
+            </DialogHeader>
+            
+            {titleVersions.length === 0 ? (
+              <div className="py-8 text-center">
+                <div className="mb-6">
+                  <p className="text-muted-foreground mb-4">Based on your technology, we'll create versions for titles like:</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Badge variant="outline">React Developer</Badge>
+                    <Badge variant="outline">Frontend Engineer</Badge>
+                    <Badge variant="outline">Web Developer</Badge>
+                    <Badge variant="outline">UI Developer</Badge>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleGenerateVersions}
+                  disabled={isGeneratingVersions}
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                >
+                  {isGeneratingVersions ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating Versions...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4 mr-2" />
+                      Generate All Versions
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4 py-4">
+                <Tabs defaultValue={titleVersions[0]?.name}>
+                  <TabsList className="grid w-full grid-cols-4">
+                    {titleVersions.map((version) => (
+                      <TabsTrigger key={version.name} value={version.name} className="text-xs">
+                        {version.name}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {titleVersions.map((version) => (
+                    <TabsContent key={version.name} value={version.name}>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Badge className="bg-blue-600 text-white">{version.job_title}</Badge>
+                        </div>
+                        <div className="bg-muted p-6 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-[40vh] overflow-y-auto">
+                          {version.content}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => handleDownloadVersion(version.content, version.name)}
+                            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download {version.name}
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => {
+                              navigator.clipboard.writeText(version.content);
+                              toast.success('Copied to clipboard!');
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+                
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setTitleVersions([]);
+                    handleGenerateVersions();
+                  }}
+                  disabled={isGeneratingVersions}
+                >
+                  {isGeneratingVersions ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Regenerate All Versions
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
