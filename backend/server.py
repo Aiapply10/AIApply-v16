@@ -1689,6 +1689,278 @@ async def download_resume(resume_id: str, format: str, request: Request):
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use 'docx' or 'pdf'")
 
+# ============ RESUME ANALYSIS & ENHANCEMENT ============
+
+@api_router.post("/resumes/{resume_id}/analyze")
+async def analyze_resume(resume_id: str, request: Request):
+    """Analyze resume and provide score, missing info, and improvement suggestions"""
+    user = await get_current_user(request)
+    
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    original_content = resume.get('original_content', '')
+    if not original_content:
+        raise HTTPException(status_code=400, detail="Resume has no content to analyze")
+    
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"analyze_{resume_id}_{uuid.uuid4().hex[:8]}",
+        system_message="""You are an expert resume analyst and career consultant. Analyze resumes thoroughly and provide actionable feedback."""
+    ).with_model("openai", "gpt-5.2")
+    
+    analysis_prompt = f"""Analyze this resume and provide a comprehensive assessment.
+
+RESUME:
+{original_content}
+
+Provide your analysis in the following JSON format (return ONLY valid JSON, no markdown):
+{{
+    "score": <number 0-100>,
+    "grade": "<A/B/C/D/F>",
+    "summary": "<2-3 sentence overall assessment>",
+    "missing_info": {{
+        "phone": <true if missing, false if present>,
+        "email": <true if missing, false if present>,
+        "address_location": <true if missing, false if present>,
+        "linkedin": <true if missing, false if present>,
+        "professional_summary": <true if missing, false if present>,
+        "skills_section": <true if missing, false if present>,
+        "education": <true if missing, false if present>,
+        "work_experience": <true if missing, false if present>,
+        "quantifiable_achievements": <true if missing/weak, false if strong>
+    }},
+    "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
+    "weaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
+    "improvement_suggestions": ["<suggestion 1>", "<suggestion 2>", "<suggestion 3>", "<suggestion 4>"],
+    "ats_compatibility": {{
+        "score": <number 0-100>,
+        "issues": ["<issue 1>", "<issue 2>"]
+    }},
+    "detected_skills": ["<skill1>", "<skill2>", ...],
+    "detected_job_titles": ["<title1>", "<title2>", ...],
+    "experience_level": "<Entry/Mid/Senior/Executive>"
+}}"""
+
+    analysis_message = UserMessage(text=analysis_prompt)
+    analysis_response = await chat.send_message(analysis_message)
+    
+    # Parse the JSON response
+    try:
+        import json
+        # Clean up the response - remove any markdown formatting
+        response_text = analysis_response.strip()
+        if response_text.startswith('```'):
+            response_text = response_text.split('\n', 1)[1]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+        analysis_data = json.loads(response_text)
+    except:
+        # Fallback if JSON parsing fails
+        analysis_data = {
+            "score": 50,
+            "grade": "C",
+            "summary": "Unable to parse detailed analysis. Please try again.",
+            "missing_info": {},
+            "strengths": [],
+            "weaknesses": [],
+            "improvement_suggestions": ["Upload a clearer resume for better analysis"],
+            "ats_compatibility": {"score": 50, "issues": []},
+            "detected_skills": [],
+            "detected_job_titles": [],
+            "experience_level": "Unknown"
+        }
+    
+    # Store analysis in database
+    await db.resumes.update_one(
+        {"resume_id": resume_id},
+        {"$set": {
+            "analysis": analysis_data,
+            "analyzed_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "resume_id": resume_id,
+        "analysis": analysis_data
+    }
+
+@api_router.post("/resumes/{resume_id}/create-master")
+async def create_master_resume(resume_id: str, request: Request):
+    """Create a polished master resume without a specific job description"""
+    user = await get_current_user(request)
+    
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    original_content = resume.get('original_content', '')
+    if not original_content:
+        raise HTTPException(status_code=400, detail="Resume has no content")
+    
+    # Get user profile for additional context
+    user_profile = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    primary_tech = user_profile.get("primary_technology", "") if user_profile else ""
+    sub_techs = user_profile.get("sub_technologies", []) if user_profile else []
+    
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"master_{resume_id}_{uuid.uuid4().hex[:8]}",
+        system_message="""You are an expert resume writer and career consultant. 
+Your task is to create a polished, professional master resume that can be used as a base for any job application.
+Focus on fixing formatting issues, improving content quality, and making it ATS-friendly."""
+    ).with_model("openai", "gpt-5.2")
+    
+    master_prompt = f"""Transform this resume into a polished MASTER RESUME that serves as a strong foundation for any job application.
+
+ORIGINAL RESUME:
+{original_content}
+
+USER'S PRIMARY TECHNOLOGY: {primary_tech or 'Not specified'}
+USER'S SKILLS: {', '.join(sub_techs) if sub_techs else 'Not specified'}
+
+CREATE A MASTER RESUME that:
+1. PROFESSIONAL SUMMARY: Write a compelling 3-4 line summary highlighting key expertise and value proposition
+2. FIX ALL ISSUES: Grammar, spelling, formatting, inconsistencies
+3. SKILLS SECTION: Organize skills into categories (Technical Skills, Tools & Platforms, Soft Skills)
+4. EXPERIENCE: 
+   - Rewrite bullet points with strong action verbs
+   - Add quantifiable metrics where possible (even estimates like "Improved performance by ~20%")
+   - Ensure consistent formatting (dates, company names, titles)
+5. EDUCATION: Proper formatting with degrees, institutions, dates
+6. FORMATTING: Use standard ATS-friendly sections:
+   - PROFESSIONAL SUMMARY
+   - SKILLS
+   - PROFESSIONAL EXPERIENCE
+   - EDUCATION
+   - CERTIFICATIONS (if any)
+7. CONTACT INFO: Ensure placeholder for phone, email, location, LinkedIn
+
+Make it professional, impactful, and ready to customize for specific jobs.
+Return ONLY the master resume content in plain text format."""
+
+    master_message = UserMessage(text=master_prompt)
+    master_content = await chat.send_message(master_message)
+    
+    # Store master resume
+    await db.resumes.update_one(
+        {"resume_id": resume_id},
+        {"$set": {
+            "master_resume": master_content,
+            "master_created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "resume_id": resume_id,
+        "master_resume": master_content,
+        "message": "Master resume created successfully"
+    }
+
+@api_router.post("/resumes/{resume_id}/generate-versions")
+async def generate_resume_versions(resume_id: str, request: Request):
+    """Generate 3-4 resume versions with different job title designations based on candidate's technology"""
+    user = await get_current_user(request)
+    
+    # Get request body
+    body = {}
+    try:
+        body = await request.json()
+    except:
+        pass
+    
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Use master resume if available, otherwise use original
+    base_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+    if not base_content:
+        raise HTTPException(status_code=400, detail="Resume has no content")
+    
+    # Get user's primary technology
+    user_profile = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    primary_tech = body.get("primary_technology") or (user_profile.get("primary_technology", "") if user_profile else "")
+    
+    # Define popular job titles for each technology
+    tech_titles = {
+        "Java": ["Java Developer", "Java Software Engineer", "Backend Developer", "Full Stack Java Developer"],
+        "Python": ["Python Developer", "Python Engineer", "Backend Developer", "Data Engineer"],
+        "PHP": ["PHP Developer", "Web Developer", "Full Stack Developer", "Backend PHP Developer"],
+        "AI": ["AI Engineer", "Machine Learning Engineer", "Data Scientist", "AI/ML Developer"],
+        "React": ["React Developer", "Frontend Developer", "React Engineer", "Web Developer"],
+        "Frontend": ["Frontend Developer", "UI Developer", "Web Developer", "JavaScript Developer"],
+        "Backend": ["Backend Developer", "Software Engineer", "API Developer", "Server-Side Developer"],
+        "Full Stack": ["Full Stack Developer", "Software Engineer", "Web Developer", "Application Developer"],
+        "DevOps": ["DevOps Engineer", "Site Reliability Engineer", "Cloud Engineer", "Infrastructure Engineer"],
+        "Mobile": ["Mobile Developer", "iOS Developer", "Android Developer", "React Native Developer"],
+    }
+    
+    # Get relevant titles or use generic ones
+    job_titles = tech_titles.get(primary_tech, ["Software Developer", "Software Engineer", "Application Developer", "Technical Specialist"])
+    
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=f"versions_{resume_id}_{uuid.uuid4().hex[:8]}",
+        system_message="""You are an expert resume writer. Create variations of resumes optimized for different job titles while maintaining the candidate's actual experience and skills."""
+    ).with_model("openai", "gpt-5.2")
+    
+    versions = []
+    
+    for i, title in enumerate(job_titles[:4]):  # Generate up to 4 versions
+        version_prompt = f"""Create a resume version optimized for the job title: {title}
+
+BASE RESUME:
+{base_content}
+
+PRIMARY TECHNOLOGY: {primary_tech or 'Software Development'}
+
+Modify this resume to be optimized for a "{title}" position:
+1. Update the PROFESSIONAL SUMMARY to highlight relevant skills for this title
+2. Reorder and emphasize skills most relevant to this role
+3. Adjust experience bullet points to emphasize relevant work
+4. Use keywords and terminology common for "{title}" positions
+5. Keep all factual information accurate - only adjust emphasis and presentation
+
+Return ONLY the modified resume content in plain text format."""
+
+        version_message = UserMessage(text=version_prompt)
+        version_content = await chat.send_message(version_message)
+        
+        versions.append({
+            "name": title,
+            "content": version_content,
+            "job_title": title
+        })
+    
+    # Store versions in database
+    await db.resumes.update_one(
+        {"resume_id": resume_id},
+        {"$set": {
+            "title_versions": versions,
+            "versions_created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "resume_id": resume_id,
+        "versions": versions,
+        "primary_technology": primary_tech,
+        "message": f"Generated {len(versions)} resume versions for different job titles"
+    }
+
 # ============ COVER LETTER ============
 
 @api_router.post("/cover-letter/generate")
