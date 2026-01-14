@@ -654,10 +654,19 @@ export function RegisterPage() {
                 </div>
                 <h1 className="font-heading text-3xl font-bold mb-2 text-slate-900">Verify your email</h1>
                 <p className="text-slate-600">
-                  We've sent a 6-digit code to<br />
+                  Enter the verification code for<br />
                   <span className="font-semibold text-violet-600">{formData.email}</span>
                 </p>
               </div>
+
+              {/* Display Generated OTP */}
+              {generatedOTP && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 border-2 border-dashed border-violet-300 rounded-xl text-center">
+                  <p className="text-sm text-slate-600 mb-2">Your Verification Code</p>
+                  <p className="text-3xl font-bold text-violet-600 tracking-[0.5em] font-mono">{generatedOTP}</p>
+                  <p className="text-xs text-slate-500 mt-2">Enter this code below to verify your email</p>
+                </div>
+              )}
 
               <div className="flex justify-center gap-3 mb-6">
                 {otp.map((digit, index) => (
