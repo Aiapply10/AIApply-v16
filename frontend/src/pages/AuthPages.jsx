@@ -265,6 +265,7 @@ export function RegisterPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
+  const [generatedOTP, setGeneratedOTP] = useState(''); // Store generated OTP for display
   const otpInputRefs = useRef([]);
   
   const US_CITIES = [
