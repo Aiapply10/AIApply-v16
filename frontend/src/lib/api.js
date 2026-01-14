@@ -114,12 +114,26 @@ export const reportAPI = {
 
 // Live Jobs API (JSearch)
 export const liveJobsAPI = {
-  search: (query, location, employmentType, page = 1) => 
+  search: (query, location, employmentType, page = 1, source = null) => 
     api.get('/live-jobs/search', { 
-      params: { query, location, employment_type: employmentType, page } 
+      params: { query, location, employment_type: employmentType, page, source } 
     }),
   getRecommendations: () => api.get('/live-jobs/recommendations'),
   getDetails: (jobId) => api.get(`/live-jobs/${jobId}`),
+};
+
+// Application API - Updated
+export const applicationAPI = {
+  create: (data) => api.post('/applications', data),
+  getAll: (status) => api.get('/applications', { params: { status } }),
+  updateStatus: (id, status) => api.put(`/applications/${id}/status`, null, { params: { status } }),
+  uploadScreenshot: (applicationId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/applications/${applicationId}/screenshot`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Technologies API
