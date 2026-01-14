@@ -1419,6 +1419,60 @@ export function ResumesPage() {
                     <div className="p-4 bg-muted rounded-lg">
                       <p className="text-sm">{autoResults.analysis.summary}</p>
                     </div>
+
+                    {/* Missing Information Alert */}
+                    {autoResults.analysis.missing_info && Object.values(autoResults.analysis.missing_info).some(v => v) && (
+                      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                        <h4 className="font-semibold text-red-500 mb-3 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          Missing Information - Please Add:
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {autoResults.analysis.missing_info.phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="w-4 h-4 text-red-400" />
+                              <span>Phone Number</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.email && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Mail className="w-4 h-4 text-red-400" />
+                              <span>Email Address</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.address_location && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <MapPin className="w-4 h-4 text-red-400" />
+                              <span>Location/Address</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.linkedin && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Linkedin className="w-4 h-4 text-red-400" />
+                              <span>LinkedIn Profile</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.professional_summary && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <FileCheck className="w-4 h-4 text-red-400" />
+                              <span>Professional Summary</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.skills_section && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Zap className="w-4 h-4 text-red-400" />
+                              <span>Skills Section</span>
+                            </div>
+                          )}
+                          {autoResults.analysis.missing_info.quantifiable_achievements && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <TrendingUp className="w-4 h-4 text-red-400" />
+                              <span>Quantifiable Achievements</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
