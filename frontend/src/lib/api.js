@@ -96,6 +96,13 @@ export const applicationAPI = {
   create: (data) => api.post('/applications', data),
   getAll: (status) => api.get('/applications', { params: { status } }),
   updateStatus: (id, status) => api.put(`/applications/${id}/status?status=${status}`),
+  uploadScreenshot: (applicationId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/applications/${applicationId}/screenshot`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Emails API
