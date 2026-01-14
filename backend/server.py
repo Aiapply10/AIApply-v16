@@ -396,16 +396,14 @@ async def send_otp(data: SendOTPRequest):
         upsert=True
     )
     
-    # Send OTP email
-    email_sent = await send_otp_email(data.email, otp, data.name)
-    
-    if not email_sent:
-        raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again.")
+    # Return OTP directly (built-in verification system)
+    logger.info(f"OTP generated for {data.email}: {otp}")
     
     return {
-        "message": "Verification code sent to your email",
+        "message": "Verification code generated",
         "email": data.email,
-        "expires_in_minutes": 10
+        "expires_in_minutes": 10,
+        "otp": otp  # Return OTP for built-in verification
     }
 
 
