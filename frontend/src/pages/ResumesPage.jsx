@@ -37,7 +37,18 @@ import {
   Target,
   Wand2,
   CheckCircle2,
-  Copy
+  Copy,
+  BarChart3,
+  AlertTriangle,
+  Zap,
+  Star,
+  Phone,
+  Mail,
+  MapPin,
+  Linkedin,
+  FileCheck,
+  Users,
+  TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,16 +59,25 @@ export function ResumesPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isTailoring, setIsTailoring] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isCreatingMaster, setIsCreatingMaster] = useState(false);
+  const [isGeneratingVersions, setIsGeneratingVersions] = useState(false);
   const [selectedResume, setSelectedResume] = useState(null);
   const [showTailorDialog, setShowTailorDialog] = useState(false);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [showCoverLetterDialog, setShowCoverLetterDialog] = useState(false);
   const [showOptimizeDialog, setShowOptimizeDialog] = useState(false);
+  const [showAnalysisDialog, setShowAnalysisDialog] = useState(false);
+  const [showMasterDialog, setShowMasterDialog] = useState(false);
+  const [showVersionsDialog, setShowVersionsDialog] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [optimizedContent, setOptimizedContent] = useState('');
   const [extractedKeywords, setExtractedKeywords] = useState('');
   const [resumeVersions, setResumeVersions] = useState([]);
   const [selectedVersion, setSelectedVersion] = useState('default');
+  const [analysisData, setAnalysisData] = useState(null);
+  const [masterResume, setMasterResume] = useState('');
+  const [titleVersions, setTitleVersions] = useState([]);
   const fileInputRef = useRef(null);
 
   const [tailorForm, setTailorForm] = useState({
