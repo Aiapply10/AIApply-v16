@@ -109,8 +109,8 @@ export function DashboardPage() {
       setResumes(resumesRes.data);
       setProfileCompleteness(completenessRes.data);
       
-      // Show popup if profile is incomplete (less than 80%)
-      if (completenessRes.data.percentage < 80) {
+      // Show popup if profile is not 100% complete
+      if (completenessRes.data.percentage < 100) {
         setShowProfilePopup(true);
       }
     } catch (error) {
