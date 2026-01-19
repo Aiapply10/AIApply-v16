@@ -715,7 +715,6 @@ export function EmailCenterPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
 
       {/* Connect Email Dialog */}
       <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
