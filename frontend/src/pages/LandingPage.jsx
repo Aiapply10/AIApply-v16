@@ -79,31 +79,31 @@ export function LandingPage() {
       description: 'Real-time job recommendations from LinkedIn, Indeed, Dice based on your skills.',
       color: 'from-emerald-500 to-teal-600',
       bgLight: 'bg-emerald-50',
-      textColor: 'text-pink-600',
+      textColor: 'text-emerald-600',
     },
     {
       icon: Send,
       title: 'One-Click Applications',
       description: 'Apply to jobs directly from our platform with auto-generated cover letters.',
-      color: 'from-emerald-500 to-green-600',
-      bgLight: 'bg-emerald-50',
-      textColor: 'text-emerald-600',
-    },
-    {
-      icon: Mail,
-      title: 'Email Management',
-      description: 'AI assists with email responses and scheduling interviews automatically.',
       color: 'from-orange-500 to-amber-600',
       bgLight: 'bg-orange-50',
       textColor: 'text-orange-600',
     },
     {
+      icon: Mail,
+      title: 'Email Management',
+      description: 'AI assists with email responses and scheduling interviews automatically.',
+      color: 'from-pink-500 to-rose-600',
+      bgLight: 'bg-pink-50',
+      textColor: 'text-pink-600',
+    },
+    {
       icon: BarChart3,
       title: 'Smart Analytics',
       description: 'Track applications, interviews, and offers with beautiful dashboards.',
-      color: 'from-indigo-500 to-blue-600',
-      bgLight: 'bg-indigo-50',
-      textColor: 'text-indigo-600',
+      color: 'from-violet-500 to-purple-600',
+      bgLight: 'bg-violet-50',
+      textColor: 'text-violet-600',
     },
   ];
 
@@ -116,47 +116,100 @@ export function LandingPage() {
   ];
 
   const stats = [
-    { value: '10K+', label: 'Resumes Tailored', color: 'text-violet-600' },
-    { value: '50K+', label: 'Jobs Matched', color: 'text-blue-600' },
+    { value: '10K+', label: 'Resumes Tailored', color: 'text-blue-600' },
+    { value: '50K+', label: 'Jobs Matched', color: 'text-indigo-600' },
     { value: '95%', label: 'Success Rate', color: 'text-emerald-600' },
-    { value: '24/7', label: 'AI Support', color: 'text-pink-600' },
+    { value: '24/7', label: 'AI Support', color: 'text-orange-600' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 overflow-hidden">
-      {/* Decorative Background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 overflow-hidden">
+      {/* Animated Decorative Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-violet-200/50 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-cyan-200/50 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-violet-100/30 to-cyan-100/30 rounded-full blur-3xl" />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-blue-200/40 rounded-full blur-3xl" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.4, 0.3],
+          }}
+          transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+          className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-indigo-200/40 rounded-full blur-3xl" 
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-blue-100/20 to-indigo-100/20 rounded-full blur-3xl" />
+        {/* Floating particles */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 10, 0],
+              opacity: [0.2, 0.5, 0.2],
+            }}
+            transition={{
+              duration: 5 + i,
+              repeat: Infinity,
+              delay: i * 0.5,
+            }}
+            className="absolute w-2 h-2 rounded-full bg-blue-400/30"
+            style={{
+              left: `${15 + i * 15}%`,
+              top: `${20 + i * 10}%`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-sm">
+      <motion.header 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm"
+      >
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:shadow-violet-500/50 transition-all group-hover:scale-105 duration-300">
+              <motion.div 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-shadow"
+              >
                 <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                   <path d="M2 17l10 5 10-5"/>
                   <path d="M2 12l10 5 10-5"/>
                 </svg>
-              </div>
+              </motion.div>
               <span className="font-heading font-bold text-xl text-slate-800">CareerQuest</span>
             </Link>
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-slate-600 hover:text-violet-600 transition-colors font-medium">
+              <motion.a 
+                href="#features" 
+                whileHover={{ y: -2 }}
+                className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              >
                 Features
-              </a>
-              <a href="#technologies" className="text-slate-600 hover:text-violet-600 transition-colors font-medium">
+              </motion.a>
+              <motion.a 
+                href="#technologies" 
+                whileHover={{ y: -2 }}
+                className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              >
                 Technologies
-              </a>
+              </motion.a>
               {isAuthenticated ? (
-                <Button onClick={() => navigate('/dashboard')} className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30" data-testid="go-to-dashboard">
-                  Dashboard
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button onClick={() => navigate('/dashboard')} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30" data-testid="go-to-dashboard">
+                    Dashboard
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </motion.div>
               ) : (
                 <div className="flex items-center gap-4">
                   <Button variant="ghost" onClick={() => navigate('/login')} className="text-slate-600 hover:text-slate-900 hover:bg-slate-100" data-testid="login-btn">
