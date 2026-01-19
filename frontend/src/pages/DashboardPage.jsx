@@ -511,10 +511,10 @@ export function DashboardPage() {
 
       {/* Profile Completion Popup - Outside PageTransition for proper centering */}
       <Dialog open={showProfilePopup} onOpenChange={setShowProfilePopup}>
-        <DialogContent className="max-w-lg bg-white">
+        <DialogContent className="max-w-lg bg-white max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-slate-800">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-6 h-6 text-amber-600" />
               </div>
               <div>
@@ -525,13 +525,13 @@ export function DashboardPage() {
               </div>
             </DialogTitle>
             <DialogDescription className="text-slate-600">
-              Please complete these fields to use Auto-Apply and get better job matches.
+              Complete your profile to use Auto-Apply and get better job matches.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4">
+          <div className="py-2">
             {/* Progress Bar */}
-            <div className="mb-6">
+            <div className="mb-4">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-slate-600">Profile Completion</span>
                 <span className={`font-semibold ${
@@ -541,7 +541,7 @@ export function DashboardPage() {
                   {profileCompleteness?.percentage}%
                 </span>
               </div>
-              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all ${
                     profileCompleteness?.percentage >= 80 ? 'bg-green-500' : 
@@ -554,20 +554,20 @@ export function DashboardPage() {
             
             {/* Missing Fields */}
             {profileCompleteness?.missing_fields?.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-slate-700 mb-3">
-                  Missing Information ({profileCompleteness.missing_fields.length} items):
+              <div>
+                <p className="text-sm font-medium text-slate-700 mb-2">
+                  Missing ({profileCompleteness.missing_fields.length} items):
                 </p>
-                <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
+                <div className="max-h-40 overflow-y-auto space-y-1.5 pr-2">
                   {profileCompleteness.missing_fields.map((field) => {
                     const IconComponent = fieldIcons[field] || AlertTriangle;
                     return (
                       <div 
                         key={field}
-                        className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl"
+                        className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg"
                       >
-                        <IconComponent className="w-5 h-5 text-amber-600" />
-                        <span className="text-sm text-amber-800 font-medium">{field}</span>
+                        <IconComponent className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-sm text-amber-800">{field}</span>
                       </div>
                     );
                   })}
@@ -575,29 +575,24 @@ export function DashboardPage() {
               </div>
             )}
             
-            {/* Auto-Apply Warning */}
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-red-800">Auto-Apply Disabled</p>
-                  <p className="text-sm text-red-600 mt-1">
-                    Complete at least 80% of your profile to enable Auto-Apply feature for automatic job applications.
-                  </p>
-                </div>
+            {/* Auto-Apply Warning - Compact */}
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-red-600 shrink-0" />
+                <p className="text-sm text-red-700">
+                  <span className="font-semibold">Auto-Apply Disabled</span> - Complete 80%+ to enable
+                </p>
               </div>
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <Button 
               variant="outline" 
               className="flex-1 border-slate-200 text-slate-700"
               onClick={() => setShowProfilePopup(false)}
             >
-              Remind Me Later
+              Later
             </Button>
             <Button 
               className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
