@@ -193,8 +193,8 @@ Build a website where a job seeker can:
 1. **Quick Actions hover transparency** - Fixed button hover states to maintain readable text
 2. **Auto-Apply button grayed out** - Now enables when profile reaches 80%, shows clear message when incomplete
 3. **Non-US jobs appearing** - Strengthened location filtering with stricter US-only validation
-4. **Settings/History popup alignment** - Verified dialogs are properly centered using Radix Dialog component
-5. **Missing profile completion popup** - Now automatically shows on login when profile < 80%
+4. **Settings/History popup alignment** - FIXED: Moved all dialogs OUTSIDE of PageTransition wrapper (CSS transforms from framer-motion break fixed positioning)
+5. **Profile completion popup** - FIXED: Now shows automatically on login unless profile is 100% complete, and properly centered
 
 ### Animation Consistency
 - Added framer-motion animations to Email Center page (stat cards with hover lift)
