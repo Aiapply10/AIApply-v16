@@ -497,8 +497,8 @@ export function DashboardPage() {
                   {stats.recent_applications.slice(0, 5).map((app, index) => (
                     <StaggerItem key={app.application_id || index}>
                       <motion.div
-                        whileHover={{ x: 4, backgroundColor: 'rgb(241 245 249)' }}
-                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer"
+                        whileHover={{ x: 4 }}
+                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-100 cursor-pointer transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <motion.div 
@@ -506,18 +506,19 @@ export function DashboardPage() {
                             className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center"
                           >
                             <Briefcase className="w-5 h-5 text-white" />
+                          </motion.div>
+                          <div>
+                            <p className="font-medium text-slate-800">{app.job_title || 'Position'}</p>
+                            <p className="text-sm text-slate-500">{app.company_name || 'Company'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-slate-800">{app.job_title || 'Position'}</p>
-                          <p className="text-sm text-slate-500">{app.company_name || 'Company'}</p>
-                        </div>
-                      </div>
-                      <Badge className={`${getStatusColor(app.status)} border`}>
-                        {app.status?.replace('_', ' ') || 'Applied'}
-                      </Badge>
-                    </div>
+                        <Badge className={`${getStatusColor(app.status)} border`}>
+                          {app.status?.replace('_', ' ') || 'Applied'}
+                        </Badge>
+                      </motion.div>
+                    </StaggerItem>
                   ))}
-                </div>
+                </StaggerContainer>
               ) : (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
