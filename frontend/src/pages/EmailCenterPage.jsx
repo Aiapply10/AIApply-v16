@@ -452,30 +452,6 @@ export function EmailCenterPage() {
               </motion.div>
             </StaggerItem>
           </StaggerContainer>
-                <div className="p-3 rounded-xl bg-purple-100">
-                  <Inbox className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Inbox Messages</p>
-                  <p className="text-2xl font-bold text-slate-900">{inbox.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-amber-100">
-                  <User className="w-6 h-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Recruiter Emails</p>
-                  <p className="text-2xl font-bold text-slate-900">{inbox.filter(m => m.is_recruiter).length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
