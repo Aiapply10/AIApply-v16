@@ -137,6 +137,12 @@ export function ResumesPage() {
     try {
       const response = await resumeAPI.upload(file);
       
+      // Update user profile if extracted from resume
+      if (response.data.profile_updated && response.data.updated_user) {
+        setUser(response.data.updated_user);
+        toast.success('Profile automatically updated from resume!', { duration: 5000 });
+      }
+      
       // Show automatic results popup
       if (response.data.auto_processed) {
         setAutoResults({
@@ -144,7 +150,8 @@ export function ResumesPage() {
           file_name: response.data.file_name,
           analysis: response.data.analysis,
           master_resume: response.data.master_resume,
-          title_versions: response.data.title_versions || []
+          title_versions: response.data.title_versions || [],
+          extracted_profile: response.data.extracted_profile
         });
         setShowAutoResultsDialog(true);
         toast.success('Resume analyzed successfully!');
