@@ -332,7 +332,12 @@ export function EmailCenterPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-600" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <Loader2 className="w-8 h-8 text-blue-600" />
+          </motion.div>
         </div>
       </DashboardLayout>
     );
@@ -340,64 +345,113 @@ export function EmailCenterPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Email Center</h1>
-            <p className="text-slate-500 mt-1">Manage your email accounts and let AI handle your job applications</p>
-          </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => loadData()}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button 
-              onClick={() => setShowComposeDialog(true)}
-              className="bg-violet-600 hover:bg-violet-700"
-              disabled={accounts.length === 0}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Compose
-            </Button>
-          </div>
-        </div>
+      <PageTransition>
+        <div className="space-y-6">
+          {/* Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center justify-between"
+          >
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Email Center</h1>
+              <p className="text-slate-500 mt-1">Manage your email accounts and let AI handle your job applications</p>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => loadData()}
+                disabled={isRefreshing}
+                className="border-slate-200 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  onClick={() => setShowComposeDialog(true)}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  disabled={accounts.length === 0}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  AI Compose
+                </Button>
+              </motion.div>
+            </div>
+          </motion.div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-blue-100">
-                  <Mail className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Connected Accounts</p>
-                  <p className="text-2xl font-bold text-slate-900">{accounts.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-green-100">
-                  <Send className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Emails Sent</p>
-                  <p className="text-2xl font-bold text-slate-900">{history.filter(h => h.type === 'sent').length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
+          {/* Quick Stats with Animation */}
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-blue-100">
+                        <Mail className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Connected Accounts</p>
+                        <p className="text-2xl font-bold text-slate-900">{accounts.length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-green-100">
+                        <Send className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Emails Sent</p>
+                        <p className="text-2xl font-bold text-slate-900">{history.filter(h => h.type === 'sent').length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-orange-100">
+                        <Inbox className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Inbox Messages</p>
+                        <p className="text-2xl font-bold text-slate-900">{inbox.length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+            <StaggerItem>
+              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="cursor-pointer">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-violet-100">
+                        <Zap className="w-6 h-6 text-violet-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Auto Replies</p>
+                        <p className="text-2xl font-bold text-slate-900">{settings.auto_reply_enabled ? 'ON' : 'OFF'}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+          </StaggerContainer>
                 <div className="p-3 rounded-xl bg-purple-100">
                   <Inbox className="w-6 h-6 text-purple-600" />
                 </div>
