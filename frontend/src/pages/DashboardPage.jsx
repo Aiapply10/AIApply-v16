@@ -305,89 +305,156 @@ export function DashboardPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Header with animation */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        >
           <div>
             <h1 className="font-heading text-3xl md:text-4xl font-bold text-slate-800">
               Welcome back,{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-gradient-primary">
                 {user?.name?.split(' ')[0]}!
               </span>
             </h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-slate-500 mt-2">
               Here's an overview of your job search progress
             </p>
           </div>
-          <Button 
-            className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30 group"
-            onClick={() => navigate('/live-jobs')}
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Browse Live Jobs
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button 
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 group"
+              onClick={() => navigate('/live-jobs')}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Browse Live Jobs
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </motion.div>
+        </motion.div>
 
         {/* Profile Incomplete Warning Banner */}
-        {!isProfileComplete && (
-          <Card className="border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
-            <CardContent className="flex items-center gap-4 py-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-6 h-6 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-amber-800">Profile Incomplete ({profileCompleteness?.percentage}%)</h3>
-                <p className="text-sm text-amber-700">
-                  Complete your profile to enable Auto-Apply and get better job recommendations.
-                </p>
-              </div>
-              <Button 
-                className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
-                onClick={() => setShowProfilePopup(true)}
-              >
-                View Missing Fields
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        <AnimatePresence>
+          {!isProfileComplete && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -10, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 overflow-hidden">
+                <CardContent className="flex items-center gap-4 py-4">
+                  <motion.div 
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                    className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0"
+                  >
+                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-amber-800">Profile Incomplete ({profileCompleteness?.percentage}%)</h3>
+                    <p className="text-sm text-amber-700">
+                      Complete your profile to enable Auto-Apply and get better job recommendations.
+                    </p>
+                  </div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+                      onClick={() => setShowProfilePopup(true)}
+                    >
+                      View Missing Fields
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Quick Actions for new users */}
-        {resumes.length === 0 && (
-          <Card className="border-2 border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50 overflow-hidden relative">
-            <CardContent className="flex flex-col items-center justify-center py-12 relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center mb-6 shadow-xl shadow-violet-500/30">
-                <Upload className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="font-heading text-2xl font-semibold mb-2 text-slate-800">Upload Your First Resume</h3>
-              <p className="text-slate-600 text-center mb-6 max-w-md">
-                Get started by uploading your resume. Our AI will help you tailor it for specific job applications.
-              </p>
-              <Button 
-                onClick={() => navigate('/resumes')} 
-                className="bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30" 
-                data-testid="upload-resume-cta"
-              >
-                <Rocket className="w-4 h-4 mr-2" />
-                Upload Resume
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, index) => (
-            <Card 
-              key={stat.label}
-              className="bg-white border-slate-200 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+        <AnimatePresence>
+          {resumes.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
             >
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                    <p className="text-4xl font-bold mt-1 text-slate-800">{stat.value}</p>
-                  </div>
-                  <div className={`w-14 h-14 rounded-xl ${stat.bgLight} flex items-center justify-center`}>
+              <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 overflow-hidden relative">
+                <CardContent className="flex flex-col items-center justify-center py-12 relative">
+                  <motion.div 
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mb-6 shadow-xl shadow-blue-500/30"
+                  >
+                    <Upload className="w-10 h-10 text-white" />
+                  </motion.div>
+                  <h3 className="font-heading text-2xl font-semibold mb-2 text-slate-800">Upload Your First Resume</h3>
+                  <p className="text-slate-600 text-center mb-6 max-w-md">
+                    Get started by uploading your resume. Our AI will help you tailor it for specific job applications.
+                  </p>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      onClick={() => navigate('/resumes')} 
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30" 
+                      data-testid="upload-resume-cta"
+                    >
+                      <Rocket className="w-4 h-4 mr-2" />
+                      Upload Resume
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Stats Grid with staggered animation */}
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statCards.map((stat, index) => (
+            <StaggerItem key={stat.label}>
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="h-full"
+              >
+                <Card className="bg-white border-slate-200 shadow-md hover:shadow-xl transition-shadow duration-300 h-full cursor-pointer group">
+                  <CardContent className="pt-6 h-full">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                        <motion.p 
+                          className="text-4xl font-bold mt-1 text-slate-800"
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 + 0.2, type: 'spring' }}
+                        >
+                          {stat.value}
+                        </motion.p>
+                        <p className="text-xs text-slate-400 mt-1">{stat.description}</p>
+                      </div>
+                      <motion.div 
+                        whileHover={{ rotate: 10, scale: 1.1 }}
+                        className={`w-14 h-14 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}
+                      >
+                        <stat.icon className="w-7 h-7 text-white" />
+                      </motion.div>
+                    </div>
+                    {/* Hover indicator */}
+                    <motion.div 
+                      className="h-1 bg-gradient-to-r mt-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: `linear-gradient(to right, var(--tw-gradient-stops))` }}
+                      initial={{ width: 0 }}
+                      whileHover={{ width: '100%' }}
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
                     <stat.icon className={`w-7 h-7 ${stat.iconColor}`} />
                   </div>
                 </div>
