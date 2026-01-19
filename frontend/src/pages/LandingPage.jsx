@@ -280,7 +280,7 @@ export function LandingPage() {
                   <Button 
                     size="lg" 
                     variant="outline"
-                    className="border-2 border-slate-300 text-slate-700 hover:bg-slate-100 text-lg px-8 py-6"
+                    className="border-2 border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-400 text-lg px-8 py-6"
                     onClick={handleGoogleLogin}
                     data-testid="google-login-btn"
                   >
