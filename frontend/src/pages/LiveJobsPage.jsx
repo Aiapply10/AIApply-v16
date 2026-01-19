@@ -111,10 +111,21 @@ export function LiveJobsPage() {
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
 
+  // Job Source Platforms
+  const JOB_SOURCES = [
+    { value: 'all', label: 'All Platforms', icon: '🌐' },
+    { value: 'indeed', label: 'Indeed', icon: '💼' },
+    { value: 'dice', label: 'Dice', icon: '🎲' },
+    { value: 'linkedin', label: 'LinkedIn', icon: '🔗' },
+    { value: 'remoteok', label: 'RemoteOK', icon: '🌍' },
+    { value: 'arbeitnow', label: 'Arbeitnow', icon: '🇪🇺' },
+  ];
+
   const [searchForm, setSearchForm] = useState({
     query: '',
     location: 'United States',
     employment_type: '',
+    source: 'all',  // Platform filter
   });
 
   const [applicationForm, setApplicationForm] = useState({
