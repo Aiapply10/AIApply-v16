@@ -351,83 +351,132 @@ export function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Features Section */}
       <section id="features" className="relative py-24 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 border border-blue-200 mb-6">
               <Zap className="w-4 h-4 text-blue-600" />
               <span className="text-sm font-semibold text-blue-700">Powerful Features</span>
             </div>
             <h2 className="font-heading text-4xl sm:text-5xl font-bold mb-4 text-slate-900">
               Everything You Need to{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Land Your Next Role</span>
+              <span className="text-gradient-primary">Land Your Next Role</span>
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              From resume optimization to application tracking, we've got you covered.
+              From resume optimization to application tracking, we&apos;ve got you covered.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {features.map((feature, index) => (
-              <div 
+              <motion.div 
                 key={feature.title}
-                className="group relative bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                variants={itemVariants}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="group relative bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-shadow cursor-pointer"
               >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg`}>
+                <motion.div 
+                  whileHover={{ rotate: 10, scale: 1.1 }}
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg`}
+                >
                   <feature.icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800">
+                </motion.div>
+                <h3 className="font-heading text-xl font-semibold mb-2 text-slate-800 group-hover:text-blue-600 transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-slate-600">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Technologies Section */}
       <section id="technologies" className="relative py-24 px-6 lg:px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
             <h2 className="font-heading text-4xl sm:text-5xl font-bold mb-4 text-slate-900">
               Specialized for{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">Top Technologies</span>
+              <span className="text-gradient-primary">Top Technologies</span>
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Our AI understands the specific requirements for each technology stack.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="flex flex-wrap justify-center gap-4">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="flex flex-wrap justify-center gap-4"
+          >
             {technologies.map((tech, index) => (
-              <div 
+              <motion.div 
                 key={tech.name}
-                className={`group relative px-8 py-4 bg-white rounded-2xl shadow-lg border ${tech.borderColor} hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300`}
+                variants={itemVariants}
+                whileHover={{ y: -4, scale: 1.05 }}
+                className={`group relative px-8 py-4 bg-white rounded-2xl shadow-lg border ${tech.borderColor} hover:shadow-xl cursor-pointer transition-shadow`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${tech.color}`} />
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                    className={`w-3 h-3 rounded-full ${tech.color}`} 
+                  />
                   <span className={`font-heading font-semibold text-lg ${tech.textColor}`}>{tech.name}</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="relative py-24 px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <div className="relative bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-center overflow-hidden shadow-2xl">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 rounded-3xl p-12 text-center overflow-hidden shadow-2xl"
+          >
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl" />
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl" 
+              />
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+                className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl" 
+              />
             </div>
             
             <div className="relative z-10">
