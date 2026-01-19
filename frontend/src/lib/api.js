@@ -59,6 +59,7 @@ export const resumeAPI = {
     formData.append('file', file);
     return api.post('/resumes/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000, // 2 minutes timeout for AI processing
     });
   },
   getAll: () => api.get('/resumes'),
