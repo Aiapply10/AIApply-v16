@@ -1054,10 +1054,107 @@ async def linkedin_callback(data: LinkedInCallbackRequest):
 
 # ============ RESUME ROUTES ============
 
-async def auto_analyze_resume(resume_id: str, text_content: str, user_id: str):
-    """Automatically analyze resume, create master, and generate versions after upload"""
+async def extract_profile_from_resume(text_content: str, user_id: str):
+    """Extract profile details from resume and update user profile"""
     
-    # Get user profile for technology info
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"extract_profile_{uuid.uuid4().hex[:8]}",
+            system_message="""You are an expert at extracting structured data from resumes. Extract contact and professional information accurately."""
+        ).with_model("openai", "gpt-5.2")
+        
+        extraction_prompt = f"""Extract the following information from this resume. Return ONLY valid JSON.
+
+RESUME:
+{text_content}
+
+Extract and return JSON format (use null for missing fields):
+{{
+    "name": "<full name>",
+    "email": "<email address or null>",
+    "phone": "<phone number or null>",
+    "location": "<city, state or full address or null>",
+    "linkedin_profile": "<linkedin URL or null>",
+    "primary_technology": "<main technology/skill area: Java, Python, PHP, AI, React, Frontend, Backend, Full Stack, DevOps, Mobile, or null>",
+    "sub_technologies": ["<skill1>", "<skill2>", "<skill3>", ...],
+    "years_of_experience": <number or null>,
+    "current_job_title": "<most recent job title or null>",
+    "current_company": "<most recent company or null>",
+    "education": "<highest degree and institution or null>",
+    "certifications": ["<cert1>", "<cert2>", ...]
+}}
+
+Rules:
+- For primary_technology, choose the BEST match from: Java, Python, PHP, AI, React, Frontend, Backend, Full Stack, DevOps, Mobile
+- For sub_technologies, list specific tools, frameworks, and languages mentioned
+- Extract phone in any format found
+- Return null (not empty string) for missing fields"""
+
+        extraction_message = UserMessage(text=extraction_prompt)
+        extraction_response = await chat.send_message(extraction_message)
+        
+        # Parse the JSON response
+        import json
+        response_text = extraction_response.strip()
+        if response_text.startswith('```'):
+            response_text = response_text.split('\n', 1)[1]
+            if '```' in response_text:
+                response_text = response_text.split('```')[0]
+        
+        extracted_data = json.loads(response_text)
+        logger.info(f"Extracted profile data: {extracted_data}")
+        
+        # Build update document (only update non-null fields)
+        update_fields = {}
+        
+        if extracted_data.get("name"):
+            update_fields["name"] = extracted_data["name"]
+        if extracted_data.get("phone"):
+            update_fields["phone"] = extracted_data["phone"]
+        if extracted_data.get("location"):
+            update_fields["location"] = extracted_data["location"]
+        if extracted_data.get("linkedin_profile"):
+            update_fields["linkedin_profile"] = extracted_data["linkedin_profile"]
+        if extracted_data.get("primary_technology"):
+            update_fields["primary_technology"] = extracted_data["primary_technology"]
+        if extracted_data.get("sub_technologies") and len(extracted_data["sub_technologies"]) > 0:
+            update_fields["sub_technologies"] = extracted_data["sub_technologies"]
+        if extracted_data.get("years_of_experience"):
+            update_fields["years_of_experience"] = extracted_data["years_of_experience"]
+        if extracted_data.get("current_job_title"):
+            update_fields["current_job_title"] = extracted_data["current_job_title"]
+        if extracted_data.get("current_company"):
+            update_fields["current_company"] = extracted_data["current_company"]
+        if extracted_data.get("education"):
+            update_fields["education"] = extracted_data["education"]
+        if extracted_data.get("certifications") and len(extracted_data["certifications"]) > 0:
+            update_fields["certifications"] = extracted_data["certifications"]
+        
+        if update_fields:
+            update_fields["profile_extracted_from_resume"] = True
+            update_fields["profile_extracted_at"] = datetime.now(timezone.utc).isoformat()
+            update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+            
+            await db.users.update_one(
+                {"user_id": user_id},
+                {"$set": update_fields}
+            )
+            logger.info(f"Profile updated for user {user_id} with {len(update_fields)} fields from resume")
+        
+        return extracted_data
+        
+    except Exception as e:
+        logger.error(f"Error extracting profile from resume: {str(e)}")
+        return None
+
+async def auto_analyze_resume(resume_id: str, text_content: str, user_id: str):
+    """Automatically analyze resume, extract profile, create master, and generate versions after upload"""
+    
+    # First, extract profile details and update user
+    extracted_profile = await extract_profile_from_resume(text_content, user_id)
+    
+    # Get updated user profile for technology info
     user_profile = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     primary_tech = user_profile.get("primary_technology", "") if user_profile else ""
     sub_techs = user_profile.get("sub_technologies", []) if user_profile else []
@@ -1065,7 +1162,8 @@ async def auto_analyze_resume(resume_id: str, text_content: str, user_id: str):
     results = {
         "analysis": None,
         "master_resume": None,
-        "title_versions": []
+        "title_versions": [],
+        "extracted_profile": extracted_profile
     }
     
     try:
