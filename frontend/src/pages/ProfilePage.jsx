@@ -619,27 +619,34 @@ export function ProfilePage() {
               <Briefcase className="w-5 h-5" />
               Job Preferences
             </CardTitle>
-            <CardDescription>Your preferred job conditions and compensation</CardDescription>
+            <CardDescription>Your preferred job conditions and compensation (USD)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Salary */}
             <div className="space-y-2">
-              <Label>Salary Expectations</Label>
+              <Label className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                Salary Expectations (USD)
+              </Label>
               <div className="grid grid-cols-3 gap-4">
-                <div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
                   <Input
-                    type="number"
-                    value={formData.salary_min}
-                    onChange={(e) => setFormData({ ...formData, salary_min: e.target.value })}
-                    placeholder="Min"
+                    type="text"
+                    value={formatUSD(formData.salary_min)}
+                    onChange={(e) => handleSalaryChange('salary_min', e.target.value)}
+                    placeholder="Min (e.g., 80,000)"
+                    className="pl-7"
                   />
                 </div>
-                <div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
                   <Input
-                    type="number"
-                    value={formData.salary_max}
-                    onChange={(e) => setFormData({ ...formData, salary_max: e.target.value })}
-                    placeholder="Max"
+                    type="text"
+                    value={formatUSD(formData.salary_max)}
+                    onChange={(e) => handleSalaryChange('salary_max', e.target.value)}
+                    placeholder="Max (e.g., 120,000)"
+                    className="pl-7"
                   />
                 </div>
                 <Select
@@ -650,32 +657,41 @@ export function ProfilePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="annual">Per Year</SelectItem>
+                    <SelectItem value="annual">Per Year (Annual)</SelectItem>
                     <SelectItem value="hourly">Per Hour</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {formData.salary_type === 'annual' 
+                  ? 'Enter your expected annual salary range in US Dollars'
+                  : 'Enter your expected hourly rate in US Dollars'}
+              </p>
             </div>
 
-            {/* Tax Type */}
+            {/* Tax Type - Multiple Selection */}
             <div className="space-y-2">
-              <Label>Tax Type Preference *</Label>
-              <div className="flex gap-2">
+              <Label>Tax Type Preferences * (Select all that apply)</Label>
+              <div className="flex flex-wrap gap-2">
                 {TAX_TYPES.map((type) => (
                   <Badge
                     key={type}
-                    variant={formData.tax_type === type ? "default" : "outline"}
+                    variant={formData.tax_types?.includes(type) ? "default" : "outline"}
                     className={`cursor-pointer px-4 py-2 transition-colors ${
-                      formData.tax_type === type 
-                        ? 'bg-green-600 hover:bg-green-700' 
+                      formData.tax_types?.includes(type) 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
                         : 'hover:bg-green-500/10'
                     }`}
-                    onClick={() => setFormData({ ...formData, tax_type: type })}
+                    onClick={() => toggleTaxType(type)}
                   >
+                    {formData.tax_types?.includes(type) && <Check className="w-3 h-3 mr-1" />}
                     {type}
                   </Badge>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground">
+                W2: Full-time employee | 1099: Independent contractor | C2C/Corp-to-Corp: Through your own company
+              </p>
             </div>
 
             {/* Job Type */}
