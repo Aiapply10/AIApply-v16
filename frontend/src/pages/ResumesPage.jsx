@@ -54,6 +54,7 @@ import {
 import { toast } from 'sonner';
 
 export function ResumesPage() {
+  const { setUser } = useAuthStore();
   const [resumes, setResumes] = useState([]);
   const [technologies, setTechnologies] = useState({ primary: [], sub_technologies: {} });
   const [isLoading, setIsLoading] = useState(true);
