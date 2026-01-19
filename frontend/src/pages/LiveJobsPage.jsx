@@ -862,23 +862,31 @@ ${job?.description || job?.full_description || 'N/A'}
                         size="sm"
                         className="text-slate-500 hover:text-slate-700"
                         onClick={() => window.open(job.apply_link, '_blank')}
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  View Original
-                </Button>
-              )}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        View Original
+                      </Button>
+                    </motion.div>
+                  )}
+                </motion.div>
+              </div>
             </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
 
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <Loader2 className="w-10 h-10 text-blue-500" />
+          </motion.div>
         </div>
       </DashboardLayout>
     );
@@ -886,7 +894,8 @@ ${job?.description || job?.full_description || 'N/A'}
 
   return (
     <DashboardLayout>
-      <div className="space-y-8" data-testid="live-jobs-page">
+      <PageTransition>
+        <div className="space-y-8" data-testid="live-jobs-page">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
