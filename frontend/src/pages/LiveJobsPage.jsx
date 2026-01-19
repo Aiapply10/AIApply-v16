@@ -653,6 +653,8 @@ ${job?.description || job?.full_description || 'N/A'}
     return styles[source] || 'bg-blue-500/10 text-blue-500 border-blue-500/30';
   };
 
+  // Note: JobCard is intentionally defined inside the component for access to parent scope functions
+  // eslint-disable-next-line react/no-unstable-nested-components
   const JobCard = ({ job, showMatchedTech = false, index = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
