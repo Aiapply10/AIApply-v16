@@ -955,32 +955,48 @@ ${job?.description || job?.full_description || 'N/A'}
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-white rounded-xl p-4 border border-violet-100 shadow-sm">
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="bg-white rounded-xl p-4 border border-violet-100 shadow-sm cursor-pointer"
+              >
                 <p className="text-sm text-slate-500">Today&apos;s Applications</p>
                 <p className="text-2xl font-bold text-violet-600">
                   {autoApplyStatus?.today_applications || 0} / {autoApplyStatus?.max_daily || 10}
                 </p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm">
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm cursor-pointer"
+              >
                 <p className="text-sm text-slate-500">Remaining Today</p>
                 <p className="text-2xl font-bold text-emerald-600">
                   {autoApplyStatus?.remaining || 10}
                 </p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm cursor-pointer"
+              >
                 <p className="text-sm text-slate-500">Total Applications</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {autoApplyStatus?.total_applications || 0}
                 </p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm cursor-pointer"
+              >
                 <p className="text-sm text-slate-500">Last Run</p>
                 <p className="text-sm font-semibold text-slate-700">
                   {autoApplyStatus?.last_run 
                     ? formatDate(autoApplyStatus.last_run)
                     : 'Never'}
                 </p>
-              </div>
+              </motion.div>
             </div>
             
             <div className="flex flex-wrap gap-2">
