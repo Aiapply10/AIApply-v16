@@ -97,6 +97,7 @@ Build a website where a job seeker can:
 - [x] ~~OTP Email Verification~~ **COMPLETED Jan 13**
 - [x] ~~Email Center~~ **COMPLETED Jan 13**
 - [x] ~~Google login button hover bug~~ **FIXED Jan 19** - Text was becoming unreadable on hover due to CSS `hover:text-accent-foreground` (white). Added explicit `hover:text-slate-800` to all social login buttons.
+- [x] ~~Job search not fetching from multiple platforms~~ **FIXED Jan 19** - Rebuilt job scraper to support LinkedIn, Dice, Indeed (via JSearch), RemoteOK, Glassdoor, ZipRecruiter. All results now filtered to US-only.
 
 ### P1 - High Priority
 - [ ] Flaky frontend login during automated testing (recurring issue)
