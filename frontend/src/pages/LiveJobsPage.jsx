@@ -1270,6 +1270,8 @@ ${job?.description || job?.full_description || 'N/A'}
             )}
           </TabsContent>
         </Tabs>
+      </div>
+      </PageTransition>
 
         {/* Step-by-Step Apply Wizard Dialog */}
         <Dialog open={showApplyDialog} onOpenChange={(open) => {
