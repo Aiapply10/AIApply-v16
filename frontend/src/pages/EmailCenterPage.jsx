@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { emailCenterAPI, resumeAPI } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -50,6 +51,11 @@ import {
   Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { 
+  PageTransition, 
+  StaggerContainer, 
+  StaggerItem 
+} from '../components/ui/animations';
 
 export function EmailCenterPage() {
   const [accounts, setAccounts] = useState([]);
