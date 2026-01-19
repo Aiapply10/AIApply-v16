@@ -57,31 +57,63 @@ class JobScraper:
         return f"scrape_{hashlib.md5(unique_str.encode()).hexdigest()[:12]}"
     
     def _is_us_location(self, location: str) -> bool:
-        """Check if location is in the United States"""
+        """Check if location is in the United States - strict filtering"""
         if not location:
-            return True  # Assume US if no location
+            return False  # Reject if no location specified
         
-        location_lower = location.lower()
+        location_lower = location.lower().strip()
+        
+        # Exclude non-US patterns FIRST (more strict)
+        non_us_patterns = [
+            'uk', 'united kingdom', 'canada', 'europe', 'india', 'germany', 'france', 
+            'australia', 'singapore', 'japan', 'china', 'brazil', 'mexico', 'toronto',
+            'london', 'berlin', 'paris', 'sydney', 'mumbai', 'bangalore', 'ontario',
+            'british columbia', 'quebec', 'vancouver', 'montreal', 'calgary', 'ottawa',
+            'spain', 'italy', 'netherlands', 'sweden', 'norway', 'denmark', 'finland',
+            'poland', 'portugal', 'ireland', 'switzerland', 'austria', 'belgium',
+            'dublin', 'amsterdam', 'munich', 'zurich', 'madrid', 'barcelona',
+            'philippines', 'vietnam', 'thailand', 'indonesia', 'malaysia',
+            'south africa', 'nigeria', 'kenya', 'egypt', 'uae', 'dubai',
+            'new zealand', 'argentina', 'chile', 'colombia', 'peru'
+        ]
+        for pattern in non_us_patterns:
+            if pattern in location_lower:
+                return False
         
         # Check for explicit US patterns
         for pattern in US_LOCATION_PATTERNS:
             if pattern in location_lower:
                 return True
         
-        # Check for state abbreviations
+        # Check for US state abbreviations (strict matching)
         for state in US_STATES:
-            if f', {state}' in location.upper() or f' {state}' in location.upper():
+            # Match ", CA" or " CA" at end or with space after
+            if f', {state.lower()}' in location_lower or location_lower.endswith(f' {state.lower()}'):
+                return True
+            if f', {state}' in location or location.endswith(f' {state}'):
                 return True
         
-        # Exclude non-US patterns
-        non_us_patterns = ['uk', 'united kingdom', 'canada', 'europe', 'india', 'germany', 'france', 
-                          'australia', 'singapore', 'japan', 'china', 'brazil', 'mexico', 'toronto',
-                          'london', 'berlin', 'paris', 'sydney', 'mumbai', 'bangalore']
-        for pattern in non_us_patterns:
-            if pattern in location_lower:
-                return False
+        # Check for common US city names
+        us_cities = [
+            'new york', 'los angeles', 'chicago', 'houston', 'phoenix', 'philadelphia',
+            'san antonio', 'san diego', 'dallas', 'san jose', 'austin', 'jacksonville',
+            'fort worth', 'columbus', 'charlotte', 'san francisco', 'indianapolis',
+            'seattle', 'denver', 'boston', 'el paso', 'nashville', 'detroit', 'portland',
+            'las vegas', 'memphis', 'louisville', 'baltimore', 'milwaukee', 'albuquerque',
+            'tucson', 'fresno', 'sacramento', 'kansas city', 'atlanta', 'miami',
+            'raleigh', 'omaha', 'oakland', 'minneapolis', 'tulsa', 'cleveland',
+            'wichita', 'arlington', 'new orleans', 'bakersfield', 'tampa', 'aurora',
+            'honolulu', 'anaheim', 'santa ana', 'riverside', 'corpus christi',
+            'lexington', 'pittsburgh', 'anchorage', 'stockton', 'cincinnati',
+            'saint paul', 'toledo', 'newark', 'greensboro', 'plano', 'henderson',
+            'lincoln', 'buffalo', 'fort wayne', 'jersey city', 'chula vista',
+            'orlando', 'st. louis', 'scottsdale', 'chandler', 'gilbert', 'irving'
+        ]
+        for city in us_cities:
+            if city in location_lower:
+                return True
         
-        return True  # Default to US if uncertain
+        return False  # Default to rejecting if uncertain
     
     def _filter_us_jobs(self, jobs: List[Dict]) -> List[Dict]:
         """Filter jobs to only US-based positions"""
