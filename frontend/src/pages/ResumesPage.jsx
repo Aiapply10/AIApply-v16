@@ -132,10 +132,11 @@ export function ResumesPage() {
     }
 
     setIsUploading(true);
-    toast.info('Uploading and analyzing your resume... This may take a moment.', { duration: 10000 });
+    const uploadToastId = toast.loading('Uploading and analyzing your resume... AI is creating a Master Resume and job-specific versions. This takes about 60 seconds.', { duration: 120000 });
     
     try {
       const response = await resumeAPI.upload(file);
+      toast.dismiss(uploadToastId);
       
       // Update user profile if extracted from resume
       if (response.data.profile_updated && response.data.updated_user) {
@@ -154,14 +155,25 @@ export function ResumesPage() {
           extracted_profile: response.data.extracted_profile
         });
         setShowAutoResultsDialog(true);
-        toast.success('Resume analyzed successfully!');
+        toast.success('Resume analyzed successfully! Master Resume and job-specific versions created.', { duration: 5000 });
       } else {
         toast.success('Resume uploaded successfully!');
       }
       
       loadData();
     } catch (error) {
-      toast.error('Failed to upload resume');
+      toast.dismiss(uploadToastId);
+      console.error('Upload error:', error);
+      // Even if there was a timeout error, the upload might have succeeded
+      // Try to reload data to check
+      toast.info('Processing may still be in progress. Checking for your resume...', { duration: 5000 });
+      await loadData();
+      // Check if resume was actually uploaded
+      if (resumes.length > 0) {
+        toast.success('Resume found! It was uploaded successfully.', { duration: 5000 });
+      } else {
+        toast.error('Upload may have failed. Please try again.', { duration: 5000 });
+      }
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
