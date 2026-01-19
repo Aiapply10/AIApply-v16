@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { liveJobsAPI, resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI, authAPI } from '../lib/api';
 import { useAuthStore } from '../store';
@@ -59,10 +60,23 @@ import {
   History,
   AlertCircle,
   X,
-  Plus
+  Plus,
+  TrendingUp,
+  Zap,
+  Award,
+  Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { 
+  PageTransition, 
+  StaggerContainer, 
+  StaggerItem,
+  HoverCard,
+  AnimatedTooltip,
+  AnimatedProgress,
+  PulseBadge
+} from '../components/ui/animations';
 
 export function LiveJobsPage() {
   const { user } = useAuthStore();
