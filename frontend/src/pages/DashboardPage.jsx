@@ -561,13 +561,14 @@ export function DashboardPage() {
                 <div className="max-h-40 overflow-y-auto space-y-1.5 pr-2">
                   {profileCompleteness.missing_fields.map((field) => {
                     const IconComponent = fieldIcons[field] || AlertTriangle;
+                    const fieldLabel = fieldLabels[field] || field.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                     return (
                       <div 
                         key={field}
                         className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg"
                       >
                         <IconComponent className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span className="text-sm text-amber-800">{field}</span>
+                        <span className="text-sm text-amber-800">{fieldLabel}</span>
                       </div>
                     );
                   })}
