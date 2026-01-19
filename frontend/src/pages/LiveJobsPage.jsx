@@ -916,7 +916,7 @@ ${job?.description || job?.full_description || 'N/A'}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label>Job Title / Keywords</Label>
                   <Input
@@ -927,7 +927,7 @@ ${job?.description || job?.full_description || 'N/A'}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Location</Label>
+                  <Label>Location (US Only)</Label>
                   <Input
                     placeholder="e.g., New York, Remote"
                     value={searchForm.location}
@@ -953,7 +953,79 @@ ${job?.description || job?.full_description || 'N/A'}
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Job Platform</Label>
+                  <Select
+                    value={searchForm.source}
+                    onValueChange={(value) => setSearchForm({ ...searchForm, source: value })}
+                  >
+                    <SelectTrigger data-testid="job-search-source">
+                      <SelectValue placeholder="All Platforms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {JOB_SOURCES.map((source) => (
+                        <SelectItem key={source.value} value={source.value}>
+                          <span className="flex items-center gap-2">
+                            <span>{source.icon}</span>
+                            {source.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+              
+              {/* Quick Platform Links */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+                <span className="text-sm text-muted-foreground">Search directly on:</span>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openPlatformSearch('indeed')}
+                  className="h-7 text-xs"
+                >
+                  💼 Indeed
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openPlatformSearch('dice')}
+                  className="h-7 text-xs"
+                >
+                  🎲 Dice
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openPlatformSearch('linkedin')}
+                  className="h-7 text-xs"
+                >
+                  🔗 LinkedIn
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openPlatformSearch('glassdoor')}
+                  className="h-7 text-xs"
+                >
+                  🏢 Glassdoor
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => openPlatformSearch('ziprecruiter')}
+                  className="h-7 text-xs"
+                >
+                  ⚡ ZipRecruiter
+                </Button>
+              </div>
+              
               <Button type="submit" disabled={isSearching} data-testid="search-jobs-btn">
                 {isSearching ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
