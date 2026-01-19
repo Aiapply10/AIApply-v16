@@ -2094,8 +2094,6 @@ ${job?.description || job?.full_description || 'N/A'}
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-      </PageTransition>
     </DashboardLayout>
   );
 }
