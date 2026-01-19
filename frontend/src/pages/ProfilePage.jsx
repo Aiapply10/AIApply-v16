@@ -209,6 +209,33 @@ export function ProfilePage() {
     }
   };
 
+  const toggleTaxType = (type) => {
+    if (formData.tax_types.includes(type)) {
+      setFormData({
+        ...formData,
+        tax_types: formData.tax_types.filter(t => t !== type)
+      });
+    } else {
+      setFormData({
+        ...formData,
+        tax_types: [...formData.tax_types, type]
+      });
+    }
+  };
+
+  // Format number as USD
+  const formatUSD = (value) => {
+    if (!value) return '';
+    const num = parseInt(value.toString().replace(/[^0-9]/g, ''));
+    return isNaN(num) ? '' : num.toLocaleString('en-US');
+  };
+
+  const handleSalaryChange = (field, value) => {
+    // Remove non-numeric characters for storage
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setFormData({ ...formData, [field]: numericValue });
+  };
+
   const handleResumeUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
