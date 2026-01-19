@@ -111,7 +111,7 @@ export function ProfilePage() {
         salary_min: user.salary_min || '',
         salary_max: user.salary_max || '',
         salary_type: user.salary_type || 'annual',
-        tax_type: user.tax_type || '',
+        tax_types: user.tax_types || (user.tax_type ? [user.tax_type] : []),  // Support old single value
         relocation_preference: user.relocation_preference || '',
         location_preferences: user.location_preferences || [],
         job_type_preferences: user.job_type_preferences || [],
