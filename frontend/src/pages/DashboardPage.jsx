@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { useAuthStore } from '../store';
 import { reportAPI, resumeAPI, authAPI } from '../lib/api';
@@ -31,8 +32,22 @@ import {
   AlertTriangle,
   X,
   ChevronRight,
-  Bot
+  Bot,
+  Star,
+  Award,
+  Calendar,
+  MessageSquare,
+  Eye
 } from 'lucide-react';
+import { 
+  PageTransition, 
+  StaggerContainer, 
+  StaggerItem, 
+  HoverCard,
+  AnimatedTooltip,
+  AnimatedProgress,
+  AnimatedCounter 
+} from '../components/ui/animations';
 
 export function DashboardPage() {
   const navigate = useNavigate();
