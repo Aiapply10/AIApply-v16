@@ -539,72 +539,85 @@ export function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="bg-white border-slate-200 shadow-lg">
+          {/* Quick Actions - Enhanced */}
+          <Card className="bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-slate-800">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <motion.div 
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"
+                >
                   <Zap className="w-4 h-4 text-emerald-600" />
-                </div>
+                </motion.div>
                 Quick Actions
               </CardTitle>
               <CardDescription className="text-slate-500">Common tasks at your fingertips</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-50 h-12"
-                onClick={() => navigate('/resumes')}
+              {[
+                { icon: Upload, color: 'blue', label: 'Upload New Resume', path: '/resumes' },
+                { icon: Eye, color: 'pink', label: 'Browse Live Jobs', path: '/live-jobs' },
+                { icon: Sparkles, color: 'violet', label: 'Tailor Resume with AI', path: '/resumes' },
+              ].map((action, index) => (
+                <motion.div
+                  key={action.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  whileHover={{ x: 4, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-50 h-12 group"
+                    onClick={() => navigate(action.path)}
+                  >
+                    <div className={`w-8 h-8 rounded-lg bg-${action.color}-100 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
+                      <action.icon className={`w-4 h-4 text-${action.color}-600`} />
+                    </div>
+                    {action.label}
+                    <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Button>
+                </motion.div>
+              ))}
+              
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                whileHover={{ x: 4, scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
-                  <Upload className="w-4 h-4 text-blue-600" />
-                </div>
-                Upload New Resume
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-50 h-12"
-                onClick={() => navigate('/live-jobs')}
-              >
-                <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center mr-3">
-                  <Sparkles className="w-4 h-4 text-pink-600" />
-                </div>
-                Browse Live Jobs
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-50 h-12"
-                onClick={() => navigate('/resumes')}
-              >
-                <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center mr-3">
-                  <Sparkles className="w-4 h-4 text-violet-600" />
-                </div>
-                Tailor Resume with AI
-              </Button>
-              <Button 
-                variant="outline" 
-                className={`w-full justify-start h-12 ${
-                  isProfileComplete 
-                    ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
-                    : 'border-amber-200 bg-amber-50 text-amber-700'
-                }`}
-                onClick={() => isProfileComplete ? navigate('/live-jobs-2') : setShowProfilePopup(true)}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
-                  isProfileComplete ? 'bg-cyan-100' : 'bg-amber-100'
-                }`}>
-                  {isProfileComplete ? (
-                    <Bot className="w-4 h-4 text-cyan-600" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  )}
-                </div>
-                {isProfileComplete ? 'Auto-Apply Jobs' : 'Auto-Apply (Profile Incomplete)'}
-              </Button>
+                <Button 
+                  variant="outline" 
+                  className={`w-full justify-start h-12 group ${
+                    isProfileComplete 
+                      ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
+                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                  }`}
+                  onClick={() => isProfileComplete ? navigate('/live-jobs-2') : setShowProfilePopup(true)}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
+                    isProfileComplete ? 'bg-cyan-100' : 'bg-amber-100'
+                  }`}>
+                    {isProfileComplete ? (
+                      <Bot className="w-4 h-4 text-cyan-600" />
+                    ) : (
+                      <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}>
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      </motion.div>
+                    )}
+                  </div>
+                  {isProfileComplete ? 'Auto-Apply Jobs' : 'Auto-Apply (Profile Incomplete)'}
+                  <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Button>
+              </motion.div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
+      </PageTransition>
     </DashboardLayout>
   );
 }
