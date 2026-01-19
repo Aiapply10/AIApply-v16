@@ -954,7 +954,7 @@ ${job?.description || job?.full_description || 'N/A'}
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div className="bg-white rounded-xl p-4 border border-violet-100 shadow-sm">
-                <p className="text-sm text-slate-500">Today's Applications</p>
+                <p className="text-sm text-slate-500">Today&apos;s Applications</p>
                 <p className="text-2xl font-bold text-violet-600">
                   {autoApplyStatus?.today_applications || 0} / {autoApplyStatus?.max_daily || 10}
                 </p>
@@ -1520,7 +1520,7 @@ ${job?.description || job?.full_description || 'N/A'}
                       <ul className="text-sm text-amber-700 space-y-1">
                         <li>• Your application will be recorded in the Applications page</li>
                         <li>• The job posting will open in a new tab</li>
-                        <li>• Upload your tailored resume on the employer's website</li>
+                        <li>• Upload your tailored resume on the employer&apos;s website</li>
                       </ul>
                     </div>
                   </div>

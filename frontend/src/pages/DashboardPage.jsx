@@ -320,7 +320,7 @@ export function DashboardPage() {
               </span>
             </h1>
             <p className="text-slate-500 mt-2">
-              Here's an overview of your job search progress
+              Here&apos;s an overview of your job search progress
             </p>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
