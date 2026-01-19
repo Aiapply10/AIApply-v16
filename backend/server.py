@@ -43,7 +43,11 @@ from PyPDF2 import PdfReader
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=True)
+# Load .env file only if it exists (for local development)
+# In production, environment variables are injected by Kubernetes
+env_file = ROOT_DIR / '.env'
+if env_file.exists():
+    load_dotenv(env_file, override=False)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
