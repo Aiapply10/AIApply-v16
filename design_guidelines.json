@@ -1,178 +1,151 @@
 {
   "identity": {
-    "name": "E1: The Anti-AI Designer",
-    "mission": "Create a 'happening, lively, and interactive' AI Resume Tailor that breaks the boring SaaS mold.",
-    "archetype": "Electric & Neon (Archetype 2) - Adapted for High Energy",
-    "principles": [
+    "persona": "E1 - The Anti-AI Designer",
+    "archetype": "The Performance Pro (Elite Athleticism & Precision)",
+    "core_principles": [
       "Fusion over Imitation",
-      "Emotion First (Empowerment & Energy)",
-      "Content is King (Storytelling)",
-      "Zoom In (Bold Details)",
-      "Negative Space (Breathing Room)",
-      "Contrast (High Impact)"
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
     ]
   },
   "typography": {
-    "font_family": {
-      "heading": "Outfit, sans-serif",
-      "body": "Manrope, sans-serif",
-      "mono": "JetBrains Mono, monospace"
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weights": ["500", "600", "700"],
+      "usage": "Use for all section titles, hero text, and card headers. Tight tracking (-0.02em).",
+      "anti_pattern": "Do not use Inter for headings."
     },
-    "usage_rules": {
-      "headings": "Bold (700) or ExtraBold (800). Tight tracking (-0.02em).",
-      "body": "Regular (400) or Medium (500). Relaxed leading (1.6).",
-      "overline": "Uppercase, tracking-widest (0.2em), text-xs, font-bold."
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["400", "500"],
+      "usage": "Use for all paragraphs, inputs, and data tables.",
+      "note": "Ensure 'Manrope' is actually used in index.css (currently it points to Inter)."
+    },
+    "mono": {
+      "family": "JetBrains Mono, monospace",
+      "usage": "Use for code snippets, API keys, and data metrics."
     }
   },
   "colors": {
-    "palette_name": "Neon Future",
-    "mode_strategy": "Hybrid (Dark Mode Default for 'Cool' factor, Light Mode for 'Clean' factor)",
-    "light_theme": {
-      "background": "210 40% 98%",
-      "foreground": "222 47% 11%",
-      "card": "0 0% 100%",
-      "card_foreground": "222 47% 11%",
-      "primary": "262 83% 58%",
-      "primary_foreground": "210 40% 98%",
-      "secondary": "210 40% 96.1%",
-      "secondary_foreground": "222 47% 11%",
-      "accent": "262 83% 58%",
-      "accent_foreground": "210 40% 98%",
-      "border": "214.3 31.8% 91.4%"
+    "palette_name": "Cyber-Professional",
+    "primary": {
+      "name": "Electric Blue",
+      "hex": "#2563EB",
+      "tailwind": "blue-600",
+      "usage": "Primary CTAs, active states, key highlights."
     },
-    "dark_theme": {
-      "background": "222 47% 11%",
-      "foreground": "210 40% 98%",
-      "card": "217 33% 17%",
-      "card_foreground": "210 40% 98%",
-      "primary": "263 70% 50%",
-      "primary_foreground": "210 40% 98%",
-      "secondary": "217 33% 17%",
-      "secondary_foreground": "210 40% 98%",
-      "accent": "263 70% 50%",
-      "accent_foreground": "210 40% 98%",
-      "border": "217 33% 17%"
+    "secondary": {
+      "name": "Obsidian",
+      "hex": "#020617",
+      "tailwind": "slate-950",
+      "usage": "Dark mode backgrounds, sidebar, footer."
     },
-    "special_accents": {
-      "electric_purple": "#8B5CF6",
-      "neon_cyan": "#06B6D4",
-      "acid_lime": "#84CC16",
-      "hot_pink": "#EC4899"
-    }
-  },
-  "visual_enhancers": {
-    "glassmorphism": {
-      "usage": "Sticky Headers, Floating Navs, Dashboard Cards",
-      "classes": "bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg"
+    "accent": {
+      "name": "Signal Orange",
+      "hex": "#F97316",
+      "tailwind": "orange-500",
+      "usage": "Notification badges, 'New' labels, urgent alerts."
     },
-    "tracing_beam": {
-      "usage": "Feature Cards, Pricing Tables",
-      "description": "Animated gradient border that traces the container edge."
+    "neutral": {
+      "light": "#F8FAFC",
+      "dark": "#0F172A",
+      "usage": "Backgrounds. Avoid pure black/white."
     },
     "gradients": {
-      "usage": "Text Highlights, Buttons, Background Blobs",
-      "rule": "Use noise/grain overlay on gradients to avoid 'digital flatness'."
+      "primary": "bg-gradient-to-r from-blue-600 to-indigo-600",
+      "glow": "bg-gradient-to-r from-blue-500/20 to-purple-500/20"
     },
-    "textures": {
-      "usage": "Backgrounds",
-      "type": "Subtle noise or grain (opacity 0.05)"
+    "forbidden": [
+      "Generic Purple (#7C3AED) as primary",
+      "Teal (#14B8A6) for dashboards"
+    ]
+  },
+  "visual_enhancers": {
+    "surface_strategies": [
+      {
+        "name": "The Tracing Beam",
+        "usage": "High-conversion Cards, Pricing Tables",
+        "css_class": "group relative overflow-hidden border border-white/10 bg-slate-900/50 backdrop-blur-xl"
+      },
+      {
+        "name": "Crystal Glass",
+        "usage": "Sticky Headers, Floating Navs",
+        "css_class": "bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-white/20"
+      }
+    ],
+    "shadows": {
+      "glow_blue": "0 0 20px rgba(37, 99, 235, 0.3)",
+      "sharp": "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+    },
+    "borders": {
+      "subtle": "border border-slate-200 dark:border-slate-800",
+      "highlight": "border-l-4 border-blue-600"
     }
   },
-  "layout_strategy": {
-    "marketing_page": {
-      "grid_type": "Mode A: The Tetris Grid",
-      "columns": "grid-cols-1 md:grid-cols-12",
-      "gap": "gap-8 md:gap-12",
-      "rules": "Asymmetry is key. Use col-span-7 vs col-span-5. Never 50/50."
-    },
-    "dashboard": {
-      "grid_type": "Mode B: The Control Room Grid",
-      "columns": "grid-cols-1 md:grid-cols-4",
-      "gap": "gap-6",
-      "rules": "Dense, information-rich. Use bento-box style sizing."
+  "layout_strategies": {
+    "dashboard_grid": {
+      "type": "Bento Grid",
+      "classes": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4",
+      "rules": [
+        "Summary cards: col-span-1",
+        "Main chart: col-span-2 row-span-2",
+        "Feed: col-span-1 row-span-2"
+      ]
     },
     "spacing": {
-      "scale": "Generous. Use p-8, p-12, p-24 for sections.",
-      "container_padding": "px-6 md:px-12 lg:px-24"
+      "scale": "Generous (p-6, p-8, p-12)",
+      "rule": "Containers with borders must have internal padding (p-6+) to prevent text collision."
     }
   },
   "components": {
     "buttons": {
-      "style": "Pill-shaped or Sharp Rectangles (mix based on context).",
-      "interaction": "Scale down slightly on click (0.95). Glow on hover."
+      "style": "Sharp or slightly rounded (rounded-lg). No full pills.",
+      "animation": "hover:translate-y-[-1px] active:translate-y-[1px] transition-all"
     },
     "cards": {
-      "style": "Glassmorphism or Solid with Tracing Beam.",
-      "hover": "Lift up (-4px) and increase shadow."
+      "style": "Flat background, 1px subtle border, no shadow by default. Hover adds shadow.",
+      "hover": "hover:border-blue-500/50 hover:shadow-lg transition-all duration-300"
     },
     "inputs": {
-      "style": "Minimalist. Bottom border only OR filled background with no border.",
-      "focus": "Ring with accent color."
+      "style": "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500/20"
     }
   },
   "motion": {
     "library": "framer-motion",
-    "variants": {
-      "fadeInUp": {
-        "initial": { "opacity": 0, "y": 20 },
-        "animate": { "opacity": 1, "y": 0 },
-        "transition": { "duration": 0.5, "ease": "easeOut" }
-      },
-      "staggerContainer": {
-        "animate": { "transition": { "staggerChildren": 0.1 } }
-      },
-      "scaleIn": {
-        "initial": { "scale": 0.9, "opacity": 0 },
-        "animate": { "scale": 1, "opacity": 1 }
-      }
-    },
-    "micro_interactions": "All interactive elements must have hover/tap states."
-  },
-  "image_urls": {
-    "hero_main": {
-      "url": "https://images.unsplash.com/photo-1758518727592-706e80ebc354?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwxfHxjb25maWRlbnQlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzfGVufDB8fHx8MTc2NjUwNjYyNXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Confident successful professional woman",
-      "category": "Hero Section"
-    },
-    "about_team": {
-      "url": "https://images.unsplash.com/photo-1737573296361-75315239293a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjB0ZWNoJTIwb2ZmaWNlJTIwdGVhbXxlbnwwfHx8fDE3NjY1MDY2MjZ8MA&ixlib=rb-4.1.0&q=85",
-      "alt": "Modern tech team collaborating",
-      "category": "About/Features"
-    },
-    "background_abstract": {
-      "url": "https://images.unsplash.com/photo-1762278805303-69a5fe7b6a82?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMG5lb24lMjBncmFkaWVudCUyMHRlY2hub2xvZ3l8ZW58MHx8fHwxNzY2NTA2NjI4fDA&ixlib=rb-4.1.0&q=85",
-      "alt": "Abstract neon flowing lines",
-      "category": "Backgrounds/Cards"
-    },
-    "feature_1": {
-      "url": "https://images.unsplash.com/photo-1737574821698-862e77f044c1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njd8MHwxfHNlYXJjaHwyfHxjb25maWRlbnQlMjBwcm9mZXNzaW9uYWwlMjBzdWNjZXNzfGVufDB8fHx8MTc2NjUwNjYyNXww&ixlib=rb-4.1.0&q=85",
-      "alt": "Focused businessman",
-      "category": "Features"
+    "required_animations": [
+      "Page transitions (fade-in + slide-up)",
+      "Staggered list items",
+      "Hover lift on cards"
+    ],
+    "classes": {
+      "page_enter": "animate-in fade-in slide-in-from-bottom-4 duration-500",
+      "hover_lift": "hover:-translate-y-1 transition-transform duration-300"
     }
   },
+  "images": {
+    "hero_bg": "https://images.unsplash.com/photo-1646153114001-495dfb56506d",
+    "team_meeting": "https://images.unsplash.com/photo-1622675363311-3e1904dc1885",
+    "job_seeker": "https://images.unsplash.com/photo-1736939666660-d4c776e0532c",
+    "success_moment": "https://images.unsplash.com/photo-1738750908048-14200459c3c9"
+  },
   "instructions_to_main_agent": [
-    "Implement the 'Electric & Neon' theme using the provided HSL values in tailwind.config.js.",
-    "Use 'Outfit' for all headings and 'Manrope' for body text.",
-    "Apply 'glassmorphism' classes to dashboard cards and sticky headers.",
-    "Use the provided image URLs for the respective sections.",
-    "Ensure all interactive elements have hover states and micro-animations.",
-    "Use framer-motion for page transitions and element entry animations.",
-    "Follow the 'Tetris Grid' for the landing page layout.",
-    "Do NOT use generic gradients. Use the 'Neon Future' palette.",
-    "Ensure high contrast for accessibility (WCAG AA)."
+    "1. REFACTOR index.css: Replace the 'Violet/Purple' theme with the 'Electric Blue/Obsidian' theme defined in colors.",
+    "2. UPDATE tailwind.config.js: Ensure 'Manrope' is the default sans font, replacing Inter.",
+    "3. IMPLEMENT Dark Mode toggle: Ensure the app supports class-based dark mode.",
+    "4. APPLY Bento Grid: Refactor the Dashboard layout to use the Bento Grid strategy.",
+    "5. ENHANCE Cards: Add the 'Tracing Beam' or 'Hover Glow' effect to job cards.",
+    "6. ADD Motion: Wrap page contents in a motion component for smooth entry.",
+    "7. USE Images: Replace placeholders with the provided Unsplash URLs."
   ],
-  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
-    "Avoid 'AI slop' aesthetic (generic centered layouts, uniform styling).",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur).",
-    "Do NOT apply universal transition (e.g., transition: all).",
-    "Do NOT center align the app container.",
-    "Always use modern button styles (pill-shaped or sharp).",
-    "NEVER use AI assistant Emoji characters.",
+  "universal_guidelines": [
+    "Do not use generic centered layouts.",
+    "Create depth through layered design elements.",
+    "Use glass-morphism effects with backdrop filters.",
     "Every interaction needs micro-animations.",
     "Use 2-3x more spacing than feels comfortable.",
-    "Use 'sonner' for toasts.",
-    "Components MUST use named exports.",
-    "Pages MUST use default exports."
+    "All interactive elements MUST include data-testid."
   ]
 }
