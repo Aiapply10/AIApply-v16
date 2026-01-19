@@ -455,49 +455,57 @@ export function DashboardPage() {
             </StaggerItem>
           ))}
         </StaggerContainer>
-                    <stat.icon className={`w-7 h-7 ${stat.iconColor}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="grid lg:grid-cols-3 gap-6"
+        >
           {/* Recent Applications */}
-          <Card className="lg:col-span-2 bg-white border-slate-200 shadow-lg">
+          <Card className="lg:col-span-2 bg-white border-slate-200 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2 text-slate-800">
-                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Target className="w-4 h-4 text-violet-600" />
-                  </div>
+                  <motion.div 
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center"
+                  >
+                    <Target className="w-4 h-4 text-blue-600" />
+                  </motion.div>
                   Recent Applications
                 </CardTitle>
                 <CardDescription className="text-slate-500">Your latest job applications</CardDescription>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/applications')}
-                className="border-slate-200 text-slate-600 hover:bg-slate-50"
-              >
-                View All
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+              <motion.div whileHover={{ x: 3 }}>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/applications')}
+                  className="border-slate-200 text-slate-600 hover:bg-slate-50 group"
+                >
+                  View All
+                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </motion.div>
             </CardHeader>
             <CardContent>
               {stats?.recent_applications?.length > 0 ? (
-                <div className="space-y-3">
+                <StaggerContainer className="space-y-3" delay={0.1}>
                   {stats.recent_applications.slice(0, 5).map((app, index) => (
-                    <div 
-                      key={app.application_id || index}
-                      className="flex items-center justify-between p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
-                          <Briefcase className="w-5 h-5 text-white" />
+                    <StaggerItem key={app.application_id || index}>
+                      <motion.div
+                        whileHover={{ x: 4, backgroundColor: 'rgb(241 245 249)' }}
+                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.div 
+                            whileHover={{ rotate: 10 }}
+                            className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center"
+                          >
+                            <Briefcase className="w-5 h-5 text-white" />
                         </div>
                         <div>
                           <p className="font-medium text-slate-800">{app.job_title || 'Position'}</p>
