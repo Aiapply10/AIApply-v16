@@ -556,9 +556,9 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { icon: Upload, color: 'blue', label: 'Upload New Resume', path: '/resumes' },
-                { icon: Eye, color: 'pink', label: 'Browse Live Jobs', path: '/live-jobs' },
-                { icon: Sparkles, color: 'violet', label: 'Tailor Resume with AI', path: '/resumes' },
+                { icon: Upload, bgColor: 'bg-blue-100', iconColor: 'text-blue-600', label: 'Upload New Resume', path: '/resumes' },
+                { icon: Eye, bgColor: 'bg-pink-100', iconColor: 'text-pink-600', label: 'Browse Live Jobs', path: '/live-jobs' },
+                { icon: Sparkles, bgColor: 'bg-violet-100', iconColor: 'text-violet-600', label: 'Tailor Resume with AI', path: '/resumes' },
               ].map((action, index) => (
                 <motion.div
                   key={action.label}
@@ -570,14 +570,14 @@ export function DashboardPage() {
                 >
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-50 h-12 group"
+                    className="w-full justify-start border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 h-12 group"
                     onClick={() => navigate(action.path)}
                   >
-                    <div className={`w-8 h-8 rounded-lg bg-${action.color}-100 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
-                      <action.icon className={`w-4 h-4 text-${action.color}-600`} />
+                    <div className={`w-8 h-8 rounded-lg ${action.bgColor} flex items-center justify-center mr-3 group-hover:scale-110 transition-transform`}>
+                      <action.icon className={`w-4 h-4 ${action.iconColor}`} />
                     </div>
-                    {action.label}
-                    <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="font-medium">{action.label}</span>
+                    <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-slate-500" />
                   </Button>
                 </motion.div>
               ))}
@@ -593,10 +593,10 @@ export function DashboardPage() {
                   variant="outline" 
                   className={`w-full justify-start h-12 group ${
                     isProfileComplete 
-                      ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
-                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                      ? 'border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300' 
+                      : 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800'
                   }`}
-                  onClick={() => isProfileComplete ? navigate('/live-jobs-2') : setShowProfilePopup(true)}
+                  onClick={() => isProfileComplete ? navigate('/live-jobs') : setShowProfilePopup(true)}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${
                     isProfileComplete ? 'bg-cyan-100' : 'bg-amber-100'
@@ -609,7 +609,7 @@ export function DashboardPage() {
                       </motion.div>
                     )}
                   </div>
-                  {isProfileComplete ? 'Auto-Apply Jobs' : 'Auto-Apply (Profile Incomplete)'}
+                  <span className="font-medium">{isProfileComplete ? 'Auto-Apply Jobs' : 'Auto-Apply (Profile Incomplete)'}</span>
                   <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </motion.div>
