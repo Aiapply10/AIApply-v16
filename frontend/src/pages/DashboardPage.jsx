@@ -138,7 +138,12 @@ export function DashboardPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="w-12 h-12 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <div className="w-12 h-12 rounded-full border-4 border-blue-200 border-t-blue-600" />
+          </motion.div>
         </div>
       </DashboardLayout>
     );
@@ -149,25 +154,28 @@ export function DashboardPage() {
       label: 'Total Applications',
       value: stats?.total_applications || 0,
       icon: Send,
-      color: 'from-pink-500 to-rose-500',
-      bgLight: 'bg-pink-50',
-      iconColor: 'text-pink-600',
+      color: 'from-blue-500 to-indigo-500',
+      bgLight: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      description: 'Jobs applied to',
     },
     {
-      label: 'Interviews Scheduled',
+      label: 'Interviews',
       value: stats?.interviews_scheduled || 0,
-      icon: Clock,
+      icon: Calendar,
       color: 'from-orange-500 to-amber-500',
       bgLight: 'bg-orange-50',
       iconColor: 'text-orange-600',
+      description: 'Scheduled',
     },
     {
-      label: 'Offers Received',
+      label: 'Offers',
       value: stats?.offers_received || 0,
-      icon: CheckCircle2,
-      color: 'from-green-500 to-emerald-500',
-      bgLight: 'bg-green-50',
-      iconColor: 'text-green-600',
+      icon: Award,
+      color: 'from-emerald-500 to-green-500',
+      bgLight: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      description: 'Received',
     },
     {
       label: 'Resumes',
