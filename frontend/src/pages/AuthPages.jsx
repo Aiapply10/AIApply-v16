@@ -164,7 +164,7 @@ export function LoginPage() {
 
           <Button 
             variant="outline" 
-            className="w-full border-slate-200 hover:bg-slate-50 py-6 text-lg text-slate-700"
+            className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-800 py-6 text-lg text-slate-700"
             onClick={handleGoogleLogin}
             data-testid="google-login"
           >
@@ -178,7 +178,7 @@ export function LoginPage() {
           </Button>
           <Button 
             variant="outline" 
-            className="w-full border-slate-200 hover:bg-slate-50 py-6 text-lg mt-3 text-slate-700"
+            className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-800 py-6 text-lg mt-3 text-slate-700"
             onClick={handleLinkedInLogin}
             disabled={isLinkedInLoading}
             data-testid="linkedin-login"
@@ -555,7 +555,7 @@ export function RegisterPage() {
               <div className="space-y-3 mb-6">
                 <Button 
                   variant="outline" 
-                  className="w-full border-slate-200 hover:bg-slate-50 py-6 text-lg text-slate-700"
+                  className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-800 py-6 text-lg text-slate-700"
                   onClick={handleGoogleLogin}
                   data-testid="google-register"
                 >
@@ -570,7 +570,7 @@ export function RegisterPage() {
 
                 <Button 
                   variant="outline" 
-                  className="w-full border-slate-200 hover:bg-slate-50 py-6 text-lg text-slate-700"
+                  className="w-full border-slate-200 hover:bg-slate-50 hover:text-slate-800 py-6 text-lg text-slate-700"
                   onClick={handleLinkedInLogin}
                   disabled={isLinkedInLoading}
                   data-testid="linkedin-register"
