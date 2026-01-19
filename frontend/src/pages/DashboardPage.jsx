@@ -184,6 +184,7 @@ export function DashboardPage() {
       color: 'from-violet-500 to-purple-500',
       bgLight: 'bg-violet-50',
       iconColor: 'text-violet-600',
+      description: 'Uploaded',
     },
   ];
 
@@ -191,7 +192,8 @@ export function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8" data-testid="candidate-dashboard">
+      <PageTransition>
+        <div className="space-y-8" data-testid="candidate-dashboard">
         {/* Profile Completion Popup */}
         <Dialog open={showProfilePopup} onOpenChange={setShowProfilePopup}>
           <DialogContent className="max-w-lg bg-white">
