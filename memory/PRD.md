@@ -102,7 +102,7 @@ Build a website where a job seeker can:
 - [x] ~~UI Enhancement - Animations & Interactivity~~ **COMPLETED Jan 19** - Added framer-motion, enhanced CSS with animations, hover effects, interactive cards, tooltips, and modern blue color scheme.
 
 ### P1 - High Priority  
-- [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19** - On upload: (1) Analysis score 82/100, (2) Master Resume created, (3) 4 title-specific versions generated automatically (Full Stack Developer, Software Engineer, Web Developer, Application Developer).
+- [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19** - On upload: (1) Analysis score 82/100, (2) Master Resume created, (3) 4 title-specific versions generated automatically (Full Stack Developer, Software Engineer, Web Developer, Application Developer). Added 2-minute timeout and improved loading messages.
 - [ ] Flaky frontend login during automated testing (recurring issue)
 - [ ] Backend refactoring - break down monolithic server.py
 
