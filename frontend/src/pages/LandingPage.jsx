@@ -480,31 +480,40 @@ export function LandingPage() {
             </div>
             
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/30 mb-6">
-                <Rocket className="w-4 h-4 text-white" />
-                <span className="text-sm font-semibold text-white">Start Your Journey</span>
-              </div>
-              
-              <h2 className="font-heading text-4xl sm:text-5xl font-bold mb-6 text-white">
-                Ready to Transform Your Job Search?
-              </h2>
-              
-              <p className="text-lg text-white/90 max-w-xl mx-auto mb-8">
-                Join thousands of job seekers who've already landed their dream roles using our AI-powered platform.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-violet-700 hover:bg-slate-100 text-lg px-8 py-6 font-semibold shadow-xl"
-                  onClick={handleGetStarted}
-                >
-                  Start Free Today
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/30 mb-6">
+                  <Rocket className="w-4 h-4 text-white" />
+                  <span className="text-sm font-semibold text-white">Start Your Journey</span>
+                </div>
+                
+                <h2 className="font-heading text-4xl sm:text-5xl font-bold mb-6 text-white">
+                  Ready to Transform Your Job Search?
+                </h2>
+                
+                <p className="text-lg text-white/90 max-w-xl mx-auto mb-8">
+                  Join thousands of job seekers who&apos;ve already landed their dream roles using our AI-powered platform.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      size="lg" 
+                      className="bg-white text-blue-700 hover:bg-slate-100 text-lg px-8 py-6 font-semibold shadow-xl"
+                      onClick={handleGetStarted}
+                    >
+                      Start Free Today
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </motion.div>
+                </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -513,7 +522,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                   <path d="M2 17l10 5 10-5"/>
