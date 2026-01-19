@@ -61,7 +61,7 @@ const SUB_TECHNOLOGIES_MAP = {
   'Front End React': ['JavaScript', 'TypeScript', 'Redux', 'Next.js', 'React Router', 'Tailwind CSS', 'Material UI', 'Styled Components', 'Jest', 'React Query', 'Axios', 'GraphQL', 'Webpack', 'Vite', 'Storybook'],
 };
 
-const TAX_TYPES = ['W2', '1099', 'C2C'];
+const TAX_TYPES = ['W2', '1099', 'C2C', 'Corp-to-Corp'];
 const JOB_TYPES = ['Remote', 'Hybrid', 'Onsite'];
 const RELOCATION_OPTIONS = ['Yes', 'No', 'Open to Discussion'];
 
@@ -93,7 +93,7 @@ export function ProfilePage() {
     salary_min: '',
     salary_max: '',
     salary_type: 'annual',
-    tax_type: '',
+    tax_types: [],  // Changed to array for multiple selection
     relocation_preference: '',
     location_preferences: [],
     job_type_preferences: [],
