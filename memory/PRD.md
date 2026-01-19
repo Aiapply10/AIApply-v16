@@ -96,6 +96,7 @@ Build a website where a job seeker can:
 ### P0 - Critical
 - [x] ~~OTP Email Verification~~ **COMPLETED Jan 13**
 - [x] ~~Email Center~~ **COMPLETED Jan 13**
+- [x] ~~Google login button hover bug~~ **FIXED Jan 19** - Text was becoming unreadable on hover due to CSS `hover:text-accent-foreground` (white). Added explicit `hover:text-slate-800` to all social login buttons.
 
 ### P1 - High Priority
 - [ ] Flaky frontend login during automated testing (recurring issue)
@@ -180,4 +181,4 @@ Build a website where a job seeker can:
 
 ---
 
-*Last updated: January 13, 2026*
+*Last updated: January 19, 2026*
