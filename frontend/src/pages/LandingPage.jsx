@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { useAuthStore } from '../store';
 import { 
@@ -15,7 +16,10 @@ import {
   Target,
   Rocket,
   Star,
-  ChevronRight
+  ChevronRight,
+  Globe,
+  Bot,
+  Shield
 } from 'lucide-react';
 
 export function LandingPage() {
@@ -35,29 +39,46 @@ export function LandingPage() {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
   const features = [
     {
       icon: FileText,
       title: 'Smart Resume Upload',
       description: 'Upload your resume in PDF or Word format. Our AI extracts and analyzes your experience.',
-      color: 'from-violet-500 to-purple-600',
-      bgLight: 'bg-violet-50',
-      textColor: 'text-violet-600',
-    },
-    {
-      icon: Sparkles,
-      title: 'AI-Powered Tailoring',
-      description: 'Get your resume customized for specific job descriptions using GPT-5.2 technology.',
-      color: 'from-blue-500 to-cyan-600',
+      color: 'from-blue-500 to-indigo-600',
       bgLight: 'bg-blue-50',
       textColor: 'text-blue-600',
     },
     {
+      icon: Sparkles,
+      title: 'AI-Powered Tailoring',
+      description: 'Get your resume customized for specific job descriptions using advanced AI technology.',
+      color: 'from-indigo-500 to-purple-600',
+      bgLight: 'bg-indigo-50',
+      textColor: 'text-indigo-600',
+    },
+    {
       icon: Target,
       title: 'Live Job Matching',
-      description: 'Real-time job recommendations from LinkedIn, Indeed, Glassdoor based on your skills.',
-      color: 'from-pink-500 to-rose-600',
-      bgLight: 'bg-pink-50',
+      description: 'Real-time job recommendations from LinkedIn, Indeed, Dice based on your skills.',
+      color: 'from-emerald-500 to-teal-600',
+      bgLight: 'bg-emerald-50',
       textColor: 'text-pink-600',
     },
     {
