@@ -1058,7 +1058,7 @@ export function EmailCenterPage() {
           )}
         </DialogContent>
       </Dialog>
-      </div>
+        </div>
       </PageTransition>
     </DashboardLayout>
   );
