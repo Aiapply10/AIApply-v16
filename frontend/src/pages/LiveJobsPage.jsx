@@ -309,16 +309,38 @@ export function LiveJobsPage() {
         searchForm.query || null,
         searchForm.location || 'United States',
         searchForm.employment_type || null,
-        1
+        1,
+        searchForm.source !== 'all' ? searchForm.source : null
       );
       setJobs(response.data.jobs || []);
       setActiveTab('search');
-      toast.success(`Found ${response.data.total} jobs`);
+      const sourceMsg = searchForm.source !== 'all' ? ` from ${searchForm.source}` : '';
+      toast.success(`Found ${response.data.total} jobs${sourceMsg}`);
     } catch (error) {
       console.error('Error searching jobs:', error);
       toast.error('Failed to search jobs');
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  // Direct link to external job platforms
+  const openPlatformSearch = (platform) => {
+    const query = encodeURIComponent(searchForm.query || 'software developer');
+    const location = encodeURIComponent(searchForm.location || 'United States');
+    
+    const platformUrls = {
+      indeed: `https://www.indeed.com/jobs?q=${query}&l=${location}`,
+      dice: `https://www.dice.com/jobs?q=${query}&location=${location}`,
+      linkedin: `https://www.linkedin.com/jobs/search/?keywords=${query}&location=${location}`,
+      glassdoor: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${query}&locT=N&locId=1`,
+      ziprecruiter: `https://www.ziprecruiter.com/Jobs/${query}`,
+      monster: `https://www.monster.com/jobs/search?q=${query}&where=${location}`,
+      careerbuilder: `https://www.careerbuilder.com/jobs?keywords=${query}&location=${location}`,
+    };
+    
+    if (platformUrls[platform]) {
+      window.open(platformUrls[platform], '_blank');
     }
   };
 
