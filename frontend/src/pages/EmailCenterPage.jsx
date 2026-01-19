@@ -1048,7 +1048,7 @@ export function EmailCenterPage() {
                 <Button 
                   onClick={handleSendEmail} 
                   disabled={isSending}
-                  className="bg-violet-600 hover:bg-violet-700"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   {isSending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
                   Send Reply
@@ -1058,6 +1058,8 @@ export function EmailCenterPage() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
+      </PageTransition>
     </DashboardLayout>
   );
 }
