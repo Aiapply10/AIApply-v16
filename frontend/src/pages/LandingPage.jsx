@@ -215,49 +215,67 @@ export function LandingPage() {
                   <Button variant="ghost" onClick={() => navigate('/login')} className="text-slate-600 hover:text-slate-900 hover:bg-slate-100" data-testid="login-btn">
                     Login
                   </Button>
-                  <Button onClick={() => navigate('/register')} className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30" data-testid="register-btn">
-                    Get Started
-                    <Zap className="w-4 h-4 ml-1" />
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button onClick={() => navigate('/register')} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30" data-testid="register-btn">
+                      Get Started
+                      <Zap className="w-4 h-4 ml-1" />
+                    </Button>
+                  </motion.div>
                 </div>
               )}
             </nav>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="grid lg:grid-cols-12 gap-12 items-center"
+          >
             <div className="lg:col-span-7 space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 border border-violet-200">
-                <Sparkles className="w-4 h-4 text-violet-600" />
-                <span className="text-sm font-semibold text-violet-700">Powered by GPT-5.2</span>
-                <span className="px-2 py-0.5 rounded-full bg-violet-600 text-xs text-white font-bold">NEW</span>
-              </div>
+              <motion.div 
+                variants={itemVariants}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 border border-blue-200"
+              >
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-semibold text-blue-700">AI-Powered Job Search</span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-xs text-white font-bold">NEW</span>
+              </motion.div>
               
-              <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900">
+              <motion.h1 
+                variants={itemVariants}
+                className="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-slate-900"
+              >
                 Land Your 
-                <span className="block bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Dream Job</span>
+                <span className="block text-gradient-primary">Dream Job</span>
                 <span className="block text-slate-800">with AI Power</span>
-              </h1>
+              </motion.h1>
               
-              <p className="text-xl text-slate-600 max-w-xl leading-relaxed">
+              <motion.p 
+                variants={itemVariants}
+                className="text-xl text-slate-600 max-w-xl leading-relaxed"
+              >
                 Upload your resume, let AI customize it for each job, and apply with confidence. 
                 Track applications, manage communications, and get hired faster.
-              </p>
+              </motion.p>
               
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-lg px-8 py-6 shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40 transition-all"
-                  onClick={handleGetStarted}
-                  data-testid="get-started-btn"
-                >
-                  Get Started Free
-                  <Rocket className="w-5 h-5 ml-2" />
-                </Button>
+              <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg px-8 py-6 shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all"
+                    onClick={handleGetStarted}
+                    data-testid="get-started-btn"
+                  >
+                    Get Started Free
+                    <Rocket className="w-5 h-5 ml-2" />
+                  </Button>
+                </motion.div>
                 <Button 
                   size="lg" 
                   variant="outline"
