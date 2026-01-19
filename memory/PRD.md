@@ -184,3 +184,19 @@ Build a website where a job seeker can:
 ---
 
 *Last updated: January 19, 2026*
+
+---
+
+## Session Fixes (Jan 19, 2026)
+
+### Bug Fixes
+1. **Quick Actions hover transparency** - Fixed button hover states to maintain readable text
+2. **Auto-Apply button grayed out** - Now enables when profile reaches 80%, shows clear message when incomplete
+3. **Non-US jobs appearing** - Strengthened location filtering with stricter US-only validation
+4. **Settings/History popup alignment** - Verified dialogs are properly centered using Radix Dialog component
+5. **Missing profile completion popup** - Now automatically shows on login when profile < 80%
+
+### Animation Consistency
+- Added framer-motion animations to Email Center page (stat cards with hover lift)
+- Added animations to Live Jobs Auto-Apply stat cards
+- All pages now have consistent PageTransition and StaggerContainer animations
