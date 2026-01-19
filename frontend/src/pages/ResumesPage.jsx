@@ -1548,6 +1548,86 @@ export function ResumesPage() {
                   </div>
                 )}
 
+                {/* Extracted Profile - Auto-filled from Resume */}
+                {autoResults.extracted_profile && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold flex items-center gap-2 text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Profile Auto-Filled from Resume
+                    </h4>
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        The following information was extracted and added to your profile:
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {autoResults.extracted_profile.name && (
+                          <div>
+                            <span className="text-muted-foreground">Name:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.name}</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.phone && (
+                          <div>
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.phone}</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.location && (
+                          <div>
+                            <span className="text-muted-foreground">Location:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.location}</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.linkedin_profile && (
+                          <div>
+                            <span className="text-muted-foreground">LinkedIn:</span>
+                            <span className="ml-2 font-medium text-blue-600">{autoResults.extracted_profile.linkedin_profile}</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.primary_technology && (
+                          <div>
+                            <span className="text-muted-foreground">Primary Tech:</span>
+                            <Badge className="ml-2 bg-violet-600">{autoResults.extracted_profile.primary_technology}</Badge>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.years_of_experience && (
+                          <div>
+                            <span className="text-muted-foreground">Experience:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.years_of_experience} years</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.current_job_title && (
+                          <div>
+                            <span className="text-muted-foreground">Current Title:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.current_job_title}</span>
+                          </div>
+                        )}
+                        {autoResults.extracted_profile.current_company && (
+                          <div>
+                            <span className="text-muted-foreground">Company:</span>
+                            <span className="ml-2 font-medium">{autoResults.extracted_profile.current_company}</span>
+                          </div>
+                        )}
+                      </div>
+                      {autoResults.extracted_profile.sub_technologies && autoResults.extracted_profile.sub_technologies.length > 0 && (
+                        <div className="mt-3">
+                          <span className="text-muted-foreground text-sm">Skills:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {autoResults.extracted_profile.sub_technologies.slice(0, 10).map((skill, i) => (
+                              <Badge key={i} variant="secondary" className="text-xs">{skill}</Badge>
+                            ))}
+                            {autoResults.extracted_profile.sub_technologies.length > 10 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{autoResults.extracted_profile.sub_technologies.length - 10} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Master Resume */}
                 {autoResults.master_resume && (
                   <div className="space-y-4">
