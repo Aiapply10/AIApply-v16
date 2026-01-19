@@ -1390,19 +1390,25 @@ async def upload_resume(
     
     await db.resumes.insert_one(resume_doc)
     
-    # Automatically analyze, create master, and generate versions
+    # Automatically analyze, extract profile, create master, and generate versions
     logger.info(f"Starting auto-analysis for resume {resume_id}")
     auto_results = await auto_analyze_resume(resume_id, text_content, user["user_id"])
+    
+    # Get the updated user profile to return to frontend
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password": 0})
     
     return {
         "resume_id": resume_id,
         "file_name": file.filename,
         "content_preview": text_content[:500] + "..." if len(text_content) > 500 else text_content,
-        "message": "Resume uploaded and analyzed successfully",
+        "message": "Resume uploaded and analyzed successfully. Profile updated from resume.",
         "analysis": auto_results.get("analysis"),
         "master_resume": auto_results.get("master_resume"),
         "title_versions": auto_results.get("title_versions", []),
-        "auto_processed": True
+        "extracted_profile": auto_results.get("extracted_profile"),
+        "updated_user": updated_user,
+        "auto_processed": True,
+        "profile_updated": auto_results.get("extracted_profile") is not None
     }
 
 @api_router.get("/resumes")
