@@ -640,124 +640,228 @@ ${job?.description || job?.full_description || 'N/A'}
     return date.toLocaleDateString();
   };
 
-  const JobCard = ({ job, showMatchedTech = false }) => (
-    <Card className="hover:shadow-lg transition-all duration-200 group">
-      <CardContent className="p-6">
-        <div className="flex gap-4">
-          {/* Company Logo */}
-          <div className="shrink-0">
-            {job.company_logo ? (
-              <img 
-                src={job.company_logo} 
-                alt={job.company}
-                className="w-14 h-14 rounded-lg object-contain bg-muted p-1"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div 
-              className={`w-14 h-14 rounded-lg bg-primary/10 items-center justify-center ${job.company_logo ? 'hidden' : 'flex'}`}
-            >
-              <Building2 className="w-6 h-6 text-primary" />
-            </div>
-          </div>
+  // Source badge colors
+  const getSourceStyle = (source) => {
+    const styles = {
+      'LinkedIn': 'bg-[#0077B5]/10 text-[#0077B5] border-[#0077B5]/30',
+      'Indeed': 'bg-[#2557A7]/10 text-[#2557A7] border-[#2557A7]/30',
+      'Dice': 'bg-pink-500/10 text-pink-500 border-pink-500/30',
+      'RemoteOK': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+      'Glassdoor': 'bg-green-600/10 text-green-600 border-green-600/30',
+      'ZipRecruiter': 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+    };
+    return styles[source] || 'bg-blue-500/10 text-blue-500 border-blue-500/30';
+  };
 
-          {/* Job Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-semibold text-lg group-hover:text-primary transition-colors line-clamp-1">
-                  {job.title}
-                </h3>
-                <p className="text-muted-foreground">{job.company}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {showMatchedTech && job.matched_technology && (
-                  <Badge className="gradient-ai text-white">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    {job.matched_technology}
-                  </Badge>
-                )}
-                {job.source && (
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
-                    <Globe className="w-3 h-3 mr-1" />
-                    {job.source}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-muted-foreground">
-              {job.location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {job.location || job.country}
-                </span>
-              )}
-              {job.is_remote && (
-                <Badge variant="secondary" className="text-xs">
-                  <Globe className="w-3 h-3 mr-1" />
-                  Remote
-                </Badge>
-              )}
-              {job.employment_type && (
-                <Badge variant="outline" className="text-xs">
-                  {job.employment_type}
-                </Badge>
-              )}
-              {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period) && (
-                <span className="flex items-center gap-1 text-green-600">
-                  <DollarSign className="w-4 h-4" />
-                  {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-                </span>
-              )}
-              {job.posted_at && (
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {formatDateRelative(job.posted_at)}
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            {job.description && (
-              <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-                {job.description}
-              </p>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              <Button 
-                size="sm"
-                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
-                onClick={() => {
-                  setSelectedJob(job);
-                  setTailorForm({ resume_id: '' });
-                  setTailoredContent('');
-                  setShowTailorDialog(true);
-                }}
-                data-testid={`tailor-${job.job_id}`}
+  const JobCard = ({ job, showMatchedTech = false, index = 0 }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.05 }}
+        whileHover={{ y: -4, transition: { duration: 0.2 } }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+        className="group"
+      >
+        <Card className={`relative overflow-hidden transition-all duration-300 border-slate-200/60 ${isHovered ? 'shadow-xl border-blue-300/50' : 'shadow-sm'}`}>
+          {/* Animated gradient border on hover */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-indigo-500/0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+          />
+          
+          {/* Shimmer effect on hover */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
+            initial={{ x: '-100%' }}
+            animate={{ x: isHovered ? '100%' : '-100%' }}
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
+          />
+          
+          <CardContent className="p-6 relative">
+            <div className="flex gap-4">
+              {/* Company Logo with animation */}
+              <motion.div 
+                className="shrink-0"
+                whileHover={{ scale: 1.05, rotate: 2 }}
+                transition={{ type: 'spring', stiffness: 300 }}
               >
-                <FileEdit className="w-4 h-4 mr-1" />
-                AI Tailor Resume
-              </Button>
-              <Button 
-                size="sm"
-                onClick={() => openApplyWizard(job)}
-                data-testid={`apply-${job.job_id}`}
-              >
-                <Send className="w-4 h-4 mr-1" />
-                Apply Now
-              </Button>
-              {job.apply_link && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.open(job.apply_link, '_blank')}
+                {job.company_logo ? (
+                  <img 
+                    src={job.company_logo} 
+                    alt={job.company}
+                    className="w-14 h-14 rounded-xl object-contain bg-slate-50 p-1.5 border border-slate-100"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 items-center justify-center shadow-lg ${job.company_logo ? 'hidden' : 'flex'}`}
+                >
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+              </motion.div>
+
+              {/* Job Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-heading font-semibold text-lg text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1">
+                        {job.title}
+                      </h3>
+                      {job.is_remote && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700"
+                        >
+                          <Globe className="w-3 h-3 mr-1" />
+                          Remote
+                        </motion.span>
+                      )}
+                    </div>
+                    <p className="text-slate-600 font-medium">{job.company}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Save button */}
+                    <AnimatedTooltip content={isSaved ? 'Saved' : 'Save job'}>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsSaved(!isSaved);
+                          toast.success(isSaved ? 'Removed from saved' : 'Job saved!');
+                        }}
+                        className={`p-2 rounded-full transition-colors ${isSaved ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400 hover:text-amber-500'}`}
+                      >
+                        <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                      </motion.button>
+                    </AnimatedTooltip>
+                    
+                    {showMatchedTech && job.matched_technology && (
+                      <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-sm">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          {job.matched_technology}
+                        </Badge>
+                      </motion.div>
+                    )}
+                    {job.source && (
+                      <Badge variant="outline" className={getSourceStyle(job.source)}>
+                        {job.source}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Meta Info with icons */}
+                <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
+                  {job.location && (
+                    <AnimatedTooltip content="Location">
+                      <span className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors">
+                        <MapPin className="w-4 h-4 text-blue-500" />
+                        {job.location || job.country}
+                      </span>
+                    </AnimatedTooltip>
+                  )}
+                  {job.employment_type && (
+                    <AnimatedTooltip content="Employment type">
+                      <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+                        <Briefcase className="w-3 h-3" />
+                        {job.employment_type}
+                      </span>
+                    </AnimatedTooltip>
+                  )}
+                  {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period) && (
+                    <AnimatedTooltip content="Salary range">
+                      <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                        <DollarSign className="w-4 h-4" />
+                        {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
+                      </span>
+                    </AnimatedTooltip>
+                  )}
+                  {job.posted_at && (
+                    <AnimatedTooltip content="Posted date">
+                      <span className="flex items-center gap-1.5 text-slate-400">
+                        <Clock className="w-4 h-4" />
+                        {formatDateRelative(job.posted_at)}
+                      </span>
+                    </AnimatedTooltip>
+                  )}
+                </div>
+
+                {/* Description - shows more on hover */}
+                <AnimatePresence>
+                  {job.description && (
+                    <motion.div 
+                      className="mt-3 overflow-hidden"
+                      initial={{ height: 48 }}
+                      animate={{ height: isHovered ? 'auto' : 48 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <p className={`text-sm text-slate-500 ${isHovered ? '' : 'line-clamp-2'}`}>
+                        {job.description}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Actions - enhanced */}
+                <motion.div 
+                  className="flex flex-wrap items-center gap-2 mt-4"
+                  initial={{ opacity: 0.8 }}
+                  animate={{ opacity: isHovered ? 1 : 0.8 }}
+                >
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
+                      onClick={() => {
+                        setSelectedJob(job);
+                        setTailorForm({ resume_id: '' });
+                        setTailoredContent('');
+                        setShowTailorDialog(true);
+                      }}
+                      data-testid={`tailor-${job.job_id}`}
+                    >
+                      <Wand2 className="w-4 h-4 mr-1" />
+                      AI Tailor Resume
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+                      onClick={() => openApplyWizard(job)}
+                      data-testid={`apply-${job.job_id}`}
+                    >
+                      <Send className="w-4 h-4 mr-1" />
+                      Apply Now
+                    </Button>
+                  </motion.div>
+                  {job.apply_link && (
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-slate-500 hover:text-slate-700"
+                        onClick={() => window.open(job.apply_link, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
                   View Original
