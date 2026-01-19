@@ -111,14 +111,15 @@ export function LiveJobsPage() {
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
 
-  // Job Source Platforms
+  // Job Source Platforms - US Focused
   const JOB_SOURCES = [
     { value: 'all', label: 'All Platforms', icon: '🌐' },
     { value: 'indeed', label: 'Indeed', icon: '💼' },
-    { value: 'dice', label: 'Dice', icon: '🎲' },
     { value: 'linkedin', label: 'LinkedIn', icon: '🔗' },
+    { value: 'glassdoor', label: 'Glassdoor', icon: '🏢' },
+    { value: 'dice', label: 'Dice', icon: '🎲' },
     { value: 'remoteok', label: 'RemoteOK', icon: '🌍' },
-    { value: 'arbeitnow', label: 'Arbeitnow', icon: '🇪🇺' },
+    { value: 'ziprecruiter', label: 'ZipRecruiter', icon: '⚡' },
   ];
 
   const [searchForm, setSearchForm] = useState({
