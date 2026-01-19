@@ -986,8 +986,8 @@ ${job?.description || job?.full_description || 'N/A'}
             <div className="flex flex-wrap gap-2">
               <Button
                 onClick={handleRunAutoApply}
-                disabled={isRunningAutoApply || !autoApplyStatus?.enabled || !autoApplyStatus?.configured}
-                className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg shadow-violet-500/30"
+                disabled={isRunningAutoApply || (profileCompleteness && profileCompleteness.percentage < 80)}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/30"
               >
                 {isRunningAutoApply ? (
                   <>
@@ -1004,7 +1004,7 @@ ${job?.description || job?.full_description || 'N/A'}
               <Button
                 variant="outline"
                 onClick={() => setShowAutoApplyDialog(true)}
-                className="border-violet-200 text-violet-700 hover:bg-violet-50"
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
@@ -1015,14 +1015,23 @@ ${job?.description || job?.full_description || 'N/A'}
                   loadAutoApplyHistory();
                   setShowHistoryDialog(true);
                 }}
-                className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                className="border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300"
               >
                 <History className="w-4 h-4 mr-2" />
                 View History
               </Button>
             </div>
             
-            {!autoApplyStatus?.configured && (
+            {profileCompleteness && profileCompleteness.percentage < 80 && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <p className="text-sm text-amber-700">
+                  Complete your profile to at least 80% to enable Auto-Apply. Current: {profileCompleteness.percentage}%
+                </p>
+              </div>
+            )}
+            
+            {!autoApplyStatus?.configured && profileCompleteness && profileCompleteness.percentage >= 80 && (
               <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
                 <p className="text-sm text-amber-700">
