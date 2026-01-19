@@ -508,6 +508,110 @@ export function DashboardPage() {
         </motion.div>
       </div>
       </PageTransition>
+
+      {/* Profile Completion Popup - Outside PageTransition for proper centering */}
+      <Dialog open={showProfilePopup} onOpenChange={setShowProfilePopup}>
+        <DialogContent className="max-w-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-slate-800">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <span className="block">Complete Your Profile</span>
+                <span className="text-sm font-normal text-slate-500">
+                  {profileCompleteness?.percentage}% complete
+                </span>
+              </div>
+            </DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Please complete these fields to use Auto-Apply and get better job matches.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-slate-600">Profile Completion</span>
+                <span className={`font-semibold ${
+                  profileCompleteness?.percentage >= 80 ? 'text-green-600' : 
+                  profileCompleteness?.percentage >= 50 ? 'text-amber-600' : 'text-red-600'
+                }`}>
+                  {profileCompleteness?.percentage}%
+                </span>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all ${
+                    profileCompleteness?.percentage >= 80 ? 'bg-green-500' : 
+                    profileCompleteness?.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${profileCompleteness?.percentage}%` }}
+                />
+              </div>
+            </div>
+            
+            {/* Missing Fields */}
+            {profileCompleteness?.missing_fields?.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-slate-700 mb-3">
+                  Missing Information ({profileCompleteness.missing_fields.length} items):
+                </p>
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
+                  {profileCompleteness.missing_fields.map((field) => {
+                    const IconComponent = fieldIcons[field] || AlertTriangle;
+                    return (
+                      <div 
+                        key={field}
+                        className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl"
+                      >
+                        <IconComponent className="w-5 h-5 text-amber-600" />
+                        <span className="text-sm text-amber-800 font-medium">{field}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Auto-Apply Warning */}
+            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Auto-Apply Disabled</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    Complete at least 80% of your profile to enable Auto-Apply feature for automatic job applications.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 border-slate-200 text-slate-700"
+              onClick={() => setShowProfilePopup(false)}
+            >
+              Remind Me Later
+            </Button>
+            <Button 
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+              onClick={() => {
+                setShowProfilePopup(false);
+                navigate('/profile');
+              }}
+            >
+              Complete Profile
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
