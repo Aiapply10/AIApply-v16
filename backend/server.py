@@ -3751,17 +3751,23 @@ async def run_auto_apply(request: Request):
     all_jobs = []
     scraper = JobScraper()
     
+    logger.info(f"Auto-apply: Searching for jobs with keywords={job_keywords}, locations={locations}")
+    
     for keyword in job_keywords[:3]:  # Limit to 3 keywords
         for location in locations[:2]:  # Limit to 2 locations
             try:
+                logger.info(f"Scraping jobs for '{keyword}' in '{location}'...")
                 scraped_jobs = await scraper.scrape_all_sources(
                     keyword, 
                     location, 
                     limit_per_source=5
                 )
+                logger.info(f"Found {len(scraped_jobs)} jobs for '{keyword}' in '{location}'")
                 all_jobs.extend(scraped_jobs)
             except Exception as e:
                 logger.error(f"Error scraping jobs for {keyword} in {location}: {str(e)}")
+    
+    logger.info(f"Total jobs scraped: {len(all_jobs)}")
     
     # Remove duplicates based on job title and company
     seen = set()
