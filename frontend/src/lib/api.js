@@ -143,6 +143,7 @@ export const autoApplyAPI = {
   toggle: () => api.post('/auto-apply/toggle'),
   getHistory: (limit = 50) => api.get('/auto-apply/history', { params: { limit } }),
   run: () => api.post('/auto-apply/run'),
+  autoFillSettings: () => api.post('/auto-apply/auto-fill-settings'),
   getStatus: () => api.get('/auto-apply/status'),
 };
 
