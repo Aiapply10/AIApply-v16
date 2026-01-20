@@ -3746,10 +3746,10 @@ async def run_auto_apply(request: Request):
         job_keywords = ["Software Developer"]
     
     # Use our system's job scraper to fetch jobs
-    from utils.job_scraper import MultiSourceJobScraper
+    from utils.job_scraper import JobScraper
     
     all_jobs = []
-    scraper = MultiSourceJobScraper()
+    scraper = JobScraper()
     
     for keyword in job_keywords[:3]:  # Limit to 3 keywords
         for location in locations[:2]:  # Limit to 2 locations
