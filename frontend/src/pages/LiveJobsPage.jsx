@@ -330,17 +330,42 @@ export function LiveJobsPage() {
     e?.preventDefault();
     setIsSearching(true);
     try {
+      // Build location based on remote_only flag
+      let searchLocation = searchForm.location || 'United States';
+      if (searchForm.remote_only) {
+        searchLocation = 'Remote, United States';
+      }
+      
+      // Get the first employment type if multiple selected, or null
+      const employmentType = searchForm.employment_types.length > 0 
+        ? searchForm.employment_types[0] 
+        : null;
+      
       const response = await liveJobsAPI.search(
         searchForm.query || null,
-        searchForm.location || 'United States',
-        searchForm.employment_type || null,
+        searchLocation,
+        employmentType,
         1,
         searchForm.source !== 'all' ? searchForm.source : null
       );
-      setJobs(response.data.jobs || []);
+      
+      // Filter results based on employment types and remote flag
+      let filteredJobs = response.data.jobs || [];
+      
+      // Filter by remote if enabled
+      if (searchForm.remote_only) {
+        filteredJobs = filteredJobs.filter(job => 
+          job.location?.toLowerCase().includes('remote') ||
+          job.title?.toLowerCase().includes('remote') ||
+          job.description?.toLowerCase().includes('remote')
+        );
+      }
+      
+      setJobs(filteredJobs);
       setActiveTab('search');
       const sourceMsg = searchForm.source !== 'all' ? ` from ${searchForm.source}` : '';
-      toast.success(`Found ${response.data.total} jobs${sourceMsg}`);
+      const remoteMsg = searchForm.remote_only ? ' (Remote only)' : '';
+      toast.success(`Found ${filteredJobs.length} jobs${sourceMsg}${remoteMsg}`);
     } catch (error) {
       console.error('Error searching jobs:', error);
       toast.error('Failed to search jobs');
