@@ -302,6 +302,17 @@ export function ResumesPage() {
     }
   };
 
+  const handleSetPrimary = async (resumeId) => {
+    try {
+      await resumeAPI.setPrimary(resumeId);
+      toast.success('Resume set as primary');
+      loadData();
+    } catch (error) {
+      console.error('Set primary error:', error);
+      toast.error('Failed to set primary resume');
+    }
+  };
+
   const handleGenerateCoverLetter = async () => {
     if (!selectedResume || !coverLetterForm.job_title || !coverLetterForm.company_name) {
       toast.error('Please fill in all required fields');
