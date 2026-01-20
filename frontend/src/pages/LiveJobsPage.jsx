@@ -175,7 +175,7 @@ export function LiveJobsPage() {
       // First fetch user profile to ensure we have latest data including primary_technology
       const userRes = await authAPI.getMe();
       if (userRes.data) {
-        setUser(userRes.data);
+        updateUser(userRes.data);
       }
       
       const [recsRes, resumesRes] = await Promise.all([
