@@ -887,17 +887,24 @@ async def create_session(request: Request, response: Response):
             logger.info(f"Emergent Auth response status: {auth_response.status_code}")
             
             if auth_response.status_code != 200:
-                logger.error(f"Emergent Auth error: {auth_response.text}")
-                raise HTTPException(status_code=401, detail=f"Invalid session: {auth_response.text}")
+                error_detail = auth_response.text
+                logger.error(f"Emergent Auth error: {error_detail}")
+                # Return more specific error to help debug
+                raise HTTPException(
+                    status_code=401, 
+                    detail=f"Session expired or invalid. Please try signing in again."
+                )
             
             auth_data = auth_response.json()
             logger.info(f"Auth data received for email: {auth_data.get('email')}")
     except httpx.TimeoutException:
         logger.error("Timeout while fetching session data from Emergent Auth")
-        raise HTTPException(status_code=504, detail="Authentication service timeout")
+        raise HTTPException(status_code=504, detail="Authentication service timeout. Please try again.")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching session data: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Authentication error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Authentication error. Please try again.")
     
     email = auth_data.get("email")
     name = auth_data.get("name")
