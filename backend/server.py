@@ -822,7 +822,7 @@ async def get_profile_completeness(request: Request):
         "linkedin_profile": 10,
         "salary_min": 5,
         "salary_max": 5,
-        "tax_type": 5,
+        "tax_types": 5,
         "relocation_preference": 5,
         "location_preferences": 5,
         "job_type_preferences": 5,
