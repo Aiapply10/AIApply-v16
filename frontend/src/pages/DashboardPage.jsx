@@ -115,14 +115,30 @@ export function DashboardPage() {
       setProfileCompleteness(completenessRes.data);
       
       // Show popup if profile is not 100% complete
+      // Add delay and check if user has dismissed it recently
       if (completenessRes.data.percentage < 100) {
-        setShowProfilePopup(true);
+        const lastDismissed = localStorage.getItem('profile_popup_dismissed');
+        const dismissedTime = lastDismissed ? parseInt(lastDismissed) : 0;
+        const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60);
+        
+        // Only show if not dismissed in the last 24 hours
+        if (hoursSinceDismissed > 24) {
+          // Add a small delay for smoother UX
+          setTimeout(() => {
+            setShowProfilePopup(true);
+          }, 1500);
+        }
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDismissProfilePopup = () => {
+    localStorage.setItem('profile_popup_dismissed', Date.now().toString());
+    setShowProfilePopup(false);
   };
 
   const getStatusColor = (status) => {
