@@ -13,6 +13,9 @@ export const useAuthStore = create(
 
       setUser: (user, token) => set({ user, token, isAuthenticated: !!user }),
       
+      // Update user data without changing token
+      updateUser: (user) => set({ user, isAuthenticated: !!user }),
+      
       logout: async () => {
         try {
           await fetch(`${API_URL}/auth/logout`, {
