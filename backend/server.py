@@ -3569,11 +3569,12 @@ async def auto_fill_settings_from_profile(request: Request):
     
     # If no primary, get the most recent resume
     if not primary_resume:
-        primary_resume = await db.resumes.find_one(
+        cursor = db.resumes.find(
             {"user_id": user_id},
-            {"_id": 0},
-            sort=[("created_at", -1)]
-        )
+            {"_id": 0}
+        ).sort("created_at", -1).limit(1)
+        resumes_list = await cursor.to_list(1)
+        primary_resume = resumes_list[0] if resumes_list else None
     
     # Build settings from profile
     job_keywords = []
@@ -3590,7 +3591,7 @@ async def auto_fill_settings_from_profile(request: Request):
     # Get locations from profile
     locations = []
     if user.get("location_preferences"):
-        locations = user["location_preferences"]
+        locations = list(user["location_preferences"])
     elif user.get("location"):
         locations = [user["location"]]
     
@@ -3599,7 +3600,7 @@ async def auto_fill_settings_from_profile(request: Request):
         locations = ["Remote, United States"]
     
     # Get job type preferences
-    job_types = user.get("job_type_preferences", ["Remote"])
+    job_types = list(user.get("job_type_preferences", ["Remote"]) or ["Remote"])
     
     # Get salary preferences
     min_salary = user.get("salary_min")
