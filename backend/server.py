@@ -3746,17 +3746,18 @@ async def run_auto_apply(request: Request):
         job_keywords = ["Software Developer"]
     
     # Use our system's job scraper to fetch jobs
-    from utils.job_scraper import search_jobs
+    from utils.job_scraper import MultiSourceJobScraper
     
     all_jobs = []
+    scraper = MultiSourceJobScraper()
+    
     for keyword in job_keywords[:3]:  # Limit to 3 keywords
         for location in locations[:2]:  # Limit to 2 locations
             try:
-                scraped_jobs = await asyncio.to_thread(
-                    search_jobs, 
+                scraped_jobs = await scraper.scrape_all_sources(
                     keyword, 
                     location, 
-                    source='all'
+                    limit_per_source=5
                 )
                 all_jobs.extend(scraped_jobs)
             except Exception as e:
