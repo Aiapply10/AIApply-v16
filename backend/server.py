@@ -688,7 +688,7 @@ async def get_me(request: Request):
         "salary_min": user.get("salary_min"),
         "salary_max": user.get("salary_max"),
         "salary_type": user.get("salary_type"),
-        "tax_type": user.get("tax_type"),
+        "tax_types": user.get("tax_types", []),
         "relocation_preference": user.get("relocation_preference"),
         "location_preferences": user.get("location_preferences", []),
         "job_type_preferences": user.get("job_type_preferences", []),
@@ -720,8 +720,8 @@ async def update_profile(data: UserProfileUpdate, request: Request):
         update_data["salary_max"] = data.salary_max
     if data.salary_type is not None:
         update_data["salary_type"] = data.salary_type
-    if data.tax_type is not None:
-        update_data["tax_type"] = data.tax_type
+    if data.tax_types is not None:
+        update_data["tax_types"] = data.tax_types
     if data.relocation_preference is not None:
         update_data["relocation_preference"] = data.relocation_preference
     if data.location_preferences is not None:
