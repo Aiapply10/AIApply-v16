@@ -3965,12 +3965,25 @@ async def health_check():
     return {"status": "healthy", "service": "careerquest-api"}
 
 # CORS - Add before including router
+# Note: allow_origins must not be ["*"] when allow_credentials=True
+cors_origins = os.environ.get('CORS_ORIGINS', '')
+if cors_origins and cors_origins != '*':
+    origins_list = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
+else:
+    # Default origins for development and production
+    origins_list = [
+        "http://localhost:3000",
+        "https://job-tailor-7.preview.emergentagent.com"
+    ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
+    allow_origins=origins_list,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight response for 10 minutes
 )
 
 # Logging
