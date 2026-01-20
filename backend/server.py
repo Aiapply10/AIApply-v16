@@ -4035,23 +4035,13 @@ else:
         "https://www.hireignitor.com",
     ]
 
-# Add wildcard pattern for all emergentagent.com subdomains
-# This is a workaround since CORSMiddleware doesn't support regex patterns directly
-def get_allowed_origins():
-    """Returns list of allowed origins, dynamically adding emergentagent.com subdomains"""
-    base_origins = origins_list.copy()
-    # Add common emergentagent.com patterns
-    for prefix in ['job-tailor', 'careerquest', 'app', 'www', 'api']:
-        for suffix in ['', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10']:
-            base_origins.append(f"https://{prefix}{suffix}.emergentagent.com")
-            base_origins.append(f"https://{prefix}{suffix}.preview.emergentagent.com")
-            base_origins.append(f"https://{prefix}{suffix}.emergent.host")
-    return list(set(base_origins))  # Remove duplicates
-
+# Use regex pattern to allow all emergentagent domains and custom domains
+# This is more robust than listing individual origins
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=get_allowed_origins(),
+    allow_origins=origins_list,
+    allow_origin_regex=r"https://.*\.(emergentagent\.com|emergent\.host)$|https://(www\.)?hireignitor\.com$",
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
