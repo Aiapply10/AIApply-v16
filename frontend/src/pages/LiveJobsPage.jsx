@@ -1933,6 +1933,31 @@ ${job?.description || job?.full_description || 'N/A'}
                 Configure how the AI agent should automatically apply to jobs on your behalf.
               </DialogDescription>
             </DialogHeader>
+            
+            {/* Auto-fill from Profile Button */}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const res = await autoApplyAPI.autoFillSettings();
+                    setAutoApplySettings({
+                      ...autoApplySettings,
+                      ...res.data.settings,
+                    });
+                    toast.success('Settings auto-filled from your profile!');
+                  } catch (error) {
+                    toast.error('Failed to auto-fill settings');
+                  }
+                }}
+                className="text-violet-600 border-violet-200 hover:bg-violet-50"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Auto-fill from Profile
+              </Button>
+            </div>
+            
             <div className="space-y-6 py-4">
               {/* Resume Selection */}
               <div className="space-y-2">
