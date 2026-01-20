@@ -4001,11 +4001,23 @@ else:
     # Default origins for development and production
     origins_list = [
         "http://localhost:3000",
-        "https://job-tailor-7.preview.emergentagent.com"
+        "https://job-tailor-7.preview.emergentagent.com",
+        "https://job-tailor-7.emergentagent.com",
     ]
 
+# Add regex pattern for all emergentagent subdomains
+from starlette.middleware.cors import CORSMiddleware
+import re
+
+class CustomCORSMiddleware(CORSMiddleware):
+    def is_allowed_origin(self, origin: str) -> bool:
+        # Allow all emergentagent.com subdomains
+        if origin and re.match(r'https://[a-zA-Z0-9-]+\.emergentagent\.com$', origin):
+            return True
+        return super().is_allowed_origin(origin)
+
 app.add_middleware(
-    CORSMiddleware,
+    CustomCORSMiddleware,
     allow_credentials=True,
     allow_origins=origins_list,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
