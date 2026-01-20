@@ -1097,7 +1097,7 @@ async def linkedin_callback(data: LinkedInCallbackRequest):
                     salary_min=user.get("salary_min"),
                     salary_max=user.get("salary_max"),
                     salary_type=user.get("salary_type"),
-                    tax_type=user.get("tax_type"),
+                    tax_types=user.get("tax_types"),
                     relocation_preference=user.get("relocation_preference"),
                     location_preferences=user.get("location_preferences", []),
                     job_type_preferences=user.get("job_type_preferences", [])
