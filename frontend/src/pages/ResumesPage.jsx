@@ -447,7 +447,7 @@ export function ResumesPage() {
           <div>
             <h1 className="font-heading text-3xl font-bold">My Resumes</h1>
             <p className="text-muted-foreground mt-1">
-              Upload, tailor, and manage your resumes
+              Upload, tailor, and manage your resumes {resumes.length > 0 && `(${resumes.length}/5)`}
             </p>
           </div>
           <div>
@@ -460,15 +460,16 @@ export function ResumesPage() {
             />
             <Button 
               onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
+              disabled={isUploading || resumes.length >= 5}
               data-testid="upload-resume-btn"
+              title={resumes.length >= 5 ? 'Maximum 5 resumes allowed. Delete a resume to upload a new one.' : 'Upload a resume'}
             >
               {isUploading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Upload className="w-4 h-4 mr-2" />
               )}
-              Upload Resume
+              {resumes.length >= 5 ? 'Limit Reached' : 'Upload Resume'}
             </Button>
           </div>
         </div>
