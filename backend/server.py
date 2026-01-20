@@ -19,6 +19,7 @@ import httpx
 import asyncio
 import random
 import string
+import re
 
 # Scheduler imports
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
