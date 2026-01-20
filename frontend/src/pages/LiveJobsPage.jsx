@@ -1101,22 +1101,48 @@ ${job?.description || job?.full_description || 'N/A'}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Employment Type</Label>
-                  <Select
-                    value={searchForm.employment_type || "all"}
-                    onValueChange={(value) => setSearchForm({ ...searchForm, employment_type: value === "all" ? "" : value })}
-                  >
-                    <SelectTrigger data-testid="job-search-type">
-                      <SelectValue placeholder="All Types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="FULLTIME">Full Time</SelectItem>
-                      <SelectItem value="PARTTIME">Part Time</SelectItem>
-                      <SelectItem value="CONTRACTOR">Contract</SelectItem>
-                      <SelectItem value="INTERN">Internship</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Employment Type (Multi-select)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {EMPLOYMENT_TYPES.map((type) => (
+                      <Badge
+                        key={type.value}
+                        variant={searchForm.employment_types.includes(type.value) ? "default" : "outline"}
+                        className={`cursor-pointer transition-all ${
+                          searchForm.employment_types.includes(type.value)
+                            ? 'bg-violet-600 hover:bg-violet-700'
+                            : 'hover:bg-violet-100'
+                        }`}
+                        onClick={() => {
+                          if (searchForm.employment_types.includes(type.value)) {
+                            setSearchForm({
+                              ...searchForm,
+                              employment_types: searchForm.employment_types.filter(t => t !== type.value)
+                            });
+                          } else {
+                            setSearchForm({
+                              ...searchForm,
+                              employment_types: [...searchForm.employment_types, type.value]
+                            });
+                          }
+                        }}
+                      >
+                        {searchForm.employment_types.includes(type.value) && <Check className="w-3 h-3 mr-1" />}
+                        {type.label}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Remote Jobs Only</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={searchForm.remote_only}
+                      onCheckedChange={(checked) => setSearchForm({ ...searchForm, remote_only: checked })}
+                    />
+                    <span className="text-sm text-slate-600">
+                      {searchForm.remote_only ? 'Yes - Remote jobs only' : 'No - All locations'}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Job Platform</Label>
