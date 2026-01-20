@@ -612,14 +612,14 @@ export function DashboardPage() {
             <Button 
               variant="outline" 
               className="flex-1 border-slate-200 text-slate-700"
-              onClick={() => setShowProfilePopup(false)}
+              onClick={handleDismissProfilePopup}
             >
               Later
             </Button>
             <Button 
               className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
               onClick={() => {
-                setShowProfilePopup(false);
+                handleDismissProfilePopup();
                 navigate('/profile');
               }}
             >
