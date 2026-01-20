@@ -28,11 +28,12 @@ export function AuthCallback() {
           return;
         }
 
-        // Exchange session_id for user data
+        // Exchange session_id for user data and token
         const response = await authAPI.createSession(sessionId);
-        const userData = response.data;
+        const { access_token, ...userData } = response.data;
 
-        setUser(userData, null);
+        // Set user with access token
+        setUser(userData, access_token);
 
         // Clear hash and navigate to dashboard
         window.history.replaceState(null, '', window.location.pathname);
