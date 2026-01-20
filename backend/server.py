@@ -3780,15 +3780,15 @@ Return ONLY the tailored resume content."""
                 "location": location_str,
                 "salary_info": salary_info,
                 "job_description": description[:500],
-                "apply_link": job.get("url") or job.get("external_apply_url", ""),
+                "apply_link": apply_link,
                 "resume_id": settings["resume_id"],
                 "tailored_content": tailored_content,
                 "keywords_extracted": keywords_extracted,
                 "status": "ready_to_apply",
                 "applied_at": datetime.now(timezone.utc).isoformat(),
-                "source": api_source,
+                "source": job.get("source", "system_scraper"),
                 "auto_applied": True,
-                "ats_optimized": True if tailored_content != original_content else False
+                "ats_optimized": True if tailored_content != resume_content else False
             }
             
             await db.auto_applications.insert_one(application_record)
@@ -3797,7 +3797,7 @@ Return ONLY the tailored resume content."""
             await db.applications.insert_one({
                 "application_id": application_record["application_id"],
                 "user_id": user_id,
-                "job_portal_id": "linkedin_auto",
+                "job_portal_id": job.get("source", "auto_apply"),
                 "job_title": job_title,
                 "company_name": company,
                 "job_description": description[:500],
@@ -3806,7 +3806,7 @@ Return ONLY the tailored resume content."""
                 "status": "ready_to_apply",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "auto_applied": True,
-                "apply_link": application_record["apply_link"]
+                "apply_link": apply_link
             })
             
             applications.append({
@@ -3815,7 +3815,7 @@ Return ONLY the tailored resume content."""
                 "job_title": job_title,
                 "company": company,
                 "location": location_str,
-                "apply_link": application_record["apply_link"],
+                "apply_link": apply_link,
                 "status": "ready_to_apply"
             })
             
