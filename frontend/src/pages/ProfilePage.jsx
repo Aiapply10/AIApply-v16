@@ -61,7 +61,7 @@ const SUB_TECHNOLOGIES_MAP = {
   'Front End React': ['JavaScript', 'TypeScript', 'Redux', 'Next.js', 'React Router', 'Tailwind CSS', 'Material UI', 'Styled Components', 'Jest', 'React Query', 'Axios', 'GraphQL', 'Webpack', 'Vite', 'Storybook'],
 };
 
-const TAX_TYPES = ['W2', '1099', 'C2C', 'Corp-to-Corp'];
+const TAX_TYPES = ['Fulltime', 'C2C', 'W2 Contract'];
 const JOB_TYPES = ['Remote', 'Hybrid', 'Onsite'];
 const RELOCATION_OPTIONS = ['Yes', 'No', 'Open to Discussion'];
 
