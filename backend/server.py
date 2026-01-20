@@ -3958,6 +3958,12 @@ async def get_technologies():
 async def root():
     return {"message": "AI Resume Tailor API", "version": "1.0.0"}
 
+# Health check endpoint for Kubernetes
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Kubernetes liveness and readiness probes."""
+    return {"status": "healthy", "service": "careerquest-api"}
+
 # CORS - Add before including router
 app.add_middleware(
     CORSMiddleware,
