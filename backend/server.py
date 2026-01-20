@@ -3555,6 +3555,90 @@ async def update_auto_apply_settings(data: AutoApplySettingsUpdate, request: Req
     
     return {"message": "Settings updated successfully", "settings": update_data}
 
+@api_router.post("/auto-apply/auto-fill-settings")
+async def auto_fill_settings_from_profile(request: Request):
+    """Auto-fill auto-apply settings from user's profile and resume"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get user's primary resume
+    primary_resume = await db.resumes.find_one(
+        {"user_id": user_id, "is_primary": True},
+        {"_id": 0}
+    )
+    
+    # If no primary, get the most recent resume
+    if not primary_resume:
+        primary_resume = await db.resumes.find_one(
+            {"user_id": user_id},
+            {"_id": 0},
+            sort=[("created_at", -1)]
+        )
+    
+    # Build settings from profile
+    job_keywords = []
+    if user.get("primary_technology"):
+        job_keywords.append(user["primary_technology"])
+    if user.get("sub_technologies"):
+        # Add top 2 sub-technologies
+        job_keywords.extend(user["sub_technologies"][:2])
+    
+    # Default keywords if none from profile
+    if not job_keywords:
+        job_keywords = ["Software Developer"]
+    
+    # Get locations from profile
+    locations = []
+    if user.get("location_preferences"):
+        locations = user["location_preferences"]
+    elif user.get("location"):
+        locations = [user["location"]]
+    
+    # Default to remote in US
+    if not locations:
+        locations = ["Remote, United States"]
+    
+    # Get job type preferences
+    job_types = user.get("job_type_preferences", ["Remote"])
+    
+    # Get salary preferences
+    min_salary = user.get("salary_min")
+    max_salary = user.get("salary_max")
+    
+    # Build auto-fill settings
+    auto_filled_settings = {
+        "user_id": user_id,
+        "job_keywords": job_keywords[:5],  # Limit to 5 keywords
+        "locations": locations[:3],  # Limit to 3 locations
+        "job_types": job_types,
+        "salary_min": min_salary,
+        "salary_max": max_salary,
+        "remote_only": "Remote" in job_types,
+        "resume_id": primary_resume.get("resume_id") if primary_resume else None,
+        "max_applications_per_day": 10,
+        "auto_tailor_resume": True,
+        "enabled": True,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Update or create settings
+    existing = await db.auto_apply_settings.find_one({"user_id": user_id})
+    if existing:
+        await db.auto_apply_settings.update_one(
+            {"user_id": user_id},
+            {"$set": auto_filled_settings}
+        )
+    else:
+        auto_filled_settings["created_at"] = datetime.now(timezone.utc).isoformat()
+        auto_filled_settings["last_run"] = None
+        auto_filled_settings["total_applications"] = 0
+        await db.auto_apply_settings.insert_one(auto_filled_settings)
+    
+    return {
+        "message": "Settings auto-filled from profile successfully",
+        "settings": auto_filled_settings
+    }
+
 @api_router.post("/auto-apply/toggle")
 async def toggle_auto_apply(request: Request):
     """Toggle auto-apply on/off"""
