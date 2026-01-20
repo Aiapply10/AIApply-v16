@@ -386,6 +386,24 @@ def generate_otp() -> str:
     return ''.join(random.choices(string.digits, k=6))
 
 
+# API Health Check
+@api_router.get("/health")
+async def api_health_check():
+    """API health check endpoint"""
+    try:
+        # Test database connection
+        await db.command('ping')
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy",
+        "service": "careerquest-api",
+        "database": db_status
+    }
+
+
 @api_router.post("/auth/send-otp")
 async def send_otp(data: SendOTPRequest):
     """Send OTP to email for verification"""
