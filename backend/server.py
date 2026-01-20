@@ -3630,10 +3630,11 @@ async def auto_fill_settings_from_profile(request: Request):
             {"$set": auto_filled_settings}
         )
     else:
-        auto_filled_settings["created_at"] = datetime.now(timezone.utc).isoformat()
-        auto_filled_settings["last_run"] = None
-        auto_filled_settings["total_applications"] = 0
-        await db.auto_apply_settings.insert_one(auto_filled_settings)
+        insert_data = auto_filled_settings.copy()
+        insert_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        insert_data["last_run"] = None
+        insert_data["total_applications"] = 0
+        await db.auto_apply_settings.insert_one(insert_data)
     
     return {
         "message": "Settings auto-filled from profile successfully",
