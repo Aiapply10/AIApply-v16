@@ -77,6 +77,7 @@ export const resumeAPI = {
   analyze: (id) => api.post(`/resumes/${id}/analyze`),
   createMaster: (id) => api.post(`/resumes/${id}/create-master`),
   generateVersions: (id, data) => api.post(`/resumes/${id}/generate-versions`, data),
+  setPrimary: (id) => api.put(`/resumes/${id}/set-primary`),
 };
 
 // Cover Letter API
