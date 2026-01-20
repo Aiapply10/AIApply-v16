@@ -353,14 +353,17 @@ class TestAutoApplyHistory(TestSetup):
         assert response.status_code == 200
         data = response.json()
         
-        # Should be a list
-        assert isinstance(data, list)
+        # Response is {"history": [...], "total": N}
+        assert "history" in data
+        assert "total" in data
+        history = data.get("history", [])
+        assert isinstance(history, list)
         
         # Verify no ObjectId in any record
-        for record in data:
+        for record in history:
             assert "_id" not in record
         
-        print(f"✓ Got auto-apply history: {len(data)} records")
+        print(f"✓ Got auto-apply history: {data.get('total')} records")
 
 
 class TestJobScraper(TestSetup):
