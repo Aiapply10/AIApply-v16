@@ -139,9 +139,19 @@ export function LiveJobsPage() {
   const [searchForm, setSearchForm] = useState({
     query: '',
     location: 'United States',
-    employment_type: '',
+    employment_types: [],  // Changed to array for multi-select
+    remote_only: true,  // Default to remote jobs
     source: 'all',  // Platform filter
   });
+
+  // Employment type options
+  const EMPLOYMENT_TYPES = [
+    { value: 'FULLTIME', label: 'Full Time' },
+    { value: 'PARTTIME', label: 'Part Time' },
+    { value: 'CONTRACTOR', label: 'Contract' },
+    { value: 'C2C', label: 'C2C' },
+    { value: 'W2', label: 'W2' },
+  ];
 
   const [applicationForm, setApplicationForm] = useState({
     resume_id: '',
