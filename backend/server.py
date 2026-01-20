@@ -3553,7 +3553,9 @@ async def update_auto_apply_settings(data: AutoApplySettingsUpdate, request: Req
         update_data["total_applications"] = 0
         await db.auto_apply_settings.insert_one(update_data)
     
-    return {"message": "Settings updated successfully", "settings": update_data}
+    # Return settings without _id
+    response_data = {k: v for k, v in update_data.items() if k != "_id"}
+    return {"message": "Settings updated successfully", "settings": response_data}
 
 @api_router.post("/auto-apply/auto-fill-settings")
 async def auto_fill_settings_from_profile(request: Request):
