@@ -737,7 +737,7 @@ async def update_profile(data: UserProfileUpdate, request: Request):
     )
     
     # Fetch updated user
-    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0, "password": 0})
     
     return {"message": "Profile updated successfully", "user": updated_user}
 
