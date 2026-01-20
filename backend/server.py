@@ -4029,6 +4029,10 @@ else:
         "http://localhost:3000",
         "https://job-tailor-7.preview.emergentagent.com",
         "https://job-tailor-7.emergentagent.com",
+        "https://job-tailor-7.emergent.host",
+        # Custom domain
+        "https://hireignitor.com",
+        "https://www.hireignitor.com",
     ]
 
 # Add wildcard pattern for all emergentagent.com subdomains
