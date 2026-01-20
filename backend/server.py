@@ -919,6 +919,13 @@ async def create_session(request: Request, response: Response):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # Create JWT access token for API authorization
+    access_token_expires = timedelta(days=7)
+    access_token = create_access_token(
+        data={"user_id": user_id, "email": email},
+        expires_delta=access_token_expires
+    )
+    
     # Set cookie
     response.set_cookie(
         key="session_token",
@@ -930,12 +937,15 @@ async def create_session(request: Request, response: Response):
         max_age=7 * 24 * 3600
     )
     
+    # Return user data with access token
     return {
         "user_id": user_id,
         "email": email,
         "name": name,
         "picture": picture,
-        "role": user.get("role", "candidate")
+        "role": user.get("role", "candidate"),
+        "access_token": access_token,
+        "token_type": "bearer"
     }
 
 # LinkedIn OAuth endpoint
