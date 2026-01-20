@@ -369,9 +369,9 @@ class TestAutoApplyHistory(TestSetup):
 class TestJobScraper(TestSetup):
     """Test job scraper endpoints"""
     
-    def test_search_jobs(self, authenticated_session):
-        """Test job search endpoint"""
-        response = authenticated_session.get(f"{BASE_URL}/api/jobs/search", params={
+    def test_search_live_jobs(self, authenticated_session):
+        """Test live job search endpoint"""
+        response = authenticated_session.get(f"{BASE_URL}/api/live-jobs/search", params={
             "query": "Python Developer",
             "location": "Remote"
         })
@@ -382,7 +382,8 @@ class TestJobScraper(TestSetup):
         
         # Verify response structure
         assert "jobs" in data or isinstance(data, list)
-        print(f"✓ Job search completed: {len(data.get('jobs', data)) if isinstance(data, dict) else len(data)} jobs found")
+        jobs = data.get("jobs", data) if isinstance(data, dict) else data
+        print(f"✓ Live job search completed: {len(jobs)} jobs found")
 
 
 # Cleanup fixture
