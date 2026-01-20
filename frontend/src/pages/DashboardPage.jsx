@@ -531,7 +531,10 @@ export function DashboardPage() {
       </PageTransition>
 
       {/* Profile Completion Popup - Outside PageTransition for proper centering */}
-      <Dialog open={showProfilePopup} onOpenChange={setShowProfilePopup}>
+      <Dialog open={showProfilePopup} onOpenChange={(open) => {
+        if (!open) handleDismissProfilePopup();
+        else setShowProfilePopup(true);
+      }}>
         <DialogContent className="max-w-lg bg-white max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-slate-800">
