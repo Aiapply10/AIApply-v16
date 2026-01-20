@@ -3707,88 +3707,18 @@ async def run_auto_apply(request: Request):
     resume_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
     
     for job in jobs_to_apply:
-                        params={
-                            "query": f"{keyword} in {locations[0] if locations else 'United States'}",
-                            "page": "1",
-                            "num_pages": "1"
-                        },
-                        headers={
-                            "X-RapidAPI-Key": jsearch_api_key,
-                            "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
-                        }
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        jobs_from_jsearch = data.get("data", [])[:10]
-                        # Transform JSearch format to match our processing
-                        for job in jobs_from_jsearch:
-                            all_jobs.append({
-                                "id": job.get("job_id"),
-                                "title": job.get("job_title"),
-                                "organization": job.get("employer_name"),
-                                "description_text": job.get("job_description", ""),
-                                "locations_derived": [f"{job.get('job_city', '')}, {job.get('job_state', '')}"],
-                                "url": job.get("job_apply_link"),
-                                "external_apply_url": job.get("job_apply_link"),
-                                "salary_raw": {
-                                    "value": {
-                                        "minValue": job.get("job_min_salary"),
-                                        "maxValue": job.get("job_max_salary")
-                                    }
-                                } if job.get("job_min_salary") else None
-                            })
-        except Exception as e:
-            logger.error(f"Error fetching from JSearch API: {str(e)}")
-    
-    if not all_jobs:
-        return {
-            "message": "No jobs found. Both LinkedIn and JSearch APIs returned no results.",
-            "applied_count": 0,
-            "applications": []
-        }
-    
-    # Filter out already applied jobs
-    applied_job_ids = await db.auto_applications.distinct(
-        "job_id",
-        {"user_id": user_id}
-    )
-    
-    new_jobs = [j for j in all_jobs if j.get("id") not in applied_job_ids][:remaining]
-    
-    if not new_jobs:
-        return {
-            "message": "No new jobs found matching your criteria",
-            "applied_count": 0,
-            "applications": []
-        }
-    
-    applications = []
-    original_content = resume.get('original_content', '')
-    
-    # Process each job
-    for job in new_jobs:
         try:
             job_id = job.get("id", str(uuid.uuid4()))
             job_title = job.get("title", "")
-            company = job.get("organization", "")
-            description = job.get("description_text", "")[:2000]  # Limit description length
-            
-            # Parse location
-            location_str = ""
-            if job.get("locations_derived"):
-                location_str = job["locations_derived"][0]
-            elif job.get("cities_derived"):
-                location_str = job["cities_derived"][0]
+            company = job.get("company", "")
+            description = job.get("description", "")[:2000]  # Limit description length
+            location_str = job.get("location", "")
+            apply_link = job.get("apply_link", "")
             
             # Parse salary
-            salary_info = ""
-            if job.get("salary_raw") and job["salary_raw"].get("value"):
-                salary_value = job["salary_raw"]["value"]
-                if salary_value.get("minValue") and salary_value.get("maxValue"):
-                    salary_info = f"${salary_value['minValue']:,} - ${salary_value['maxValue']:,}"
+            salary_info = job.get("salary", "")
             
-            tailored_content = original_content
+            tailored_content = resume_content
             keywords_extracted = ""
             
             # Auto-tailor resume if enabled
