@@ -869,20 +869,35 @@ async def logout(request: Request, response: Response):
 @api_router.post("/auth/session")
 async def create_session(request: Request, response: Response):
     session_id = request.headers.get("X-Session-ID")
+    logger.info(f"Session endpoint called with session_id: {session_id[:20] if session_id else 'None'}...")
+    
     if not session_id:
+        logger.error("No session ID provided in request")
         raise HTTPException(status_code=400, detail="Session ID required")
     
     # Fetch user data from Emergent Auth
     import httpx
-    async with httpx.AsyncClient() as http_client:
-        auth_response = await http_client.get(
-            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-            headers={"X-Session-ID": session_id}
-        )
-        if auth_response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        auth_data = auth_response.json()
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as http_client:
+            logger.info("Fetching session data from Emergent Auth...")
+            auth_response = await http_client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": session_id}
+            )
+            logger.info(f"Emergent Auth response status: {auth_response.status_code}")
+            
+            if auth_response.status_code != 200:
+                logger.error(f"Emergent Auth error: {auth_response.text}")
+                raise HTTPException(status_code=401, detail=f"Invalid session: {auth_response.text}")
+            
+            auth_data = auth_response.json()
+            logger.info(f"Auth data received for email: {auth_data.get('email')}")
+    except httpx.TimeoutException:
+        logger.error("Timeout while fetching session data from Emergent Auth")
+        raise HTTPException(status_code=504, detail="Authentication service timeout")
+    except Exception as e:
+        logger.error(f"Error fetching session data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Authentication error: {str(e)}")
     
     email = auth_data.get("email")
     name = auth_data.get("name")
