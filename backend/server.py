@@ -4005,8 +4005,7 @@ else:
         "https://job-tailor-7.emergentagent.com",
     ]
 
-# Add regex pattern for all emergentagent subdomains
-from starlette.middleware.cors import CORSMiddleware
+# Custom CORS middleware to allow all emergentagent.com subdomains
 import re
 
 class CustomCORSMiddleware(CORSMiddleware):
