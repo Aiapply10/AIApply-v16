@@ -172,6 +172,12 @@ export function LiveJobsPage() {
   const loadInitialData = async () => {
     setIsLoading(true);
     try {
+      // First fetch user profile to ensure we have latest data including primary_technology
+      const userRes = await authAPI.getMe();
+      if (userRes.data) {
+        setUser(userRes.data);
+      }
+      
       const [recsRes, resumesRes] = await Promise.all([
         liveJobsAPI.getRecommendations(),
         resumeAPI.getAll()
