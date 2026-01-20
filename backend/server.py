@@ -4007,8 +4007,6 @@ else:
     ]
 
 # Custom CORS middleware to allow all emergentagent.com subdomains
-import re
-
 class CustomCORSMiddleware(CORSMiddleware):
     def is_allowed_origin(self, origin: str) -> bool:
         # Allow all emergentagent.com subdomains
