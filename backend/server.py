@@ -3852,7 +3852,7 @@ Key Requirements: {description[:1000]}
 KEYWORDS TO INCORPORATE: {keywords_extracted}
 
 ORIGINAL RESUME:
-{original_content}
+{resume_content}
 
 Return ONLY the tailored resume content."""
                     
@@ -3861,7 +3861,7 @@ Return ONLY the tailored resume content."""
                     
                 except Exception as e:
                     logger.error(f"Error tailoring resume for job {job_id}: {str(e)}")
-                    tailored_content = original_content
+                    tailored_content = resume_content
             
             # Create auto-application record
             application_record = {

@@ -484,16 +484,37 @@ export function ResumesPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <FileType className="w-5 h-5 text-primary" />
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${resume.is_primary ? 'bg-amber-500/20' : 'bg-primary/10'}`}>
+                        {resume.is_primary ? (
+                          <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                        ) : (
+                          <FileType className="w-5 h-5 text-primary" />
+                        )}
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{resume.file_name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{resume.file_name}</CardTitle>
+                          {resume.is_primary && (
+                            <Badge className="bg-amber-500 text-white text-xs">Primary</Badge>
+                          )}
+                        </div>
                         <CardDescription>
                           {new Date(resume.created_at).toLocaleDateString()}
                         </CardDescription>
                       </div>
                     </div>
+                    {!resume.is_primary && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSetPrimary(resume.resume_id)}
+                        data-testid={`set-primary-${resume.resume_id}`}
+                        title="Set as primary resume"
+                        className="text-muted-foreground hover:text-amber-500"
+                      >
+                        <Star className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
