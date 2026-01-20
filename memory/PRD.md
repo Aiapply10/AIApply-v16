@@ -183,16 +183,32 @@ Build a website where a job seeker can:
 ---
 
 ## Test Credentials
-- Test User: `TEST_complete_1768343875@example.com` / `testpassword123`
-- Note: OTPs logged to backend console in demo mode
+- Test User: `test_autoapply@example.com` / `testpass123`
+- Test Resume ID: `resume_8c4696bc3a38`
 
 ## Test Reports
 - `/app/test_reports/iteration_4.json` - OTP verification tests
 - `/app/test_reports/iteration_5.json` - Email Center tests (23 tests passed)
+- `/app/test_reports/iteration_6.json` - Auto-Apply & Resume management tests (17 tests passed, 100%)
 
 ---
 
-*Last updated: January 19, 2026*
+*Last updated: January 20, 2026*
+
+---
+
+## Session Fixes (Jan 20, 2026)
+
+### Bug Fixes
+1. **Run Auto-Apply not working (P0)** - Fixed `original_content` undefined variable to `resume_content` in server.py line 3855
+2. **Auto-Apply Settings ObjectId error** - Added filter to exclude `_id` from response in update_auto_apply_settings
+3. **Profile tax_types not saving** - Fixed backend to use `tax_types` (plural) consistently across all endpoints
+4. **Multiple Resume Management** - Added "Set as Primary" button, primary badge (amber star), and 5-resume limit with UI indicator
+
+### New Features
+- Resume card shows primary status with amber star icon and "Primary" badge
+- Upload button shows "(X/5)" count and disables at 5 resumes
+- Auto-apply now uses internal job scraper (Dice, RemoteOK, LinkedIn) instead of external APIs
 
 ---
 
