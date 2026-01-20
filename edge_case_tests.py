@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_edge_cases():
-    base_url = "https://job-tailor-7.preview.emergentagent.com"
+    base_url = "https://hirepilot-3.preview.emergentagent.com"
     
     # Login to get token
     login_data = {

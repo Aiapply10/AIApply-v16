@@ -4097,7 +4097,7 @@ else:
     # Default origins for development and production
     origins_list = [
         "http://localhost:3000",
-        "https://job-tailor-7.preview.emergentagent.com",
+        "https://hirepilot-3.preview.emergentagent.com",
         "https://job-tailor-7.emergentagent.com",
         "https://job-tailor-7.emergent.host",
         # Custom domain
