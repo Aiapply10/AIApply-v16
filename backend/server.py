@@ -4045,6 +4045,7 @@ def get_allowed_origins():
         for suffix in ['', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10']:
             base_origins.append(f"https://{prefix}{suffix}.emergentagent.com")
             base_origins.append(f"https://{prefix}{suffix}.preview.emergentagent.com")
+            base_origins.append(f"https://{prefix}{suffix}.emergent.host")
     return list(set(base_origins))  # Remove duplicates
 
 app.add_middleware(
