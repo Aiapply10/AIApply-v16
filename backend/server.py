@@ -4009,18 +4009,22 @@ else:
         "https://job-tailor-7.emergentagent.com",
     ]
 
-# Custom CORS middleware to allow all emergentagent.com subdomains
-class CustomCORSMiddleware(CORSMiddleware):
-    def is_allowed_origin(self, origin: str) -> bool:
-        # Allow all emergentagent.com subdomains
-        if origin and re.match(r'https://[a-zA-Z0-9-]+\.emergentagent\.com$', origin):
-            return True
-        return super().is_allowed_origin(origin)
+# Add wildcard pattern for all emergentagent.com subdomains
+# This is a workaround since CORSMiddleware doesn't support regex patterns directly
+def get_allowed_origins():
+    """Returns list of allowed origins, dynamically adding emergentagent.com subdomains"""
+    base_origins = origins_list.copy()
+    # Add common emergentagent.com patterns
+    for prefix in ['job-tailor', 'careerquest', 'app', 'www', 'api']:
+        for suffix in ['', '-1', '-2', '-3', '-4', '-5', '-6', '-7', '-8', '-9', '-10']:
+            base_origins.append(f"https://{prefix}{suffix}.emergentagent.com")
+            base_origins.append(f"https://{prefix}{suffix}.preview.emergentagent.com")
+    return list(set(base_origins))  # Remove duplicates
 
 app.add_middleware(
-    CustomCORSMiddleware,
+    CORSMiddleware,
     allow_credentials=True,
-    allow_origins=origins_list,
+    allow_origins=get_allowed_origins(),
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
