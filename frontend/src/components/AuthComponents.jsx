@@ -61,8 +61,17 @@ export function AuthCallback() {
       } catch (err) {
         console.error('Auth callback error:', err);
         console.error('Error response:', err.response?.data);
-        const errorMessage = err.response?.data?.detail || err.message || 'Authentication failed';
-        setError(`Authentication failed: ${errorMessage}`);
+        const errorDetail = err.response?.data?.detail || '';
+        
+        // Provide user-friendly error messages
+        let errorMessage = 'Authentication failed. Please try again.';
+        if (errorDetail.includes('expired') || errorDetail.includes('invalid')) {
+          errorMessage = 'Session expired. Please try signing in again.';
+        } else if (errorDetail.includes('timeout')) {
+          errorMessage = 'Connection timed out. Please try again.';
+        }
+        
+        setError(errorMessage);
         setTimeout(() => navigate('/login'), 3000);
       }
     };
