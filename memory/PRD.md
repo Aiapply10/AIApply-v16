@@ -94,15 +94,16 @@ Build a website where a job seeker can:
 ## In Progress / Pending
 
 ### P0 - Critical
-- [x] ~~OTP Email Verification~~ **COMPLETED Jan 13**
+- [x] ~~OTP Email Verification~~ **REMOVED Jan 20** - Simplified to simple email/password registration
 - [x] ~~Email Center~~ **COMPLETED Jan 13**
-- [x] ~~Google login button hover bug~~ **VERIFIED FIXED Jan 19** - Text visible on hover across Landing, Login, and Register pages.
-- [x] ~~Profile popup raw field names~~ **VERIFIED FIXED Jan 19** - Popup now shows "Primary Technology", "Phone Number", "LinkedIn Profile" etc. instead of raw database field names.
-- [x] ~~Job search not fetching from multiple platforms~~ **FIXED Jan 19** - Rebuilt job scraper to support LinkedIn, Dice, Indeed (via JSearch), RemoteOK, Glassdoor, ZipRecruiter. All results now filtered to US-only.
-- [x] ~~UI Enhancement - Animations & Interactivity~~ **COMPLETED Jan 19** - Added framer-motion, enhanced CSS with animations, hover effects, interactive cards, tooltips, and modern blue color scheme.
+- [x] ~~Google login button hover bug~~ **VERIFIED FIXED Jan 19**
+- [x] ~~Profile popup raw field names~~ **VERIFIED FIXED Jan 19**
+- [x] ~~Job search not fetching from multiple platforms~~ **FIXED Jan 19**
+- [x] ~~UI Enhancement - Animations & Interactivity~~ **COMPLETED Jan 19**
+- [x] ~~Production Auth Issues~~ **FIXED Jan 20** - Fixed Google auth (session endpoint now returns JWT token), simplified registration, fixed CORS for production
 
 ### P1 - High Priority  
-- [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19** - On upload: (1) Analysis score 82/100, (2) Master Resume created, (3) 4 title-specific versions generated automatically (Full Stack Developer, Software Engineer, Web Developer, Application Developer). Added 2-minute timeout and improved loading messages.
+- [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19**
 - [ ] Flaky frontend login during automated testing (recurring issue)
 - [ ] Backend refactoring - break down monolithic server.py
 
