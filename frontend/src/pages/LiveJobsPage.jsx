@@ -79,7 +79,7 @@ import {
 } from '../components/ui/animations';
 
 export function LiveJobsPage() {
-  const { user, setUser } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
