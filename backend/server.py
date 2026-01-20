@@ -1410,6 +1410,14 @@ async def upload_resume(
 ):
     user = await get_current_user(request)
     
+    # Check resume limit (max 5 resumes per user)
+    resume_count = await db.resumes.count_documents({"user_id": user["user_id"]})
+    if resume_count >= 5:
+        raise HTTPException(
+            status_code=400, 
+            detail="Maximum 5 resumes allowed. Please delete an existing resume to upload a new one."
+        )
+    
     content = await file.read()
     file_extension = file.filename.split('.')[-1].lower()
     
@@ -1433,6 +1441,9 @@ async def upload_resume(
     
     resume_id = f"resume_{uuid.uuid4().hex[:12]}"
     
+    # Check if this is the first resume (make it primary)
+    is_first_resume = resume_count == 0
+    
     resume_doc = {
         "resume_id": resume_id,
         "user_id": user["user_id"],
@@ -1442,6 +1453,7 @@ async def upload_resume(
         "file_data": base64.b64encode(content).decode('utf-8'),
         "tailored_content": None,
         "auto_processed": False,
+        "is_primary": is_first_resume,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
