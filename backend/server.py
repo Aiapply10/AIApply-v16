@@ -1511,6 +1511,32 @@ async def delete_resume(resume_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Resume not found")
     return {"message": "Resume deleted successfully"}
 
+@api_router.put("/resumes/{resume_id}/set-primary")
+async def set_primary_resume(resume_id: str, request: Request):
+    """Set a resume as the primary resume for job applications"""
+    user = await get_current_user(request)
+    
+    # Check if resume exists
+    resume = await db.resumes.find_one(
+        {"resume_id": resume_id, "user_id": user["user_id"]}
+    )
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Remove primary flag from all other resumes
+    await db.resumes.update_many(
+        {"user_id": user["user_id"]},
+        {"$set": {"is_primary": False}}
+    )
+    
+    # Set this resume as primary
+    await db.resumes.update_one(
+        {"resume_id": resume_id},
+        {"$set": {"is_primary": True}}
+    )
+    
+    return {"message": "Resume set as primary successfully", "resume_id": resume_id}
+
 @api_router.post("/resumes/tailor")
 async def tailor_resume(data: TailorResumeRequest, request: Request):
     user = await get_current_user(request)
