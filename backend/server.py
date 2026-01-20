@@ -3603,7 +3603,7 @@ async def get_auto_apply_history(request: Request, limit: int = 50):
 async def run_auto_apply(request: Request):
     """
     Manually trigger auto-apply process.
-    Fetches jobs based on user settings, tailors resume, and records applications.
+    Fetches jobs using the system's job scraper and applies to matching jobs.
     """
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -3647,57 +3647,66 @@ async def run_auto_apply(request: Request):
             "applications": []
         }
     
-    # Fetch jobs from LinkedIn API or fallback to JSearch
-    api_key = os.environ.get('LIVEJOBS2_API_KEY')
-    api_host = os.environ.get('LIVEJOBS2_API_HOST', 'linkedin-job-search-api.p.rapidapi.com')
-    jsearch_api_key = os.environ.get('RAPIDAPI_KEY')
+    # Get job search parameters from settings or profile
+    job_keywords = settings.get("job_keywords", [])
+    locations = settings.get("locations", ["Remote, United States"])
     
-    job_keywords = settings.get("job_keywords", ["Software Developer"])
-    locations = settings.get("locations", ["United States"])
+    # If no keywords, use user's primary technology
+    if not job_keywords and user.get("primary_technology"):
+        job_keywords = [user.get("primary_technology")]
+    
+    # Default to common tech jobs if still empty
+    if not job_keywords:
+        job_keywords = ["Software Developer"]
+    
+    # Use our system's job scraper to fetch jobs
+    from utils.job_scraper import search_jobs
     
     all_jobs = []
-    api_source = "LinkedIn"
+    for keyword in job_keywords[:3]:  # Limit to 3 keywords
+        for location in locations[:2]:  # Limit to 2 locations
+            try:
+                scraped_jobs = await asyncio.to_thread(
+                    search_jobs, 
+                    keyword, 
+                    location, 
+                    source='all'
+                )
+                all_jobs.extend(scraped_jobs)
+            except Exception as e:
+                logger.error(f"Error scraping jobs for {keyword} in {location}: {str(e)}")
     
-    # Try LinkedIn API first
-    if api_key:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as http_client:
-                for keyword in job_keywords[:2]:
-                    for location in locations[:2]:
-                        response = await http_client.get(
-                            f"https://{api_host}/active-jb-24h",
-                            params={
-                                "limit": 10,
-                                "offset": 0,
-                                "title_filter": f'"{keyword}"',
-                                "location_filter": f'"{location}"',
-                                "description_type": "text"
-                            },
-                            headers={
-                                "X-RapidAPI-Key": api_key,
-                                "X-RapidAPI-Host": api_host
-                            }
-                        )
-                        
-                        if response.status_code == 200:
-                            jobs_data = response.json()
-                            # Check for quota exceeded error
-                            if isinstance(jobs_data, dict) and 'message' in jobs_data:
-                                logger.warning(f"LinkedIn API error: {jobs_data.get('message')}")
-                                break
-                            if isinstance(jobs_data, list):
-                                all_jobs.extend(jobs_data)
-        except Exception as e:
-            logger.error(f"Error fetching from LinkedIn API: {str(e)}")
+    # Remove duplicates based on job title and company
+    seen = set()
+    unique_jobs = []
+    for job in all_jobs:
+        key = (job.get('title', ''), job.get('company', ''))
+        if key not in seen:
+            seen.add(key)
+            unique_jobs.append(job)
     
-    # Fallback to JSearch API if LinkedIn fails or returns no jobs
-    if not all_jobs and jsearch_api_key:
-        api_source = "JSearch"
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as http_client:
-                for keyword in job_keywords[:2]:
-                    response = await http_client.get(
-                        "https://jsearch.p.rapidapi.com/search",
+    # Filter for remote jobs only (based on user preferences)
+    job_type_prefs = user.get("job_type_preferences", [])
+    if "Remote" in job_type_prefs:
+        unique_jobs = [j for j in unique_jobs if 
+            'remote' in j.get('location', '').lower() or
+            'remote' in j.get('title', '').lower()]
+    
+    # Limit to remaining daily quota
+    jobs_to_apply = unique_jobs[:remaining]
+    
+    if not jobs_to_apply:
+        return {
+            "message": "No matching jobs found. Try adjusting your search keywords.",
+            "applied_count": 0,
+            "applications": []
+        }
+    
+    # Process each job application
+    applications = []
+    resume_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+    
+    for job in jobs_to_apply:
                         params={
                             "query": f"{keyword} in {locations[0] if locations else 'United States'}",
                             "page": "1",
