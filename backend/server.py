@@ -128,7 +128,7 @@ class UserProfileUpdate(BaseModel):
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     salary_type: Optional[str] = None  # hourly, annual
-    tax_type: Optional[str] = None  # W2, 1099, C2C
+    tax_types: Optional[List[str]] = None  # Fulltime, C2C, W2 Contract
     relocation_preference: Optional[str] = None  # yes, no, maybe
     location_preferences: Optional[List[str]] = None
     job_type_preferences: Optional[List[str]] = None  # remote, hybrid, onsite
@@ -148,7 +148,7 @@ class UserResponse(BaseModel):
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     salary_type: Optional[str] = None
-    tax_type: Optional[str] = None
+    tax_types: Optional[List[str]] = None
     relocation_preference: Optional[str] = None
     location_preferences: Optional[List[str]] = None
     job_type_preferences: Optional[List[str]] = None
