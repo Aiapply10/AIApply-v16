@@ -204,11 +204,14 @@ Build a website where a job seeker can:
 2. **Auto-Apply Settings ObjectId error** - Added filter to exclude `_id` from response in update_auto_apply_settings
 3. **Profile tax_types not saving** - Fixed backend to use `tax_types` (plural) consistently across all endpoints
 4. **Multiple Resume Management** - Added "Set as Primary" button, primary badge (amber star), and 5-resume limit with UI indicator
+5. **Job Recommendations not loading** - Fixed LiveJobsPage to fetch fresh user profile on load to get primary_technology
+6. **Profile Completeness popup abrupt** - Added 1.5s delay and 24-hour dismissal memory via localStorage
 
 ### New Features
 - Resume card shows primary status with amber star icon and "Primary" badge
 - Upload button shows "(X/5)" count and disables at 5 resumes
 - Auto-apply now uses internal job scraper (Dice, RemoteOK, LinkedIn) instead of external APIs
+- Zustand store now has `updateUser()` method to update user without changing token
 
 ---
 
