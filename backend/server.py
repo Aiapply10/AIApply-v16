@@ -2819,12 +2819,14 @@ async def search_live_jobs(
     query: Optional[str] = None,
     location: Optional[str] = "United States",
     employment_type: Optional[str] = None,
-    source: Optional[str] = None,  # Filter by source: Indeed, Dice, RemoteOK, Arbeitnow
+    employment_types: Optional[str] = None,  # Comma-separated list
+    remote_only: bool = False,
+    source: Optional[str] = None,
     page: int = 1
 ):
     """
-    Search for live job listings from Indeed, Dice, RemoteOK, and other job boards.
-    Uses web scraping to get real-time jobs without API dependencies.
+    Search for live job listings using enhanced free API sources.
+    Sources: Arbeitnow, Remotive, RemoteOK, Jobicy, FindWork
     """
     user = await get_current_user(request)
     
@@ -2837,45 +2839,50 @@ async def search_live_jobs(
             technologies.extend(user["sub_technologies"][:2])
         
         if technologies:
-            query = technologies[0]  # Use primary technology for search
+            query = technologies[0]
         else:
             query = "software developer"
     
     try:
-        # Use web scraper to fetch jobs
-        logger.info(f"Searching jobs for: {query} in {location}, source filter: {source}")
+        logger.info(f"Enhanced search: {query}, remote={remote_only}, source={source}")
         
-        scraped_jobs = await job_scraper.scrape_all_sources(
+        # Parse employment types
+        emp_types = None
+        if employment_types:
+            emp_types = [t.strip() for t in employment_types.split(',')]
+        elif employment_type:
+            emp_types = [employment_type]
+        
+        # Use enhanced scraper for better results
+        jobs = await enhanced_job_scraper.scrape_all_sources(
             query=query,
-            location=location,
-            limit_per_source=10
+            remote_only=remote_only,
+            employment_types=emp_types,
+            limit_per_source=15
         )
         
         # Filter by source if specified
         if source and source.lower() != 'all':
             source_lower = source.lower()
-            scraped_jobs = [
-                job for job in scraped_jobs 
-                if source_lower in (job.get('source', '') or '').lower()
-            ]
+            jobs = [j for j in jobs if source_lower in (j.get('source', '') or '').lower()]
         
-        # Filter by employment type if specified
-        if employment_type:
-            employment_type_lower = employment_type.lower()
-            scraped_jobs = [
-                job for job in scraped_jobs 
-                if employment_type_lower in (job.get('employment_type', '') or '').lower()
-            ]
+        # Pagination
+        per_page = 20
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_jobs = jobs[start_idx:end_idx]
         
         return {
-            "jobs": scraped_jobs,
-            "total": len(scraped_jobs),
+            "jobs": paginated_jobs,
+            "total": len(jobs),
             "page": page,
+            "per_page": per_page,
+            "total_pages": (len(jobs) + per_page - 1) // per_page,
             "query_used": query,
-            "location": location,
+            "remote_only": remote_only,
             "source_filter": source,
-            "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
-            "data_source": "live_scraping"
+            "sources": ["Arbeitnow", "Remotive", "RemoteOK", "Jobicy", "FindWork"],
+            "data_source": "enhanced_free_apis"
         }
         
     except Exception as e:
@@ -2885,7 +2892,6 @@ async def search_live_jobs(
             "total": 0,
             "page": page,
             "query_used": query,
-            "location": location,
             "error": str(e)
         }
 
