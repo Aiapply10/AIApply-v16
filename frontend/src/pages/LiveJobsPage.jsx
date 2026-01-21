@@ -1405,14 +1405,14 @@ ${job?.description || job?.full_description || 'N/A'}
                     <div className="space-y-2">
                       <Label>Employment Type</Label>
                       <Select 
-                        value={liveJobs1Form.employment_type} 
-                        onValueChange={(v) => setLiveJobs1Form({...liveJobs1Form, employment_type: v})}
+                        value={liveJobs1Form.employment_type || "ALL"} 
+                        onValueChange={(v) => setLiveJobs1Form({...liveJobs1Form, employment_type: v === "ALL" ? "" : v})}
                       >
                         <SelectTrigger data-testid="livejobs1-employment">
                           <SelectValue placeholder="All Types" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Types</SelectItem>
+                          <SelectItem value="ALL">All Types</SelectItem>
                           <SelectItem value="FULLTIME">Full Time</SelectItem>
                           <SelectItem value="PARTTIME">Part Time</SelectItem>
                           <SelectItem value="CONTRACTOR">Contract</SelectItem>
