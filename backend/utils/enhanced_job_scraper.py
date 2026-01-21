@@ -387,7 +387,7 @@ class EnhancedJobScraper:
                 "tag": query
             }
             
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.get(url, params=params, headers=self._get_headers())
                 
                 if response.status_code != 200:
