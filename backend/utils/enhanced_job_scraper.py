@@ -129,9 +129,9 @@ class EnhancedJobScraper:
         
         try:
             # Arbeitnow has a public JSON API
-            url = "https://arbeitnow.com/api/job-board-api"
+            url = "https://www.arbeitnow.com/api/job-board-api"
             
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.get(url, headers=self._get_headers())
                 
                 if response.status_code != 200:
