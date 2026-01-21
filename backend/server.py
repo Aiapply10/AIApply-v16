@@ -3330,20 +3330,21 @@ async def _fetch_from_active_jobs_db(
         for job in job_list:
             try:
                 # Parse location
-                locations = job.get("locations_raw", [])
+                locations = job.get("locations_raw") or []
                 job_location = ""
                 country = ""
                 if locations and len(locations) > 0:
-                    addr = locations[0].get("address", {})
-                    city = addr.get("addressLocality", "")
-                    state = addr.get("addressRegion", "")
-                    country = addr.get("addressCountry", "").lower()
+                    addr = locations[0].get("address") or {}
+                    city = addr.get("addressLocality", "") or ""
+                    state = addr.get("addressRegion", "") or ""
+                    country = (addr.get("addressCountry", "") or "").lower()
                     job_location = f"{city}, {state}".strip(", ") if city or state else ""
                 
                 # Filter to US or remote jobs
-                location_lower = job_location.lower() + " " + country
+                location_lower = (job_location.lower() + " " + country).lower()
                 is_us_job = any(kw in location_lower for kw in us_keywords)
-                is_remote = job.get("location_type", "").lower() == "remote" or "remote" in job.get("title", "").lower()
+                job_title = (job.get("title") or "").lower()
+                is_remote = (job.get("location_type") or "").lower() == "remote" or "remote" in job_title
                 
                 if not is_us_job and not is_remote:
                     continue
@@ -3351,24 +3352,27 @@ async def _fetch_from_active_jobs_db(
                 # Parse salary
                 salary_info = None
                 if job.get("salary_raw"):
-                    salary_raw = job.get("salary_raw", {})
+                    salary_raw = job.get("salary_raw") or {}
                     if salary_raw.get("minValue") and salary_raw.get("maxValue"):
-                        salary_info = f"${int(float(salary_raw['minValue'])):,} - ${int(float(salary_raw['maxValue'])):,}"
+                        try:
+                            salary_info = f"${int(float(salary_raw['minValue'])):,} - ${int(float(salary_raw['maxValue'])):,}"
+                        except:
+                            pass
                 
-                company = job.get("organization", "Company Not Listed")
+                company = job.get("organization") or "Company Not Listed"
                 
                 jobs.append({
                     "job_id": f"activedb_{job.get('id', '')}",
-                    "title": job.get("title", ""),
+                    "title": job.get("title") or "",
                     "company": company,
-                    "company_logo": f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=10b981&color=fff",
+                    "company_logo": f"https://ui-avatars.com/api/?name={urllib.parse.quote((company[:2] if company else 'C'))}&background=10b981&color=fff",
                     "location": "Remote" if is_remote else (job_location or "United States"),
-                    "description": (job.get("description_text", "") or "")[:800],
+                    "description": ((job.get("description_text") or "")[:800]),
                     "salary_info": salary_info,
-                    "apply_link": job.get("organization_url", ""),
-                    "posted_at": job.get("date_posted", datetime.now(timezone.utc).isoformat()),
+                    "apply_link": job.get("organization_url") or "",
+                    "posted_at": job.get("date_posted") or datetime.now(timezone.utc).isoformat(),
                     "is_remote": is_remote,
-                    "employment_type": job.get("employment_type", "FULLTIME"),
+                    "employment_type": job.get("employment_type") or "FULLTIME",
                     "source": "Active Jobs DB",
                     "matched_technology": query
                 })
