@@ -580,8 +580,14 @@ class EnhancedJobScraper:
                 if any(et in (j.get('employment_type', '') or '').lower() for et in emp_types_lower)
             ]
         
-        # Sort by posted date (newest first)
-        unique_jobs.sort(key=lambda x: x.get('posted_at', ''), reverse=True)
+        # Sort by posted date (newest first) - handle mixed types
+        def safe_sort_key(x):
+            posted = x.get('posted_at', '')
+            if isinstance(posted, (int, float)):
+                return str(posted)
+            return str(posted) if posted else ''
+        
+        unique_jobs.sort(key=safe_sort_key, reverse=True)
         
         logger.info(f"Enhanced scraper: Total unique jobs: {len(unique_jobs)}")
         return unique_jobs
