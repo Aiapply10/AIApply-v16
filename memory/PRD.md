@@ -206,12 +206,18 @@ Build a website where a job seeker can:
 4. **Multiple Resume Management** - Added "Set as Primary" button, primary badge (amber star), and 5-resume limit with UI indicator
 5. **Job Recommendations not loading** - Fixed LiveJobsPage to fetch fresh user profile on load to get primary_technology
 6. **Profile Completeness popup abrupt** - Added 1.5s delay and 24-hour dismissal memory via localStorage
+7. **Job Search not working properly** - Implemented enhanced free job scraper with 5 sources (Arbeitnow, Remotive, RemoteOK, Jobicy, FindWork)
 
 ### New Features
 - Resume card shows primary status with amber star icon and "Primary" badge
 - Upload button shows "(X/5)" count and disables at 5 resumes
 - Auto-apply now uses internal job scraper (Dice, RemoteOK, LinkedIn) instead of external APIs
 - Zustand store now has `updateUser()` method to update user without changing token
+- **Enhanced Job Search** with multiple FREE API sources returning 15-20+ jobs
+- **Remote Jobs Only** toggle for filtering remote positions
+- **Multi-select Employment Type** filter (Full Time, Part Time, Contract, C2C, W2)
+- **Job Platform** dropdown to filter by source
+- **Live Jobs 1** backend endpoint ready for user's custom API integration
 
 ---
 
