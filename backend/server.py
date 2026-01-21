@@ -3190,14 +3190,19 @@ async def _fetch_from_jsearch(
             response = await client.get(url, params=params, headers=headers)
             
             if response.status_code == 429:
-                logger.warning("JSearch API rate limited")
-                return []
+                logger.warning("JSearch API rate limited (429)")
+                raise Exception("API rate limited - please try again later")
+            
+            # Check for quota exceeded in response body
+            data = response.json()
+            if data.get("message") and "quota" in data.get("message", "").lower():
+                logger.warning(f"JSearch API quota exceeded: {data.get('message')}")
+                raise Exception("Monthly API quota exceeded. Please upgrade your plan or wait until quota resets.")
             
             if response.status_code != 200:
                 logger.error(f"JSearch returned status {response.status_code}: {response.text[:200]}")
-                return []
+                raise Exception(f"API error: {response.status_code}")
             
-            data = response.json()
             job_list = data.get("data", [])
             
             logger.info(f"JSearch returned {len(job_list)} jobs for '{query}'")
