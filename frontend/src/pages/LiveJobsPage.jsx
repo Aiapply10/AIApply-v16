@@ -718,7 +718,7 @@ ${job?.description || job?.full_description || 'N/A'}
 
   // Note: JobCard is intentionally defined inside the component for access to parent scope functions
   // eslint-disable-next-line react/no-unstable-nested-components
-  const JobCard = ({ job, showMatchedTech = false, index = 0 }) => {
+  const JobCard = ({ job, showMatchedTech = false, showSource = false, index = 0 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     
