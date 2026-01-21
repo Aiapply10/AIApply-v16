@@ -3183,12 +3183,6 @@ async def search_live_jobs_1(
             seen_ids.add(job.get('job_id'))
             unique_jobs.append(job)
     jobs = unique_jobs
-                
-        except Exception as e:
-            error_msg = str(e)
-            errors.append(f"{api_config['name']}: {error_msg[:100]}")
-            logger.warning(f"Live Jobs 1: {api_config['name']} failed - {error_msg}")
-            continue
     
     # Filter by remote if requested and not already filtered
     if remote_only and jobs:
