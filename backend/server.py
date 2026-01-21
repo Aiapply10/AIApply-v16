@@ -3058,7 +3058,26 @@ async def get_job_recommendations(request: Request):
     }
 
 
-# ==================== LIVE JOBS 1 (JSearch RapidAPI Integration) ====================
+# ==================== LIVE JOBS 1 (Multi-API with Failover) ====================
+
+# API Configuration for Live Jobs 1
+LIVE_JOBS_1_APIS = [
+    {
+        "name": "JSearch",
+        "host": "jsearch.p.rapidapi.com",
+        "type": "jsearch"
+    },
+    {
+        "name": "Active Jobs DB",
+        "host": "active-jobs-db.p.rapidapi.com",
+        "type": "active_jobs_db"
+    },
+    {
+        "name": "LinkedIn Jobs Search",
+        "host": "linkedin-jobs-search.p.rapidapi.com",
+        "type": "linkedin_jobs_search"
+    }
+]
 
 @api_router.get("/live-jobs-1/search")
 async def search_live_jobs_1(
@@ -3067,13 +3086,14 @@ async def search_live_jobs_1(
     location: Optional[str] = "United States",
     remote_only: bool = False,
     employment_type: Optional[str] = None,
-    date_posted: Optional[str] = "all",  # all, today, 3days, week, month
+    date_posted: Optional[str] = "week",
     page: int = 1,
     per_page: int = 20
 ):
     """
-    Live Jobs 1 - Search jobs using JSearch RapidAPI.
-    Aggregates Indeed, LinkedIn, Glassdoor, ZipRecruiter and more.
+    Live Jobs 1 - Search jobs with automatic API failover.
+    Tries multiple APIs in sequence until one succeeds.
+    Sources: JSearch, Active Jobs DB, LinkedIn Jobs Search
     """
     user = await get_current_user(request)
     
@@ -3084,18 +3104,419 @@ async def search_live_jobs_1(
         else:
             query = "software developer"
     
-    # Get JSearch API configuration from environment
     api_key = os.environ.get('LIVE_JOBS_1_API_KEY', '')
-    api_host = os.environ.get('LIVE_JOBS_1_API_HOST', 'jsearch.p.rapidapi.com')
     
     if not api_key:
         return {
             "jobs": [],
             "total": 0,
             "page": page,
-            "message": "JSearch API key not configured",
+            "message": "API key not configured",
             "setup_required": True
         }
+    
+    jobs = []
+    api_used = None
+    errors = []
+    
+    # Try each API in sequence until one works
+    for api_config in LIVE_JOBS_1_APIS:
+        try:
+            logger.info(f"Live Jobs 1: Trying {api_config['name']}...")
+            
+            if api_config["type"] == "jsearch":
+                jobs = await _fetch_from_jsearch(
+                    api_key=api_key,
+                    api_host=api_config["host"],
+                    query=query,
+                    location=location,
+                    remote_only=remote_only,
+                    employment_type=employment_type,
+                    date_posted=date_posted,
+                    page=page,
+                    per_page=per_page
+                )
+            elif api_config["type"] == "active_jobs_db":
+                jobs = await _fetch_from_active_jobs_db(
+                    api_key=api_key,
+                    query=query,
+                    location=location,
+                    remote_only=remote_only,
+                    per_page=per_page
+                )
+            elif api_config["type"] == "linkedin_jobs_search":
+                jobs = await _fetch_from_linkedin_jobs_search(
+                    api_key=api_key,
+                    query=query,
+                    location=location,
+                    page=page
+                )
+            
+            if jobs and len(jobs) > 0:
+                api_used = api_config["name"]
+                logger.info(f"Live Jobs 1: Success with {api_config['name']} - {len(jobs)} jobs")
+                break
+            else:
+                errors.append(f"{api_config['name']}: No jobs returned")
+                
+        except Exception as e:
+            error_msg = str(e)
+            errors.append(f"{api_config['name']}: {error_msg[:100]}")
+            logger.warning(f"Live Jobs 1: {api_config['name']} failed - {error_msg}")
+            continue
+    
+    # Filter by remote if requested and not already filtered
+    if remote_only and jobs:
+        jobs = [j for j in jobs if j.get('is_remote', False) or 'remote' in (j.get('location', '') or '').lower()]
+    
+    return {
+        "jobs": jobs[:per_page],
+        "total": len(jobs),
+        "page": page,
+        "per_page": per_page,
+        "query_used": query,
+        "location": location,
+        "remote_only": remote_only,
+        "api_used": api_used,
+        "sources": ["JSearch (Indeed/LinkedIn/Glassdoor)", "Active Jobs DB", "LinkedIn Jobs Search"],
+        "data_source": "live_jobs_1_multi_api",
+        "errors": errors if not api_used else None
+    }
+
+
+async def _fetch_from_jsearch(
+    api_key: str,
+    api_host: str,
+    query: str,
+    location: str,
+    remote_only: bool,
+    employment_type: Optional[str],
+    date_posted: str,
+    page: int,
+    per_page: int
+) -> List[Dict]:
+    """Fetch jobs from JSearch RapidAPI."""
+    jobs = []
+    
+    url = "https://jsearch.p.rapidapi.com/search"
+    
+    search_query = f"{query} remote" if remote_only else query
+    
+    params = {
+        "query": f"{search_query} in {location}",
+        "page": str(page),
+        "num_pages": "1",
+        "date_posted": date_posted,
+        "country": "us"
+    }
+    
+    if employment_type and employment_type.upper() in ["FULLTIME", "PARTTIME", "CONTRACTOR", "INTERN"]:
+        params["employment_types"] = employment_type.upper()
+    
+    if remote_only:
+        params["remote_jobs_only"] = "true"
+    
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": api_host
+    }
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.get(url, params=params, headers=headers)
+        
+        data = response.json()
+        
+        # Check for quota/error messages
+        if data.get("message"):
+            msg = data.get("message", "").lower()
+            if "quota" in msg or "exceeded" in msg or "disabled" in msg:
+                raise Exception(f"API quota exceeded: {data.get('message')}")
+        
+        if response.status_code == 429:
+            raise Exception("Rate limited")
+        
+        if response.status_code != 200:
+            raise Exception(f"HTTP {response.status_code}")
+        
+        job_list = data.get("data", [])
+        
+        for job in job_list[:per_page]:
+            try:
+                salary_info = None
+                if job.get("job_min_salary") and job.get("job_max_salary"):
+                    salary_info = f"${int(job['job_min_salary']):,} - ${int(job['job_max_salary']):,}"
+                
+                is_remote = job.get("job_is_remote", False)
+                job_location = job.get("job_city", "")
+                if job.get("job_state"):
+                    job_location += f", {job['job_state']}"
+                if not job_location:
+                    job_location = job.get("job_country", "United States")
+                if is_remote:
+                    job_location = f"Remote - {job_location}" if job_location else "Remote"
+                
+                jobs.append({
+                    "job_id": f"jsearch_{job.get('job_id', '')}",
+                    "title": job.get("job_title", ""),
+                    "company": job.get("employer_name", "Company Not Listed"),
+                    "company_logo": job.get("employer_logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(job.get('employer_name', 'C')[:2])}&background=6366f1&color=fff",
+                    "location": job_location,
+                    "description": (job.get("job_description", "") or "")[:800],
+                    "salary_info": salary_info,
+                    "apply_link": job.get("job_apply_link", ""),
+                    "posted_at": job.get("job_posted_at_datetime_utc", datetime.now(timezone.utc).isoformat()),
+                    "is_remote": is_remote,
+                    "employment_type": job.get("job_employment_type", "FULLTIME"),
+                    "source": job.get("job_publisher", "JSearch"),
+                    "matched_technology": query
+                })
+            except Exception as e:
+                logger.error(f"Error parsing JSearch job: {e}")
+                continue
+    
+    return jobs
+
+
+async def _fetch_from_active_jobs_db(
+    api_key: str,
+    query: str,
+    location: str,
+    remote_only: bool,
+    per_page: int
+) -> List[Dict]:
+    """Fetch jobs from Active Jobs DB RapidAPI."""
+    jobs = []
+    
+    url = "https://active-jobs-db.p.rapidapi.com/active-ats-7d"
+    
+    # Build location filter
+    location_filter = f'"{location}"'
+    if "united states" in location.lower() or "usa" in location.lower():
+        location_filter = '"United States" OR "USA" OR "US"'
+    
+    params = {
+        "limit": str(per_page * 2),  # Get extra for filtering
+        "offset": "0",
+        "title_filter": f'"{query}"',
+        "location_filter": location_filter,
+        "description_type": "text"
+    }
+    
+    headers = {
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "active-jobs-db.p.rapidapi.com"
+    }
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.get(url, params=params, headers=headers)
+        
+        # Check for error messages
+        if response.status_code != 200:
+            try:
+                data = response.json()
+                if data.get("message"):
+                    raise Exception(data.get("message"))
+            except:
+                pass
+            raise Exception(f"HTTP {response.status_code}")
+        
+        data = response.json()
+        
+        if isinstance(data, dict) and data.get("message"):
+            raise Exception(data.get("message"))
+        
+        job_list = data if isinstance(data, list) else []
+        
+        for job in job_list[:per_page]:
+            try:
+                # Parse location
+                locations = job.get("locations_raw", [])
+                job_location = "United States"
+                if locations and len(locations) > 0:
+                    addr = locations[0].get("address", {})
+                    city = addr.get("addressLocality", "")
+                    state = addr.get("addressRegion", "")
+                    job_location = f"{city}, {state}".strip(", ") if city or state else "United States"
+                
+                # Check if remote
+                is_remote = job.get("location_type", "").lower() == "remote" or "remote" in job.get("title", "").lower()
+                
+                # Parse salary
+                salary_info = None
+                if job.get("salary_raw"):
+                    salary_raw = job.get("salary_raw", {})
+                    if salary_raw.get("minValue") and salary_raw.get("maxValue"):
+                        salary_info = f"${int(salary_raw['minValue']):,} - ${int(salary_raw['maxValue']):,}"
+                
+                # Get company name
+                company = job.get("organization", "Company Not Listed")
+                
+                jobs.append({
+                    "job_id": f"activedb_{job.get('id', '')}",
+                    "title": job.get("title", ""),
+                    "company": company,
+                    "company_logo": f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=10b981&color=fff",
+                    "location": "Remote" if is_remote else job_location,
+                    "description": (job.get("description_text", "") or "")[:800],
+                    "salary_info": salary_info,
+                    "apply_link": job.get("organization_url", ""),
+                    "posted_at": job.get("date_posted", datetime.now(timezone.utc).isoformat()),
+                    "is_remote": is_remote,
+                    "employment_type": job.get("employment_type", "FULLTIME"),
+                    "source": "Active Jobs DB",
+                    "matched_technology": query
+                })
+            except Exception as e:
+                logger.error(f"Error parsing Active Jobs DB job: {e}")
+                continue
+    
+    return jobs
+
+
+async def _fetch_from_linkedin_jobs_search(
+    api_key: str,
+    query: str,
+    location: str,
+    page: int
+) -> List[Dict]:
+    """Fetch jobs from LinkedIn Jobs Search RapidAPI (POST method)."""
+    jobs = []
+    
+    url = "https://linkedin-jobs-search.p.rapidapi.com/"
+    
+    payload = {
+        "search_terms": query,
+        "location": location,
+        "page": str(page)
+    }
+    
+    headers = {
+        "Content-Type": "application/json",
+        "X-RapidAPI-Key": api_key,
+        "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com"
+    }
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(url, json=payload, headers=headers)
+        
+        if response.status_code != 200:
+            try:
+                data = response.json()
+                if data.get("message"):
+                    raise Exception(data.get("message"))
+            except:
+                pass
+            raise Exception(f"HTTP {response.status_code}")
+        
+        data = response.json()
+        
+        if isinstance(data, dict) and data.get("message"):
+            raise Exception(data.get("message"))
+        
+        job_list = data if isinstance(data, list) else []
+        
+        for job in job_list:
+            try:
+                # Get company name
+                company = job.get("company_name", "Company Not Listed")
+                job_location = job.get("job_location", location)
+                
+                # Check if remote
+                is_remote = "remote" in job_location.lower() if job_location else False
+                
+                # Parse posted time
+                posted_at = job.get("posted_date", datetime.now(timezone.utc).isoformat())
+                
+                jobs.append({
+                    "job_id": f"linkedin_{hashlib.md5(job.get('job_url', '').encode()).hexdigest()[:12]}",
+                    "title": job.get("job_title", ""),
+                    "company": company,
+                    "company_logo": job.get("company_logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=0077B5&color=fff",
+                    "location": job_location,
+                    "description": (job.get("job_description", "") or "")[:800],
+                    "salary_info": job.get("salary", None),
+                    "apply_link": job.get("linkedin_job_url_cleaned", "") or job.get("job_url", ""),
+                    "posted_at": posted_at,
+                    "is_remote": is_remote,
+                    "employment_type": job.get("job_type", "FULLTIME"),
+                    "source": "LinkedIn",
+                    "matched_technology": query
+                })
+            except Exception as e:
+                logger.error(f"Error parsing LinkedIn job: {e}")
+                continue
+    
+    return jobs
+
+
+@api_router.get("/live-jobs-1/job-details/{job_id}")
+async def get_live_jobs_1_details(job_id: str, request: Request):
+    """Get detailed job information."""
+    await get_current_user(request)
+    
+    api_key = os.environ.get('LIVE_JOBS_1_API_KEY', '')
+    
+    if not api_key:
+        raise HTTPException(status_code=500, detail="API key not configured")
+    
+    # For JSearch jobs, try to get details
+    if job_id.startswith("jsearch_"):
+        try:
+            clean_job_id = job_id.replace("jsearch_", "")
+            
+            url = "https://jsearch.p.rapidapi.com/job-details"
+            params = {"job_id": clean_job_id, "country": "us"}
+            headers = {
+                "X-RapidAPI-Key": api_key,
+                "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
+            }
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(url, params=params, headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    jobs = data.get("data", [])
+                    
+                    if jobs:
+                        job = jobs[0]
+                        return {
+                            "job_id": job.get("job_id"),
+                            "title": job.get("job_title"),
+                            "company": job.get("employer_name"),
+                            "company_logo": job.get("employer_logo"),
+                            "location": f"{job.get('job_city', '')}, {job.get('job_state', '')}".strip(", "),
+                            "description": job.get("job_description"),
+                            "apply_link": job.get("job_apply_link"),
+                            "is_remote": job.get("job_is_remote", False),
+                            "employment_type": job.get("job_employment_type"),
+                            "source": job.get("job_publisher")
+                        }
+        except Exception as e:
+            logger.error(f"Error fetching JSearch job details: {e}")
+    
+    raise HTTPException(status_code=404, detail="Job details not available")
+
+
+@api_router.get("/live-jobs-1/status")
+async def get_live_jobs_1_status(request: Request):
+    """Get Live Jobs 1 API status and available sources."""
+    await get_current_user(request)
+    
+    api_key = os.environ.get('LIVE_JOBS_1_API_KEY', '')
+    
+    return {
+        "configured": bool(api_key),
+        "api_name": "Multi-API with Failover",
+        "sources": [
+            {"name": "JSearch", "status": "primary", "aggregates": ["Indeed", "LinkedIn", "Glassdoor", "ZipRecruiter"]},
+            {"name": "Active Jobs DB", "status": "fallback_1", "aggregates": ["ATS Systems"]},
+            {"name": "LinkedIn Jobs Search", "status": "fallback_2", "aggregates": ["LinkedIn"]}
+        ],
+        "features": ["automatic_failover", "remote_filter", "employment_type", "date_posted"]
+    }
+
+# ==================== END LIVE JOBS 1 ====================
     
     try:
         jobs = await _fetch_from_jsearch(
