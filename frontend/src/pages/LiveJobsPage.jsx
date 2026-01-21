@@ -83,6 +83,8 @@ export function LiveJobsPage() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [liveJobs1, setLiveJobs1] = useState([]);
+  const [liveJobs1Loading, setLiveJobs1Loading] = useState(false);
   const [resumes, setResumes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -99,6 +101,15 @@ export function LiveJobsPage() {
   const [activeTab, setActiveTab] = useState('recommendations');
   const [apiMessage, setApiMessage] = useState('');
   const [requiresProfileUpdate, setRequiresProfileUpdate] = useState(false);
+  
+  // Live Jobs 1 search form state
+  const [liveJobs1Form, setLiveJobs1Form] = useState({
+    query: '',
+    location: 'United States',
+    remote_only: false,
+    employment_type: '',
+    date_posted: 'week'
+  });
   
   // Step-by-step apply wizard state
   const [applyStep, setApplyStep] = useState(1);
