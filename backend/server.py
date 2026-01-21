@@ -20,6 +20,7 @@ import asyncio
 import random
 import string
 import re
+import hashlib
 
 # Scheduler imports
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
