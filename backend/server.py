@@ -3120,13 +3120,15 @@ async def search_live_jobs_1(
     api_used = None
     errors = []
     
-    # Try each API in sequence until one works
+    # Try each API in sequence until one succeeds with enough jobs
     for api_config in LIVE_JOBS_1_APIS:
         try:
             logger.info(f"Live Jobs 1: Trying {api_config['name']}...")
             
+            current_jobs = []
+            
             if api_config["type"] == "jsearch":
-                jobs = await _fetch_from_jsearch(
+                current_jobs = await _fetch_from_jsearch(
                     api_key=api_key,
                     api_host=api_config["host"],
                     query=query,
@@ -3138,7 +3140,7 @@ async def search_live_jobs_1(
                     per_page=per_page
                 )
             elif api_config["type"] == "active_jobs_db":
-                jobs = await _fetch_from_active_jobs_db(
+                current_jobs = await _fetch_from_active_jobs_db(
                     api_key=api_key,
                     query=query,
                     location=location,
@@ -3146,19 +3148,41 @@ async def search_live_jobs_1(
                     per_page=per_page
                 )
             elif api_config["type"] == "linkedin_jobs_search":
-                jobs = await _fetch_from_linkedin_jobs_search(
+                current_jobs = await _fetch_from_linkedin_jobs_search(
                     api_key=api_key,
                     query=query,
                     location=location,
                     page=page
                 )
             
-            if jobs and len(jobs) > 0:
-                api_used = api_config["name"]
-                logger.info(f"Live Jobs 1: Success with {api_config['name']} - {len(jobs)} jobs")
-                break
+            if current_jobs and len(current_jobs) > 0:
+                jobs.extend(current_jobs)
+                if not api_used:
+                    api_used = api_config["name"]
+                else:
+                    api_used += f" + {api_config['name']}"
+                logger.info(f"Live Jobs 1: Got {len(current_jobs)} from {api_config['name']}, total: {len(jobs)}")
+                
+                # If we have enough jobs, stop
+                if len(jobs) >= per_page:
+                    break
             else:
-                errors.append(f"{api_config['name']}: No jobs returned")
+                errors.append(f"{api_config['name']}: No matching jobs")
+                
+        except Exception as e:
+            error_msg = str(e)
+            errors.append(f"{api_config['name']}: {error_msg[:100]}")
+            logger.warning(f"Live Jobs 1: {api_config['name']} failed - {error_msg}")
+            continue
+    
+    # Remove duplicates by job_id
+    seen_ids = set()
+    unique_jobs = []
+    for job in jobs:
+        if job.get('job_id') not in seen_ids:
+            seen_ids.add(job.get('job_id'))
+            unique_jobs.append(job)
+    jobs = unique_jobs
                 
         except Exception as e:
             error_msg = str(e)
