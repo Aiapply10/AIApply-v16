@@ -1290,18 +1290,14 @@ ${job?.description || job?.full_description || 'N/A'}
 
         {/* Job Listings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList>
             <TabsTrigger value="recommendations" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Recommended</span> ({recommendations.length})
+              Recommended ({recommendations.length})
             </TabsTrigger>
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Search</span> ({jobs.length})
-            </TabsTrigger>
-            <TabsTrigger value="livejobs1" className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              <span className="hidden sm:inline">Live Jobs 1</span> ({liveJobs1.length})
+              Search Results ({jobs.length})
             </TabsTrigger>
           </TabsList>
 
