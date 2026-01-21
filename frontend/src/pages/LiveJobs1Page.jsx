@@ -127,20 +127,21 @@ export function LiveJobs1Page() {
 
   // Job Source Platforms - Enhanced Free APIs
   const JOB_SOURCES = [
-    { value: 'all', label: 'All Platforms', icon: '🌐' },
-    { value: 'arbeitnow', label: 'Arbeitnow', icon: '💼' },
-    { value: 'remotive', label: 'Remotive', icon: '🏠' },
-    { value: 'remoteok', label: 'RemoteOK', icon: '🌍' },
-    { value: 'jobicy', label: 'Jobicy', icon: '🎯' },
-    { value: 'findwork', label: 'FindWork', icon: '🔍' },
+    { value: 'all', label: 'All Premium Platforms', icon: '🌐' },
+    { value: 'indeed', label: 'Indeed', icon: '💼' },
+    { value: 'linkedin', label: 'LinkedIn', icon: '🔗' },
+    { value: 'glassdoor', label: 'Glassdoor', icon: '🏢' },
+    { value: 'ziprecruiter', label: 'ZipRecruiter', icon: '⚡' },
+    { value: 'activejobsdb', label: 'Active Jobs DB', icon: '📊' },
   ];
 
   const [searchForm, setSearchForm] = useState({
     query: '',
     location: 'United States',
-    employment_types: [],  // Changed to array for multi-select
-    remote_only: true,  // Default to remote jobs
-    source: 'all',  // Platform filter
+    employment_types: [],
+    remote_only: false,  // Default to all jobs
+    source: 'all',
+    date_posted: 'week',
   });
 
   // Employment type options
