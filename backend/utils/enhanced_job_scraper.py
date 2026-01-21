@@ -28,12 +28,11 @@ class EnhancedJobScraper:
         self.timeout = 25.0
         
     def _get_headers(self) -> dict:
-        """Generate headers for requests"""
+        """Generate headers for requests - no gzip to avoid decoding issues"""
         return {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Accept': 'application/json, text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept': 'application/json',
             'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
         }
     
     def _generate_job_id(self, title: str, company: str, source: str) -> str:
