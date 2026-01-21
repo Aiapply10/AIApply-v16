@@ -374,6 +374,34 @@ export function LiveJobsPage() {
     }
   };
 
+  // Live Jobs 1 (JSearch) search handler
+  const handleLiveJobs1Search = async (e) => {
+    e?.preventDefault();
+    setLiveJobs1Loading(true);
+    try {
+      const response = await liveJobs1API.search({
+        query: liveJobs1Form.query || user?.primary_technology || 'software developer',
+        location: liveJobs1Form.location,
+        remoteOnly: liveJobs1Form.remote_only,
+        employmentType: liveJobs1Form.employment_type || null,
+        datePosted: liveJobs1Form.date_posted,
+        page: 1,
+        perPage: 20
+      });
+      
+      const jobs = response.data.jobs || [];
+      setLiveJobs1(jobs);
+      
+      const remoteMsg = liveJobs1Form.remote_only ? ' (Remote)' : '';
+      toast.success(`Found ${jobs.length} jobs from Indeed, LinkedIn, Glassdoor & more${remoteMsg}`);
+    } catch (error) {
+      console.error('Error searching Live Jobs 1:', error);
+      toast.error(error.response?.data?.error || 'Failed to search jobs');
+    } finally {
+      setLiveJobs1Loading(false);
+    }
+  };
+
   // Direct link to external job platforms
   const openPlatformSearch = (platform) => {
     const query = encodeURIComponent(searchForm.query || 'software developer');
