@@ -712,6 +712,12 @@ ${job?.description || job?.full_description || 'N/A'}
       'RemoteOK': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
       'Glassdoor': 'bg-green-600/10 text-green-600 border-green-600/30',
       'ZipRecruiter': 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+      'Arbeitnow': 'bg-teal-500/10 text-teal-500 border-teal-500/30',
+      'Remotive': 'bg-purple-500/10 text-purple-500 border-purple-500/30',
+      'Jobicy': 'bg-rose-500/10 text-rose-500 border-rose-500/30',
+      'FindWork': 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30',
+      'JSearch': 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30',
+      'SimplyHired': 'bg-sky-500/10 text-sky-500 border-sky-500/30',
     };
     return styles[source] || 'bg-blue-500/10 text-blue-500 border-blue-500/30';
   };
