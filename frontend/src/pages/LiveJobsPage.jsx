@@ -100,15 +100,6 @@ export function LiveJobsPage() {
   const [apiMessage, setApiMessage] = useState('');
   const [requiresProfileUpdate, setRequiresProfileUpdate] = useState(false);
   
-  // Live Jobs 1 search form state
-  const [liveJobs1Form, setLiveJobs1Form] = useState({
-    query: '',
-    location: 'United States',
-    remote_only: false,
-    employment_type: '',
-    date_posted: 'week'
-  });
-  
   // Step-by-step apply wizard state
   const [applyStep, setApplyStep] = useState(1);
   const [aiCommand, setAiCommand] = useState('');
