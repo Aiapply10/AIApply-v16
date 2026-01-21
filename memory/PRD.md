@@ -207,7 +207,7 @@ Build a website where a job seeker can:
 5. **Job Recommendations not loading** - Fixed LiveJobsPage to fetch fresh user profile on load to get primary_technology
 6. **Profile Completeness popup abrupt** - Added 1.5s delay and 24-hour dismissal memory via localStorage
 7. **Job Search not working properly** - Implemented enhanced free job scraper with 5 sources (Arbeitnow, Remotive, RemoteOK, Jobicy, FindWork)
-8. **Live Jobs 1 Section** - Integrated JSearch RapidAPI for premium job search (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+8. **Live Jobs 1 Section** - Multi-API with automatic failover (JSearch → Active Jobs DB → LinkedIn Jobs Search)
 
 ### New Features
 - Resume card shows primary status with amber star icon and "Primary" badge
@@ -218,7 +218,12 @@ Build a website where a job seeker can:
 - **Remote Jobs Only** toggle for filtering remote positions
 - **Multi-select Employment Type** filter (Full Time, Part Time, Contract, C2C, W2)
 - **Job Platform** dropdown to filter by source
-- **Live Jobs 1 Tab** - New premium search section using JSearch RapidAPI (aggregates Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+- **Live Jobs 1 Tab** - Premium search with automatic API failover:
+  - Primary: JSearch (Indeed, LinkedIn, Glassdoor, ZipRecruiter)
+  - Fallback 1: Active Jobs DB (ATS systems)
+  - Fallback 2: LinkedIn Jobs Search
+  - Aggregates results from multiple sources (20-26+ jobs)
+  - Automatic deduplication
 
 ---
 
