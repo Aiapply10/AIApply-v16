@@ -2899,7 +2899,7 @@ async def search_live_jobs(
 async def get_job_recommendations(request: Request):
     """
     Get personalized job recommendations based on user's primary and sub technologies.
-    Requires user to have primary_technology set.
+    Uses enhanced free API sources for better results.
     """
     user = await get_current_user(request)
     
@@ -2914,66 +2914,52 @@ async def get_job_recommendations(request: Request):
     
     primary_tech = user.get("primary_technology", "")
     sub_techs = user.get("sub_technologies", [])
-    user_location = user.get("location", "United States")
     
     try:
-        # Use web scraper to fetch real jobs from multiple sources
-        logger.info(f"Scraping jobs for: {primary_tech} in {user_location}")
+        logger.info(f"Enhanced recommendations for: {primary_tech}")
         
-        # Scrape from all sources
-        scraped_jobs = await job_scraper.scrape_all_sources(
+        # Use enhanced scraper for better results
+        jobs = await enhanced_job_scraper.scrape_all_sources(
             query=primary_tech,
-            location=user_location,
-            limit_per_source=10
+            remote_only=False,
+            limit_per_source=12
         )
         
-        if scraped_jobs:
-            logger.info(f"Found {len(scraped_jobs)} jobs from web scraping")
-            return {
-                "recommendations": scraped_jobs[:20],  # Limit to 20 jobs
-                "total": len(scraped_jobs),
-                "based_on": {
-                    "primary_technology": primary_tech,
-                    "sub_technologies": sub_techs
-                },
-                "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
-                "data_source": "live_scraping"
-            }
-        
-        # If scraping returned nothing, try sub-technologies
-        if sub_techs:
+        # If not enough jobs, try sub-technologies
+        if len(jobs) < 10 and sub_techs:
             for sub_tech in sub_techs[:2]:
-                more_jobs = await job_scraper.scrape_all_sources(
+                more_jobs = await enhanced_job_scraper.scrape_all_sources(
                     query=sub_tech,
-                    location=user_location,
-                    limit_per_source=5
+                    remote_only=False,
+                    limit_per_source=6
                 )
-                scraped_jobs.extend(more_jobs)
+                jobs.extend(more_jobs)
         
-        if scraped_jobs:
-            # Remove duplicates
-            seen_ids = set()
-            unique_jobs = []
-            for job in scraped_jobs:
-                if job['job_id'] not in seen_ids:
-                    seen_ids.add(job['job_id'])
-                    unique_jobs.append(job)
-            
+        # Remove duplicates
+        seen = set()
+        unique_jobs = []
+        for job in jobs:
+            key = (job.get('title', '').lower(), job.get('company', '').lower())
+            if key not in seen:
+                seen.add(key)
+                unique_jobs.append(job)
+        
+        if unique_jobs:
             return {
-                "recommendations": unique_jobs[:20],
+                "recommendations": unique_jobs[:25],
                 "total": len(unique_jobs),
                 "based_on": {
                     "primary_technology": primary_tech,
                     "sub_technologies": sub_techs
                 },
-                "sources": ["Indeed", "Dice", "RemoteOK", "Arbeitnow"],
-                "data_source": "live_scraping"
+                "sources": ["Arbeitnow", "Remotive", "RemoteOK", "Jobicy", "FindWork"],
+                "data_source": "enhanced_free_apis"
             }
     
     except Exception as e:
-        logger.error(f"Error scraping jobs: {str(e)}")
+        logger.error(f"Error fetching recommendations: {str(e)}")
     
-    # Fallback to sample jobs if scraping fails
+    # Fallback to sample jobs if all APIs fail
     def get_sample_jobs(tech):
         sample_jobs = [
             {
