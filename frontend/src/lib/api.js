@@ -123,12 +123,37 @@ export const reportAPI = {
 
 // Live Jobs API
 export const liveJobsAPI = {
-  search: (query, location, employmentType, page = 1, source = null) => 
+  search: (params = {}) => 
     api.get('/live-jobs/search', { 
-      params: { query, location, employment_type: employmentType, page, source } 
+      params: {
+        query: params.query,
+        location: params.location,
+        employment_type: params.employmentType,
+        employment_types: params.employmentTypes,
+        remote_only: params.remoteOnly,
+        page: params.page || 1,
+        source: params.source
+      }
     }),
   getRecommendations: () => api.get('/live-jobs/recommendations'),
   getDetails: (jobId) => api.get(`/live-jobs/${jobId}`),
+};
+
+// Live Jobs 1 API (Custom API Integration)
+export const liveJobs1API = {
+  search: (params = {}) =>
+    api.get('/live-jobs-1/search', {
+      params: {
+        query: params.query,
+        location: params.location,
+        remote_only: params.remoteOnly,
+        employment_type: params.employmentType,
+        page: params.page || 1,
+        per_page: params.perPage || 20
+      }
+    }),
+  getStatus: () => api.get('/live-jobs-1/status'),
+  configure: (config) => api.post('/live-jobs-1/configure', config),
 };
 
 // Technologies API
