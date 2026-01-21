@@ -177,23 +177,25 @@ export function LiveJobs1Page() {
         updateUser(userRes.data);
       }
       
+      // For Live Jobs 1, search with user's primary technology
+      const searchQuery = userRes.data?.primary_technology || 'software developer';
+      
       const [recsRes, resumesRes] = await Promise.all([
-        liveJobs1API.search(),
+        liveJobs1API.search({ query: searchQuery, location: 'United States' }),
         resumeAPI.getAll()
       ]);
-      setRecommendations(recsRes.data.recommendations || []);
+      
+      // Live Jobs 1 returns { jobs: [], total: N, api_used: string }
+      setRecommendations(recsRes.data.jobs || []);
       setResumes(resumesRes.data || []);
       
       // Handle API messages
-      if (recsRes.data.message) {
-        setApiMessage(recsRes.data.message);
-      }
-      if (recsRes.data.requires_profile_update) {
-        setRequiresProfileUpdate(true);
+      if (recsRes.data.errors && recsRes.data.errors.length > 0) {
+        setApiMessage(`Sources: ${recsRes.data.api_used || 'Multiple APIs'}`);
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load job recommendations');
+      toast.error('Failed to load jobs');
     } finally {
       setIsLoading(false);
     }
