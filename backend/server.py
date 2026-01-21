@@ -27,6 +27,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 # Job Scraper
 from utils.job_scraper import job_scraper
+from utils.enhanced_job_scraper import enhanced_job_scraper
 
 # Email (Resend)
 import resend
