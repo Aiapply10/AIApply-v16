@@ -336,42 +336,26 @@ export function LiveJobsPage() {
     e?.preventDefault();
     setIsSearching(true);
     try {
-      // Build location based on remote_only flag
-      let searchLocation = searchForm.location || 'United States';
-      if (searchForm.remote_only) {
-        searchLocation = 'Remote, United States';
-      }
+      // Use the new API format with better parameters
+      const response = await liveJobsAPI.search({
+        query: searchForm.query || null,
+        location: searchForm.location || 'United States',
+        remoteOnly: searchForm.remote_only,
+        employmentTypes: searchForm.employment_types.length > 0 
+          ? searchForm.employment_types.join(',') 
+          : null,
+        page: 1,
+        source: searchForm.source !== 'all' ? searchForm.source : null
+      });
       
-      // Get the first employment type if multiple selected, or null
-      const employmentType = searchForm.employment_types.length > 0 
-        ? searchForm.employment_types[0] 
-        : null;
+      const jobs = response.data.jobs || [];
       
-      const response = await liveJobsAPI.search(
-        searchForm.query || null,
-        searchLocation,
-        employmentType,
-        1,
-        searchForm.source !== 'all' ? searchForm.source : null
-      );
-      
-      // Filter results based on employment types and remote flag
-      let filteredJobs = response.data.jobs || [];
-      
-      // Filter by remote if enabled
-      if (searchForm.remote_only) {
-        filteredJobs = filteredJobs.filter(job => 
-          job.location?.toLowerCase().includes('remote') ||
-          job.title?.toLowerCase().includes('remote') ||
-          job.description?.toLowerCase().includes('remote')
-        );
-      }
-      
-      setJobs(filteredJobs);
+      setJobs(jobs);
       setActiveTab('search');
+      
       const sourceMsg = searchForm.source !== 'all' ? ` from ${searchForm.source}` : '';
       const remoteMsg = searchForm.remote_only ? ' (Remote only)' : '';
-      toast.success(`Found ${filteredJobs.length} jobs${sourceMsg}${remoteMsg}`);
+      toast.success(`Found ${jobs.length} jobs${sourceMsg}${remoteMsg}`);
     } catch (error) {
       console.error('Error searching jobs:', error);
       toast.error('Failed to search jobs');
