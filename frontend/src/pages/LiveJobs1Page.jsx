@@ -337,16 +337,17 @@ export function LiveJobs1Page() {
     e?.preventDefault();
     setIsSearching(true);
     try {
-      // Use the new API format with better parameters
+      // Use Live Jobs 1 API with parameters
       const response = await liveJobs1API.search({
-        query: searchForm.query || null,
+        query: searchForm.query || user?.primary_technology || 'software developer',
         location: searchForm.location || 'United States',
         remoteOnly: searchForm.remote_only,
-        employmentTypes: searchForm.employment_types.length > 0 
-          ? searchForm.employment_types.join(',') 
+        employmentType: searchForm.employment_types.length > 0 
+          ? searchForm.employment_types[0] 
           : null,
+        datePosted: 'week',
         page: 1,
-        source: searchForm.source !== 'all' ? searchForm.source : null
+        perPage: 20
       });
       
       const jobs = response.data.jobs || [];
@@ -354,9 +355,9 @@ export function LiveJobs1Page() {
       setJobs(jobs);
       setActiveTab('search');
       
-      const sourceMsg = searchForm.source !== 'all' ? ` from ${searchForm.source}` : '';
+      const apiUsed = response.data.api_used ? ` (${response.data.api_used})` : '';
       const remoteMsg = searchForm.remote_only ? ' (Remote only)' : '';
-      toast.success(`Found ${jobs.length} jobs${sourceMsg}${remoteMsg}`);
+      toast.success(`Found ${jobs.length} jobs from Indeed, LinkedIn, Glassdoor & more${remoteMsg}`);
     } catch (error) {
       console.error('Error searching jobs:', error);
       toast.error('Failed to search jobs');
