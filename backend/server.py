@@ -3432,27 +3432,30 @@ async def _fetch_from_linkedin_jobs_search(
         for job in job_list:
             try:
                 # Get company name
-                company = job.get("company_name", "Company Not Listed")
-                job_location = job.get("job_location", location)
+                company = job.get("company_name") or "Company Not Listed"
+                job_location = job.get("job_location") or location
                 
                 # Check if remote
-                is_remote = "remote" in job_location.lower() if job_location else False
+                is_remote = "remote" in (job_location or "").lower()
                 
                 # Parse posted time
-                posted_at = job.get("posted_date", datetime.now(timezone.utc).isoformat())
+                posted_at = job.get("posted_date") or datetime.now(timezone.utc).isoformat()
+                
+                # Create safe company initials
+                company_initials = company[:2] if company and len(company) >= 2 else "C"
                 
                 jobs.append({
-                    "job_id": f"linkedin_{hashlib.md5(job.get('job_url', '').encode()).hexdigest()[:12]}",
-                    "title": job.get("job_title", ""),
+                    "job_id": f"linkedin_{hashlib.md5((job.get('job_url') or '').encode()).hexdigest()[:12]}",
+                    "title": job.get("job_title") or "",
                     "company": company,
-                    "company_logo": job.get("company_logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=0077B5&color=fff",
+                    "company_logo": job.get("company_logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(company_initials)}&background=0077B5&color=fff",
                     "location": job_location,
-                    "description": (job.get("job_description", "") or "")[:800],
-                    "salary_info": job.get("salary", None),
-                    "apply_link": job.get("linkedin_job_url_cleaned", "") or job.get("job_url", ""),
+                    "description": ((job.get("job_description") or "")[:800]),
+                    "salary_info": job.get("salary"),
+                    "apply_link": job.get("linkedin_job_url_cleaned") or job.get("job_url") or "",
                     "posted_at": posted_at,
                     "is_remote": is_remote,
-                    "employment_type": job.get("job_type", "FULLTIME"),
+                    "employment_type": job.get("job_type") or "FULLTIME",
                     "source": "LinkedIn",
                     "matched_technology": query
                 })
