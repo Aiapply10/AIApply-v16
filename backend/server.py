@@ -3289,16 +3289,11 @@ async def _fetch_from_active_jobs_db(
     
     url = "https://active-jobs-db.p.rapidapi.com/active-ats-7d"
     
-    # Build location filter
-    location_filter = f'"{location}"'
-    if "united states" in location.lower() or "usa" in location.lower():
-        location_filter = '"United States" OR "USA" OR "US"'
-    
+    # Simplify the query for better matching
     params = {
-        "limit": str(per_page * 2),  # Get extra for filtering
+        "limit": str(per_page * 2),
         "offset": "0",
         "title_filter": f'"{query}"',
-        "location_filter": location_filter,
         "description_type": "text"
     }
     
@@ -3327,28 +3322,38 @@ async def _fetch_from_active_jobs_db(
         
         job_list = data if isinstance(data, list) else []
         
-        for job in job_list[:per_page]:
+        # Filter for US jobs
+        us_keywords = ['united states', 'usa', 'us', 'remote', 'california', 'new york', 'texas', 'florida', 
+                       'washington', 'illinois', 'georgia', 'arizona', 'colorado', 'massachusetts']
+        
+        for job in job_list:
             try:
                 # Parse location
                 locations = job.get("locations_raw", [])
-                job_location = "United States"
+                job_location = ""
+                country = ""
                 if locations and len(locations) > 0:
                     addr = locations[0].get("address", {})
                     city = addr.get("addressLocality", "")
                     state = addr.get("addressRegion", "")
-                    job_location = f"{city}, {state}".strip(", ") if city or state else "United States"
+                    country = addr.get("addressCountry", "").lower()
+                    job_location = f"{city}, {state}".strip(", ") if city or state else ""
                 
-                # Check if remote
+                # Filter to US or remote jobs
+                location_lower = job_location.lower() + " " + country
+                is_us_job = any(kw in location_lower for kw in us_keywords)
                 is_remote = job.get("location_type", "").lower() == "remote" or "remote" in job.get("title", "").lower()
+                
+                if not is_us_job and not is_remote:
+                    continue
                 
                 # Parse salary
                 salary_info = None
                 if job.get("salary_raw"):
                     salary_raw = job.get("salary_raw", {})
                     if salary_raw.get("minValue") and salary_raw.get("maxValue"):
-                        salary_info = f"${int(salary_raw['minValue']):,} - ${int(salary_raw['maxValue']):,}"
+                        salary_info = f"${int(float(salary_raw['minValue'])):,} - ${int(float(salary_raw['maxValue'])):,}"
                 
-                # Get company name
                 company = job.get("organization", "Company Not Listed")
                 
                 jobs.append({
@@ -3356,7 +3361,7 @@ async def _fetch_from_active_jobs_db(
                     "title": job.get("title", ""),
                     "company": company,
                     "company_logo": f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=10b981&color=fff",
-                    "location": "Remote" if is_remote else job_location,
+                    "location": "Remote" if is_remote else (job_location or "United States"),
                     "description": (job.get("description_text", "") or "")[:800],
                     "salary_info": salary_info,
                     "apply_link": job.get("organization_url", ""),
@@ -3366,6 +3371,10 @@ async def _fetch_from_active_jobs_db(
                     "source": "Active Jobs DB",
                     "matched_technology": query
                 })
+                
+                if len(jobs) >= per_page:
+                    break
+                    
             except Exception as e:
                 logger.error(f"Error parsing Active Jobs DB job: {e}")
                 continue
