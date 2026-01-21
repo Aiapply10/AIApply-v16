@@ -3056,6 +3056,232 @@ async def get_job_recommendations(request: Request):
         "message": "Showing sample jobs. Live job scraping temporarily unavailable."
     }
 
+
+# ==================== LIVE JOBS 1 (Custom API Integration) ====================
+
+class LiveJobs1Config(BaseModel):
+    """Configuration for Live Jobs 1 custom API"""
+    api_key: Optional[str] = None
+    api_url: Optional[str] = None
+    api_name: str = "Custom API"
+
+@api_router.get("/live-jobs-1/search")
+async def search_live_jobs_1(
+    request: Request,
+    query: Optional[str] = None,
+    location: Optional[str] = "United States",
+    remote_only: bool = False,
+    employment_type: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 20
+):
+    """
+    Live Jobs 1 - Search jobs using custom API integration.
+    This endpoint is designed to work with user-provided job APIs.
+    Currently uses a placeholder that can be replaced with actual API.
+    """
+    user = await get_current_user(request)
+    
+    # Build search query from user's technologies if not provided
+    if not query:
+        if user.get("primary_technology"):
+            query = user["primary_technology"]
+        else:
+            query = "software developer"
+    
+    # Get custom API configuration from environment
+    custom_api_key = os.environ.get('LIVE_JOBS_1_API_KEY', '')
+    custom_api_url = os.environ.get('LIVE_JOBS_1_API_URL', '')
+    
+    try:
+        jobs = []
+        
+        # If custom API is configured, use it
+        if custom_api_key and custom_api_url:
+            logger.info(f"Live Jobs 1: Using custom API for '{query}'")
+            jobs = await _fetch_from_custom_api(
+                api_url=custom_api_url,
+                api_key=custom_api_key,
+                query=query,
+                location=location,
+                remote_only=remote_only,
+                employment_type=employment_type,
+                limit=per_page * 3  # Fetch extra for filtering
+            )
+        else:
+            # Placeholder - return message to configure API
+            return {
+                "jobs": [],
+                "total": 0,
+                "page": page,
+                "per_page": per_page,
+                "query_used": query,
+                "message": "Live Jobs 1 API not configured. Please provide API credentials.",
+                "setup_required": True,
+                "config_keys": ["LIVE_JOBS_1_API_KEY", "LIVE_JOBS_1_API_URL"]
+            }
+        
+        # Pagination
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_jobs = jobs[start_idx:end_idx]
+        
+        return {
+            "jobs": paginated_jobs,
+            "total": len(jobs),
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (len(jobs) + per_page - 1) // per_page,
+            "query_used": query,
+            "location": location,
+            "remote_only": remote_only,
+            "data_source": "live_jobs_1_api"
+        }
+        
+    except Exception as e:
+        logger.error(f"Live Jobs 1 search error: {str(e)}")
+        return {
+            "jobs": [],
+            "total": 0,
+            "page": page,
+            "error": str(e)
+        }
+
+
+@api_router.post("/live-jobs-1/configure")
+async def configure_live_jobs_1(config: LiveJobs1Config, request: Request):
+    """
+    Configure Live Jobs 1 API credentials.
+    Admin endpoint to set up custom job API.
+    """
+    user = await get_current_user(request)
+    
+    # Only allow admin to configure (optional: add role check)
+    
+    # Store configuration in database
+    await db.settings.update_one(
+        {"setting_id": "live_jobs_1_config"},
+        {
+            "$set": {
+                "api_key": config.api_key,
+                "api_url": config.api_url,
+                "api_name": config.api_name,
+                "configured_by": user["user_id"],
+                "configured_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": f"Live Jobs 1 configured successfully with {config.api_name}"}
+
+
+async def _fetch_from_custom_api(
+    api_url: str,
+    api_key: str,
+    query: str,
+    location: str,
+    remote_only: bool,
+    employment_type: Optional[str],
+    limit: int
+) -> List[Dict]:
+    """
+    Fetch jobs from custom API.
+    This is a template that can be adapted for different job APIs.
+    """
+    jobs = []
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Generic API call - adjust based on actual API structure
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "X-API-Key": api_key,
+                "Content-Type": "application/json"
+            }
+            
+            params = {
+                "query": query,
+                "q": query,
+                "keyword": query,
+                "location": location,
+                "remote": str(remote_only).lower(),
+                "limit": limit
+            }
+            
+            if employment_type:
+                params["employment_type"] = employment_type
+                params["type"] = employment_type
+            
+            response = await client.get(api_url, headers=headers, params=params)
+            
+            if response.status_code != 200:
+                logger.error(f"Custom API returned {response.status_code}")
+                return jobs
+            
+            data = response.json()
+            
+            # Try to parse common API response formats
+            job_list = (
+                data.get("jobs") or 
+                data.get("data") or 
+                data.get("results") or 
+                data.get("items") or 
+                (data if isinstance(data, list) else [])
+            )
+            
+            for job in job_list[:limit]:
+                try:
+                    # Map common job fields
+                    parsed_job = {
+                        "job_id": f"custom_{job.get('id') or job.get('job_id') or hashlib.md5(str(job).encode()).hexdigest()[:12]}",
+                        "title": job.get("title") or job.get("job_title") or job.get("position") or "Job Position",
+                        "company": job.get("company") or job.get("company_name") or job.get("employer_name") or "Company",
+                        "company_logo": job.get("company_logo") or job.get("logo") or f"https://ui-avatars.com/api/?name=C&background=6366f1&color=fff",
+                        "location": job.get("location") or job.get("job_location") or location,
+                        "description": (job.get("description") or job.get("job_description") or "")[:500],
+                        "salary_info": job.get("salary") or job.get("salary_range") or job.get("compensation"),
+                        "apply_link": job.get("url") or job.get("apply_url") or job.get("application_url") or job.get("link") or "",
+                        "posted_at": job.get("posted_at") or job.get("created_at") or job.get("date") or datetime.now(timezone.utc).isoformat(),
+                        "is_remote": job.get("remote") or job.get("is_remote") or "remote" in str(job.get("location", "")).lower(),
+                        "employment_type": job.get("employment_type") or job.get("type") or job.get("job_type") or "Full-time",
+                        "source": "Live Jobs 1",
+                        "matched_technology": query
+                    }
+                    jobs.append(parsed_job)
+                except Exception as e:
+                    logger.error(f"Error parsing custom API job: {e}")
+                    continue
+                    
+    except Exception as e:
+        logger.error(f"Error fetching from custom API: {e}")
+    
+    return jobs
+
+
+@api_router.get("/live-jobs-1/status")
+async def get_live_jobs_1_status(request: Request):
+    """
+    Get Live Jobs 1 API configuration status.
+    """
+    await get_current_user(request)
+    
+    custom_api_key = os.environ.get('LIVE_JOBS_1_API_KEY', '')
+    custom_api_url = os.environ.get('LIVE_JOBS_1_API_URL', '')
+    
+    # Also check database config
+    db_config = await db.settings.find_one({"setting_id": "live_jobs_1_config"}, {"_id": 0})
+    
+    return {
+        "configured": bool(custom_api_key and custom_api_url),
+        "env_configured": bool(custom_api_key),
+        "db_config": db_config,
+        "required_env_vars": ["LIVE_JOBS_1_API_KEY", "LIVE_JOBS_1_API_URL"]
+    }
+
+# ==================== END LIVE JOBS 1 ====================
+
+
 @api_router.get("/live-jobs/{job_id}")
 async def get_live_job_details(job_id: str, request: Request):
     """
