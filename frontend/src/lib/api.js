@@ -139,7 +139,7 @@ export const liveJobsAPI = {
   getDetails: (jobId) => api.get(`/live-jobs/${jobId}`),
 };
 
-// Live Jobs 1 API (Custom API Integration)
+// Live Jobs 1 API (JSearch RapidAPI Integration)
 export const liveJobs1API = {
   search: (params = {}) =>
     api.get('/live-jobs-1/search', {
@@ -148,12 +148,13 @@ export const liveJobs1API = {
         location: params.location,
         remote_only: params.remoteOnly,
         employment_type: params.employmentType,
+        date_posted: params.datePosted || 'all',
         page: params.page || 1,
         per_page: params.perPage || 20
       }
     }),
+  getDetails: (jobId) => api.get(`/live-jobs-1/job-details/${jobId}`),
   getStatus: () => api.get('/live-jobs-1/status'),
-  configure: (config) => api.post('/live-jobs-1/configure', config),
 };
 
 // Technologies API
