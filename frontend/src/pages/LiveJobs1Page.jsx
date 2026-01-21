@@ -935,9 +935,9 @@ ${job?.description || job?.full_description || 'N/A'}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold">Live Job Listings</h1>
+            <h1 className="font-heading text-3xl font-bold">Live Jobs 1 (Premium)</h1>
             <p className="text-muted-foreground mt-1">
-              Real-time opportunities from Indeed, Dice, RemoteOK & more
+              Real-time opportunities from Indeed, LinkedIn, Glassdoor, ZipRecruiter & more
             </p>
           </div>
           <Button 
