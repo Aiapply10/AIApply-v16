@@ -83,8 +83,6 @@ export function LiveJobsPage() {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
-  const [liveJobs1, setLiveJobs1] = useState([]);
-  const [liveJobs1Loading, setLiveJobs1Loading] = useState(false);
   const [resumes, setResumes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
