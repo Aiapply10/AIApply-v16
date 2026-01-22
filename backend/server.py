@@ -240,8 +240,12 @@ class AutoApplySettings(BaseModel):
     locations: List[str] = ["United States"]
     employment_types: List[str] = ["FULL_TIME"]
     min_salary: Optional[int] = None
-    max_applications_per_day: int = 10
+    max_applications_per_day: int = 10  # Options: 10, 15, 20, 25
     auto_tailor_resume: bool = True
+    generate_cover_letter: bool = True
+    source_filters: List[str] = []  # Filter by job source (e.g., "RemoteOK", "LinkedIn")
+    schedule_time: str = "12:00"  # Default to 12:00 PM (user's local time, stored as HH:MM)
+    schedule_enabled: bool = True
 
 class AutoApplySettingsUpdate(BaseModel):
     enabled: Optional[bool] = None
@@ -250,8 +254,12 @@ class AutoApplySettingsUpdate(BaseModel):
     locations: Optional[List[str]] = None
     employment_types: Optional[List[str]] = None
     min_salary: Optional[int] = None
-    max_applications_per_day: Optional[int] = None
+    max_applications_per_day: Optional[int] = None  # Options: 10, 15, 20, 25
     auto_tailor_resume: Optional[bool] = None
+    generate_cover_letter: Optional[bool] = None
+    source_filters: Optional[List[str]] = None
+    schedule_time: Optional[str] = None
+    schedule_enabled: Optional[bool] = None
 
 # ============ EMAIL CENTER MODELS ============
 
