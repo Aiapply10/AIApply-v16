@@ -283,6 +283,7 @@ class EnhancedJobScraper:
             return cached[:limit]
         
         jobs = []
+        search_terms = self._get_search_terms(query)
         
         try:
             # Remotive has a public JSON API
@@ -299,8 +300,6 @@ class EnhancedJobScraper:
                 data = response.json()
                 job_list = data.get("jobs", [])
                 
-                query_lower = query.lower()
-                
                 for job in job_list:
                     try:
                         title = job.get("title", "")
@@ -310,8 +309,8 @@ class EnhancedJobScraper:
                         tags = job.get("tags", [])
                         location = job.get("candidate_required_location", "Worldwide")
                         
-                        # Filter by query
-                        if query_lower not in title.lower() and query_lower not in category.lower() and query_lower not in description.lower():
+                        # Use improved matching with synonyms
+                        if not self._matches_query({'title': title, 'category': category, 'description': description, 'tags': tags}, search_terms):
                             continue
                         
                         # Check if US or worldwide
