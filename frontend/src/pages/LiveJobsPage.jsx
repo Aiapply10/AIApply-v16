@@ -119,7 +119,11 @@ export function LiveJobsPage() {
     job_keywords: [],
     locations: ['United States'],
     max_applications_per_day: 10,
-    auto_tailor_resume: true
+    auto_tailor_resume: true,
+    generate_cover_letter: true,
+    source_filters: [],
+    schedule_time: '12:00',
+    schedule_enabled: true
   });
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
   const [newKeyword, setNewKeyword] = useState('');
@@ -132,7 +136,7 @@ export function LiveJobsPage() {
     { value: 'remotive', label: 'Remotive', icon: '🏠' },
     { value: 'remoteok', label: 'RemoteOK', icon: '🌍' },
     { value: 'jobicy', label: 'Jobicy', icon: '🎯' },
-    { value: 'findwork', label: 'FindWork', icon: '🔍' },
+    { value: 'hackernews', label: 'HackerNews', icon: '🔶' },
   ];
 
   const [searchForm, setSearchForm] = useState({
