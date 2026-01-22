@@ -680,6 +680,18 @@ export function EmailCenterPage() {
                 <CardDescription>Configure how AI handles your emails</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Auto Reply Toggle - This is the main control */}
+                <div className="flex items-center justify-between p-4 bg-violet-50 rounded-lg border border-violet-200">
+                  <div>
+                    <Label className="text-base font-semibold text-violet-900">AI Auto-Reply</Label>
+                    <p className="text-sm text-violet-700">Automatically respond to recruiter emails with AI-generated replies</p>
+                  </div>
+                  <Switch 
+                    checked={settings.auto_reply_enabled}
+                    onCheckedChange={(v) => handleUpdateSettings('auto_reply_enabled', v)}
+                  />
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base">Auto-Compose Applications</Label>
