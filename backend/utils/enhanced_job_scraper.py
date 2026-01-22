@@ -523,63 +523,80 @@ class EnhancedJobScraper:
 
     async def scrape_findwork(self, query: str, remote_only: bool = False, limit: int = 20) -> List[Dict]:
         """
-        Fetch jobs from FindWork.dev API - FREE tier available
-        Great for developer/tech jobs
+        FindWork API requires API key - skip for now
         """
-        cache_key = self._get_cache_key("findwork", query, remote_only)
+        # FindWork API now requires authentication - skip
+        return []
+
+    async def scrape_hackernews_jobs(self, query: str, remote_only: bool = False, limit: int = 20) -> List[Dict]:
+        """
+        Fetch jobs from HackerNews Who's Hiring via Algolia API - FREE
+        Great source for tech/startup jobs
+        """
+        cache_key = self._get_cache_key("hackernews", query, remote_only)
         cached = self._get_cached_jobs(cache_key)
         if cached:
             return cached[:limit]
         
         jobs = []
+        search_terms = self._get_search_terms(query)
         
         try:
-            url = "https://findwork.dev/api/jobs/"
+            # Algolia HN Search API - search for jobs
+            url = "https://hn.algolia.com/api/v1/search"
             params = {
-                "search": query,
-                "location": "remote" if remote_only else "usa"
+                "query": f"{query} hiring",
+                "tags": "story",
+                "hitsPerPage": 100
             }
             
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.get(url, params=params, headers=self._get_headers())
                 
                 if response.status_code != 200:
-                    logger.warning(f"FindWork returned status {response.status_code}")
+                    logger.warning(f"HackerNews returned status {response.status_code}")
                     return jobs
                 
                 data = response.json()
-                job_list = data.get("results", [])
+                hits = data.get("hits", [])
                 
-                for job in job_list:
+                for hit in hits:
                     try:
-                        title = job.get("role", "")
-                        company = job.get("company_name", "Company Not Listed")
-                        location = job.get("location", "")
-                        description = job.get("text", "")[:500]
-                        is_remote = job.get("remote", False)
+                        title = hit.get("title", "")
+                        story_text = hit.get("story_text", "") or ""
                         
-                        # Filter remote if requested
+                        # Skip non-job posts
+                        if not any(kw in title.lower() for kw in ['hiring', 'job', 'remote', 'engineer', 'developer']):
+                            continue
+                        
+                        # Use improved matching with synonyms
+                        if not self._matches_query({'title': title, 'description': story_text}, search_terms):
+                            continue
+                        
+                        # Extract company name from title (usually "Company (Location)" format)
+                        company = "Tech Startup"
+                        if "(" in title:
+                            company = title.split("(")[0].strip().replace("hiring", "").replace("Hiring", "").strip()
+                        
+                        is_remote = 'remote' in title.lower() or 'remote' in story_text.lower()
+                        
                         if remote_only and not is_remote:
                             continue
                         
-                        # Check US
-                        if not self._is_us_based(location) and not is_remote:
-                            continue
-                        
                         jobs.append({
-                            "job_id": f"findwork_{job.get('id', self._generate_job_id(title, company, 'findwork'))}",
-                            "title": title,
-                            "company": company,
-                            "company_logo": job.get("company_logo") or f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=3b82f6&color=fff",
-                            "location": "Remote" if is_remote else location,
-                            "description": description,
+                            "job_id": f"hackernews_{hit.get('objectID', self._generate_job_id(title, company, 'hackernews'))}",
+                            "title": f"Software Engineer at {company}" if 'engineer' not in title.lower() else title[:100],
+                            "company": company[:50],
+                            "company_logo": f"https://ui-avatars.com/api/?name={urllib.parse.quote(company[:2])}&background=ff6600&color=fff",
+                            "location": "Remote" if is_remote else "Various / Check Listing",
+                            "description": story_text[:500] if story_text else f"Job opportunity at {company}. Click to view full details on HackerNews.",
                             "salary_info": None,
-                            "apply_link": job.get("url", ""),
-                            "posted_at": job.get("date_posted", datetime.now(timezone.utc).isoformat()),
+                            "apply_link": f"https://news.ycombinator.com/item?id={hit.get('objectID', '')}",
+                            "posted_at": hit.get("created_at", datetime.now(timezone.utc).isoformat()),
                             "is_remote": is_remote,
-                            "employment_type": job.get("employment_type", "Full-time"),
-                            "source": "FindWork",
-                            "keywords": job.get("keywords", [])[:5],
+                            "employment_type": "Full-time",
+                            "source": "HackerNews",
+                            "tags": ["startup", "tech"],
                             "matched_technology": query
                         })
                         
@@ -587,13 +604,13 @@ class EnhancedJobScraper:
                             break
                             
                     except Exception as e:
-                        logger.error(f"Error parsing FindWork job: {e}")
+                        logger.error(f"Error parsing HackerNews job: {e}")
                         continue
             
             self._set_cache(cache_key, jobs)
                         
         except Exception as e:
-            logger.error(f"Error scraping FindWork: {e}")
+            logger.error(f"Error scraping HackerNews: {e}")
         
         return jobs[:limit]
 
