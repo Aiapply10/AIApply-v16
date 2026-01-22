@@ -364,6 +364,7 @@ class EnhancedJobScraper:
             return cached[:limit]
         
         jobs = []
+        search_terms = self._get_search_terms(query)
         
         try:
             url = "https://remoteok.com/api"
@@ -380,8 +381,6 @@ class EnhancedJobScraper:
                 
                 data = response.json()
                 
-                query_lower = query.lower()
-                
                 # First item is metadata, skip it
                 for job in data[1:]:
                     if not isinstance(job, dict):
@@ -394,11 +393,8 @@ class EnhancedJobScraper:
                         description = job.get('description', '')[:500]
                         location = job.get('location', 'Remote (Worldwide)')
                         
-                        # Filter by query
-                        if (query_lower not in title.lower() and 
-                            query_lower not in ' '.join(tags).lower() and 
-                            query_lower not in company.lower() and
-                            query_lower not in description.lower()):
+                        # Use improved matching with synonyms
+                        if not self._matches_query({'title': title, 'company': company, 'description': description, 'tags': tags}, search_terms):
                             continue
                         
                         # Check US or worldwide
