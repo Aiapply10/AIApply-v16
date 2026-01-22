@@ -631,6 +631,13 @@ ${job?.description || job?.full_description || 'N/A'}
     }
   };
 
+  // Helper to strip HTML tags from job descriptions
+  const stripHtml = (html) => {
+    if (!html) return '';
+    const stripped = html.replace(/<[^>]*>/g, ' ');
+    return stripped.replace(/\s+/g, ' ').trim();
+  };
+
   const formatSalary = (min, max, currency, period) => {
     if (!min && !max) return null;
     const formatter = new Intl.NumberFormat('en-US', {
@@ -638,15 +645,6 @@ ${job?.description || job?.full_description || 'N/A'}
       currency: currency || 'USD',
       minimumFractionDigits: 0,
     });
-  
-  // Helper to strip HTML tags from job descriptions
-  const stripHtml = (html) => {
-    if (!html) return '';
-    // Remove HTML tags
-    const stripped = html.replace(/<[^>]*>/g, ' ');
-    // Clean up extra whitespace
-    return stripped.replace(/\s+/g, ' ').trim();
-  };
     let salary = '';
     if (min && max) {
       salary = `${formatter.format(min)} - ${formatter.format(max)}`;
