@@ -4279,6 +4279,14 @@ async def run_auto_apply(request: Request):
             seen.add(key)
             unique_jobs.append(job)
     
+    # Apply source filter if specified in settings
+    source_filters = settings.get("source_filters", [])
+    if source_filters:
+        source_filters_lower = [s.lower() for s in source_filters]
+        unique_jobs = [j for j in unique_jobs if 
+            j.get('source', '').lower() in source_filters_lower]
+        logger.info(f"After source filter ({source_filters}): {len(unique_jobs)} jobs")
+    
     # Filter for remote jobs only (based on user preferences)
     job_type_prefs = user.get("job_type_preferences", [])
     if "Remote" in job_type_prefs:
@@ -4291,7 +4299,7 @@ async def run_auto_apply(request: Request):
     
     if not jobs_to_apply:
         return {
-            "message": "No matching jobs found. Try adjusting your search keywords.",
+            "message": "No matching jobs found. Try adjusting your search keywords or source filters.",
             "applied_count": 0,
             "applications": []
         }
