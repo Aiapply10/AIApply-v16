@@ -50,6 +50,59 @@ class EnhancedJobScraper:
     
     def __init__(self):
         self.timeout = 25.0
+    
+    def _get_search_terms(self, query: str) -> List[str]:
+        """Get list of search terms including synonyms for better matching"""
+        query_lower = query.lower().strip()
+        
+        # Start with the original query
+        terms = [query_lower]
+        
+        # Add synonyms if available
+        for key, synonyms in TECH_SYNONYMS.items():
+            if key in query_lower or query_lower in key:
+                terms.extend(synonyms)
+                break
+            for syn in synonyms:
+                if query_lower in syn or syn in query_lower:
+                    terms.extend(synonyms)
+                    break
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_terms = []
+        for term in terms:
+            if term not in seen:
+                seen.add(term)
+                unique_terms.append(term)
+        
+        return unique_terms
+    
+    def _matches_query(self, job: Dict, search_terms: List[str]) -> bool:
+        """Check if a job matches any of the search terms"""
+        # Collect all searchable text from the job
+        searchable_fields = [
+            job.get('title', ''),
+            job.get('description', ''),
+            job.get('category', ''),
+            job.get('company', ''),
+            job.get('company_name', ''),
+        ]
+        
+        # Add tags if present
+        tags = job.get('tags', [])
+        if isinstance(tags, list):
+            searchable_fields.extend(tags)
+        
+        # Join and lowercase for searching
+        searchable_text = ' '.join(str(f) for f in searchable_fields).lower()
+        
+        # Check if any search term matches
+        for term in search_terms:
+            if term in searchable_text:
+                return True
+        
+        return False
         
     def _get_headers(self) -> dict:
         """Generate headers for requests - no gzip to avoid decoding issues"""
