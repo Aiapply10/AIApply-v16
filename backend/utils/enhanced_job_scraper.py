@@ -626,18 +626,21 @@ class EnhancedJobScraper:
         """
         logger.info(f"Enhanced scraper: Searching for '{query}', remote_only={remote_only}")
         
+        # Clear cache if needed to get fresh results
+        # self.clear_cache()  # Uncomment for debugging
+        
         # Run all scrapers concurrently
         results = await asyncio.gather(
             self.scrape_arbeitnow(query, remote_only, limit_per_source),
             self.scrape_remotive(query, True, limit_per_source),  # Remotive is always remote
             self.scrape_remoteok(query, limit_per_source),
             self.scrape_jobicy(query, remote_only, limit_per_source),
-            self.scrape_findwork(query, remote_only, limit_per_source),
+            self.scrape_hackernews_jobs(query, remote_only, limit_per_source),
             return_exceptions=True
         )
         
         all_jobs = []
-        source_names = ['Arbeitnow', 'Remotive', 'RemoteOK', 'Jobicy', 'FindWork']
+        source_names = ['Arbeitnow', 'Remotive', 'RemoteOK', 'Jobicy', 'HackerNews']
         
         for i, result in enumerate(results):
             if isinstance(result, Exception):
