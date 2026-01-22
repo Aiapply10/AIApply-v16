@@ -194,7 +194,34 @@ Build a website where a job seeker can:
 
 ---
 
-*Last updated: January 20, 2026*
+*Last updated: January 22, 2026*
+
+---
+
+## Session Fixes (Jan 22, 2026)
+
+### Bug Fixes
+1. **Job Search returning few/no results (P0)** - Implemented improved synonym matching in `enhanced_job_scraper.py`. Added `TECH_SYNONYMS` dictionary that maps technology keywords to related terms (e.g., "react" → ["react", "reactjs", "frontend", "javascript", "typescript"]). Search now returns 20-37 jobs for React/Python/Java queries.
+2. **HTML tags in job descriptions** - Added `stripHtml()` helper function to sanitize job descriptions in LiveJobsPage.jsx and LiveJobs1Page.jsx
+3. **FindWork API 401 error** - Replaced FindWork with HackerNews Jobs (via Algolia API) since FindWork now requires authentication
+
+### Testing Results (iteration_7.json)
+- **Backend Tests**: 14/14 passed (100%)
+- **Job Search Results**:
+  - React: 20 jobs (Free APIs), 10 jobs (Premium APIs)
+  - Python: 37 jobs (Free APIs)
+  - Java: 24 jobs (Free APIs)
+  - JavaScript: 23 jobs (Free APIs)
+- **Resume Download**: Both DOCX and PDF working correctly
+- **Recommendations**: 25 jobs based on user profile
+
+### Technical Changes
+- New `TECH_SYNONYMS` dictionary with 20+ technology mappings
+- New `_matches_query()` method for fuzzy matching across job fields
+- New `_get_search_terms()` method to expand queries with synonyms
+- Updated all scraper methods (Arbeitnow, Remotive, RemoteOK, Jobicy) to use improved matching
+- Added HackerNews Jobs scraper as new source
+- 15-minute caching to reduce API calls
 
 ---
 
