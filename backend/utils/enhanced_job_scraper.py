@@ -203,6 +203,7 @@ class EnhancedJobScraper:
             return cached[:limit]
         
         jobs = []
+        search_terms = self._get_search_terms(query)
         
         try:
             # Arbeitnow has a public JSON API
@@ -218,8 +219,6 @@ class EnhancedJobScraper:
                 data = response.json()
                 job_list = data.get("data", [])
                 
-                query_lower = query.lower()
-                
                 for job in job_list:
                     try:
                         title = job.get("title", "")
@@ -229,8 +228,8 @@ class EnhancedJobScraper:
                         tags = job.get("tags", [])
                         is_remote = job.get("remote", False)
                         
-                        # Filter by query
-                        if query_lower not in title.lower() and query_lower not in description.lower() and not any(query_lower in t.lower() for t in tags):
+                        # Use improved matching with synonyms
+                        if not self._matches_query({'title': title, 'description': description, 'tags': tags}, search_terms):
                             continue
                         
                         # Filter remote if requested
