@@ -1040,7 +1040,20 @@ ${job?.description || job?.full_description || 'N/A'}
               </motion.div>
             </div>
             
-            <div className="flex flex-wrap gap-2">
+            {/* Next Scheduled Run Info */}
+            {autoApplyStatus?.enabled && (
+              <div className="mt-4 p-3 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-200">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-violet-600" />
+                  <p className="text-sm text-violet-800">
+                    <strong>Next scheduled run:</strong> {autoApplyStatus?.schedule_time || '12:00'} UTC daily
+                    {' '}• Will apply to up to <strong>{autoApplyStatus?.max_daily || 10}</strong> jobs automatically
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex flex-wrap gap-2 mt-4">
               <Button
                 onClick={handleRunAutoApply}
                 disabled={isRunningAutoApply || (profileCompleteness && profileCompleteness.percentage < 80)}
