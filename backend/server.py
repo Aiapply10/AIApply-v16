@@ -4528,7 +4528,131 @@ async def get_auto_apply_status(request: Request):
         "total_applications": settings.get("total_applications", 0),
         "resume_id": settings.get("resume_id", ""),
         "job_keywords": settings.get("job_keywords", []),
-        "locations": settings.get("locations", [])
+        "locations": settings.get("locations", []),
+        "source_filters": settings.get("source_filters", []),
+        "schedule_time": settings.get("schedule_time", "12:00"),
+        "schedule_enabled": settings.get("schedule_enabled", True),
+        "generate_cover_letter": settings.get("generate_cover_letter", True)
+    }
+
+
+# ============ APPLICATION TRACKING ENDPOINTS ============
+
+@api_router.get("/applications/tracking")
+async def get_applications_tracking(
+    request: Request,
+    status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    source: Optional[str] = None
+):
+    """
+    Get applications with date-wise status tracking.
+    Status options: ready_to_apply, applied, pending, interview, rejected, accepted
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    query = {"user_id": user_id}
+    
+    # Filter by status
+    if status:
+        query["status"] = status
+    
+    # Filter by date range
+    if date_from:
+        query["applied_date"] = {"$gte": date_from}
+    if date_to:
+        if "applied_date" in query:
+            query["applied_date"]["$lte"] = date_to
+        else:
+            query["applied_date"] = {"$lte": date_to}
+    
+    # Filter by source
+    if source:
+        query["source"] = {"$regex": source, "$options": "i"}
+    
+    # Fetch applications
+    applications = await db.applications.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).limit(100).to_list(length=100)
+    
+    # Group by date for summary
+    date_summary = {}
+    status_summary = {"ready_to_apply": 0, "applied": 0, "pending": 0, "interview": 0, "rejected": 0, "accepted": 0}
+    
+    for app in applications:
+        date = app.get("applied_date", app.get("created_at", "")[:10])
+        if date not in date_summary:
+            date_summary[date] = {"count": 0, "statuses": {}}
+        date_summary[date]["count"] += 1
+        
+        app_status = app.get("status", "pending")
+        if app_status not in date_summary[date]["statuses"]:
+            date_summary[date]["statuses"][app_status] = 0
+        date_summary[date]["statuses"][app_status] += 1
+        
+        if app_status in status_summary:
+            status_summary[app_status] += 1
+    
+    return {
+        "applications": applications,
+        "total": len(applications),
+        "date_summary": date_summary,
+        "status_summary": status_summary,
+        "filters_applied": {
+            "status": status,
+            "date_from": date_from,
+            "date_to": date_to,
+            "source": source
+        }
+    }
+
+
+@api_router.put("/applications/{application_id}/status")
+async def update_application_status(
+    application_id: str,
+    request: Request,
+    status: str = Query(..., description="New status: ready_to_apply, applied, pending, interview, rejected, accepted")
+):
+    """Update the status of a job application for tracking."""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    valid_statuses = ["ready_to_apply", "applied", "pending", "interview", "rejected", "accepted"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    # Update in applications collection
+    result = await db.applications.update_one(
+        {"application_id": application_id, "user_id": user_id},
+        {
+            "$set": {
+                "status": status,
+                "status_updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Also update in auto_applications if exists
+    await db.auto_applications.update_one(
+        {"application_id": application_id, "user_id": user_id},
+        {
+            "$set": {
+                "status": status,
+                "status_updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Application not found or no changes made")
+    
+    return {
+        "message": f"Application status updated to '{status}'",
+        "application_id": application_id,
+        "new_status": status
     }
 
 
