@@ -20,6 +20,30 @@ logger = logging.getLogger(__name__)
 _job_cache = {}
 _cache_duration = timedelta(minutes=15)
 
+# Technology synonyms and related terms for better matching
+TECH_SYNONYMS = {
+    'react': ['react', 'reactjs', 'react.js', 'frontend', 'front-end', 'javascript', 'typescript', 'next.js', 'nextjs'],
+    'python': ['python', 'django', 'flask', 'fastapi', 'data science', 'machine learning', 'ml', 'ai', 'backend'],
+    'java': ['java', 'spring', 'spring boot', 'springboot', 'j2ee', 'jvm', 'kotlin', 'backend'],
+    'javascript': ['javascript', 'js', 'node', 'nodejs', 'node.js', 'typescript', 'ts', 'frontend', 'backend', 'fullstack'],
+    'node': ['node', 'nodejs', 'node.js', 'express', 'javascript', 'typescript', 'backend'],
+    'angular': ['angular', 'angularjs', 'frontend', 'front-end', 'typescript', 'javascript'],
+    'vue': ['vue', 'vuejs', 'vue.js', 'nuxt', 'frontend', 'front-end', 'javascript'],
+    'golang': ['golang', 'go', 'backend'],
+    'rust': ['rust', 'systems', 'backend'],
+    'devops': ['devops', 'sre', 'kubernetes', 'k8s', 'docker', 'aws', 'azure', 'gcp', 'cloud', 'infrastructure'],
+    'aws': ['aws', 'amazon', 'cloud', 'devops', 'infrastructure'],
+    'data': ['data', 'analytics', 'data science', 'data engineer', 'etl', 'sql', 'python', 'machine learning'],
+    'mobile': ['mobile', 'ios', 'android', 'react native', 'flutter', 'swift', 'kotlin'],
+    'fullstack': ['fullstack', 'full-stack', 'full stack', 'backend', 'frontend'],
+    'backend': ['backend', 'back-end', 'server', 'api', 'microservices'],
+    'frontend': ['frontend', 'front-end', 'ui', 'ux', 'web', 'react', 'angular', 'vue'],
+    'software': ['software', 'developer', 'engineer', 'programming', 'coding'],
+    '.net': ['.net', 'dotnet', 'c#', 'csharp', 'asp.net', 'microsoft'],
+    'php': ['php', 'laravel', 'symfony', 'wordpress', 'backend'],
+    'ruby': ['ruby', 'rails', 'ruby on rails', 'backend'],
+}
+
 
 class EnhancedJobScraper:
     """Enhanced web scraper for fetching jobs from multiple FREE job boards"""
