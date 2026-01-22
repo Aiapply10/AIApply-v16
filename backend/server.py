@@ -5586,17 +5586,18 @@ async def startup_event():
     """Start the scheduler when the app starts."""
     logger.info("Starting application and scheduler...")
     
-    # Schedule the auto-apply job to run daily at 6:00 AM UTC
+    # Schedule the auto-apply job to run daily at 12:00 PM UTC (noon)
+    # This is the default time; users can configure their own schedule
     scheduler.add_job(
         scheduled_auto_apply_for_all_users,
-        CronTrigger(hour=6, minute=0),  # Run at 6:00 AM UTC daily
+        CronTrigger(hour=12, minute=0),  # Run at 12:00 PM UTC daily
         id="daily_auto_apply",
-        name="Daily Auto-Apply Job",
+        name="Daily Auto-Apply Job (12:00 PM UTC)",
         replace_existing=True
     )
     
     scheduler.start()
-    logger.info("Scheduler started. Daily auto-apply job scheduled for 6:00 AM UTC")
+    logger.info("Scheduler started. Daily auto-apply job scheduled for 12:00 PM UTC")
 
 
 @app.on_event("shutdown")
