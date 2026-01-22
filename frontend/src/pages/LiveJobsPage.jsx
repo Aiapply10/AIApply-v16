@@ -2077,6 +2077,76 @@ ${job?.description || job?.full_description || 'N/A'}
                 />
               </div>
 
+              {/* Generate Cover Letter */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <Label className="font-semibold">Generate Cover Letter</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Auto-generate a personalized cover letter for each application
+                  </p>
+                </div>
+                <Switch
+                  checked={autoApplySettings.generate_cover_letter}
+                  onCheckedChange={(checked) => setAutoApplySettings({ ...autoApplySettings, generate_cover_letter: checked })}
+                />
+              </div>
+
+              {/* Schedule Time */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Daily Schedule Time (UTC)</Label>
+                <Select
+                  value={autoApplySettings.schedule_time}
+                  onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, schedule_time: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'].map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time} UTC
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  The AI agent will run at this time every day
+                </p>
+              </div>
+
+              {/* Source Filters */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Preferred Job Sources (Optional)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {['RemoteOK', 'Remotive', 'Arbeitnow', 'Jobicy', 'HackerNews'].map((source) => (
+                    <Badge
+                      key={source}
+                      variant={autoApplySettings.source_filters?.includes(source) ? 'default' : 'outline'}
+                      className="cursor-pointer hover:bg-violet-100"
+                      onClick={() => {
+                        const current = autoApplySettings.source_filters || [];
+                        if (current.includes(source)) {
+                          setAutoApplySettings({
+                            ...autoApplySettings,
+                            source_filters: current.filter(s => s !== source)
+                          });
+                        } else {
+                          setAutoApplySettings({
+                            ...autoApplySettings,
+                            source_filters: [...current, source]
+                          });
+                        }
+                      }}
+                    >
+                      {source}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Leave empty to search all sources
+                </p>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowAutoApplyDialog(false)} className="flex-1">
                   Cancel
