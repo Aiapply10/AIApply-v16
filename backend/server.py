@@ -4364,7 +4364,46 @@ Return ONLY the tailored resume content."""
                     logger.error(f"Error tailoring resume for job {job_id}: {str(e)}")
                     tailored_content = resume_content
             
-            # Create auto-application record
+            # Generate cover letter if enabled
+            cover_letter_content = ""
+            if settings.get("generate_cover_letter", True) and description:
+                try:
+                    cover_system = """You are an expert at writing compelling cover letters.
+                    Create personalized, professional cover letters that highlight relevant experience
+                    and show enthusiasm for the role and company."""
+                    
+                    cover_chat = LlmChat(
+                        api_key=EMERGENT_LLM_KEY,
+                        session_id=f"cover_{job_id}_{uuid.uuid4().hex[:8]}",
+                        system_message=cover_system
+                    ).with_model("openai", "gpt-5.2")
+                    
+                    cover_prompt = f"""Write a professional cover letter for:
+
+Position: {job_title}
+Company: {company}
+Job Description: {description[:1000]}
+
+Candidate Resume:
+{tailored_content[:1500]}
+
+Write a compelling cover letter (300-400 words) that:
+1. Opens with a strong hook
+2. Highlights 2-3 most relevant experiences
+3. Shows knowledge of the company
+4. Expresses genuine interest in the role
+5. Ends with a clear call to action
+
+Return ONLY the cover letter text."""
+                    
+                    cover_message = UserMessage(text=cover_prompt)
+                    cover_letter_content = await cover_chat.send_message(cover_message)
+                    
+                except Exception as e:
+                    logger.error(f"Error generating cover letter for job {job_id}: {str(e)}")
+                    cover_letter_content = ""
+            
+            # Create auto-application record with full tracking
             application_record = {
                 "application_id": f"auto_{uuid.uuid4().hex[:12]}",
                 "user_id": user_id,
@@ -4377,17 +4416,21 @@ Return ONLY the tailored resume content."""
                 "apply_link": apply_link,
                 "resume_id": settings["resume_id"],
                 "tailored_content": tailored_content,
+                "cover_letter": cover_letter_content,
                 "keywords_extracted": keywords_extracted,
-                "status": "ready_to_apply",
+                "status": "ready_to_apply",  # Statuses: ready_to_apply, applied, pending, interview, rejected, accepted
                 "applied_at": datetime.now(timezone.utc).isoformat(),
+                "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "source": job.get("source", "system_scraper"),
                 "auto_applied": True,
-                "ats_optimized": True if tailored_content != resume_content else False
+                "ats_optimized": True if tailored_content != resume_content else False,
+                "resume_version_saved": True,  # Indicates a copy was saved
+                "submission_screenshot": None  # Will be populated if external application is made
             }
             
             await db.auto_applications.insert_one(application_record)
             
-            # Also record in main applications collection
+            # Also record in main applications collection for unified tracking
             await db.applications.insert_one({
                 "application_id": application_record["application_id"],
                 "user_id": user_id,
@@ -4396,11 +4439,14 @@ Return ONLY the tailored resume content."""
                 "company_name": company,
                 "job_description": description[:500],
                 "resume_id": settings["resume_id"],
-                "cover_letter": "",
+                "cover_letter": cover_letter_content,
+                "tailored_resume": tailored_content,
                 "status": "ready_to_apply",
                 "created_at": datetime.now(timezone.utc).isoformat(),
+                "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "auto_applied": True,
-                "apply_link": apply_link
+                "apply_link": apply_link,
+                "source": job.get("source", "system_scraper")
             })
             
             applications.append({
