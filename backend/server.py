@@ -4787,6 +4787,130 @@ async def get_application_cover_letter(application_id: str, request: Request):
     }
 
 
+@api_router.get("/applications/{application_id}/saved-resume")
+async def get_saved_resume_document(application_id: str, request: Request):
+    """
+    Download the saved resume document (Word file) for a specific application.
+    This is the actual file that was generated when the application was created.
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Check if we have a saved resume document
+    saved = await db.saved_resumes.find_one(
+        {"application_id": application_id, "user_id": user_id}
+    )
+    
+    if saved and saved.get("resume_document"):
+        # Return the saved document
+        buffer = BytesIO(saved["resume_document"])
+        filename = f"Resume_{saved.get('company', 'Job').replace(' ', '_')}_{application_id}.docx"
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    
+    # If no saved document, generate one from the application content
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        application = await db.applications.find_one(
+            {"application_id": application_id, "user_id": user_id},
+            {"_id": 0}
+        )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    content = application.get("tailored_content") or application.get("tailored_resume", "")
+    
+    if not content:
+        raise HTTPException(status_code=404, detail="No resume content found for this application")
+    
+    # Generate Word document
+    from docx import Document as DocxDocument
+    
+    doc = DocxDocument()
+    job_title = application.get("job_title", "Job Application")
+    company = application.get("company", application.get("company_name", ""))
+    
+    doc.add_heading(f"Resume - {job_title} at {company}", 0)
+    
+    for line in content.split('\n'):
+        if line.strip():
+            doc.add_paragraph(line)
+    
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    filename = f"Resume_{company.replace(' ', '_')}_{application_id}.docx"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@api_router.get("/applications/{application_id}/submission-info")
+async def get_submission_info(application_id: str, request: Request):
+    """
+    Get complete submission information for an application including:
+    - Tailored resume content
+    - Cover letter
+    - Application status
+    - Submission timestamp
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get from auto_applications first
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        application = await db.applications.find_one(
+            {"application_id": application_id, "user_id": user_id},
+            {"_id": 0}
+        )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Check if we have a saved resume copy
+    saved_resume = await db.saved_resumes.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0, "resume_document": 0}  # Exclude the binary document
+    )
+    
+    return {
+        "application_id": application_id,
+        "job_title": application.get("job_title", ""),
+        "company": application.get("company", application.get("company_name", "")),
+        "location": application.get("location", ""),
+        "apply_link": application.get("apply_link", ""),
+        "status": application.get("status", "pending"),
+        "applied_at": application.get("applied_at") or application.get("created_at"),
+        "applied_date": application.get("applied_date", ""),
+        "source": application.get("source", ""),
+        "tailored_resume": application.get("tailored_content") or application.get("tailored_resume", ""),
+        "cover_letter": application.get("cover_letter", ""),
+        "keywords_extracted": application.get("keywords_extracted", ""),
+        "ats_optimized": application.get("ats_optimized", False),
+        "resume_copy_saved": bool(saved_resume),
+        "saved_at": saved_resume.get("saved_at") if saved_resume else None,
+        "auto_applied": application.get("auto_applied", False)
+    }
+
+
 # ============ SCHEDULER MANAGEMENT ENDPOINTS ============
 
 @api_router.get("/scheduler/status")
