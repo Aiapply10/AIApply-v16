@@ -4675,7 +4675,58 @@ async def get_scheduler_status():
     return {
         "scheduler_running": scheduler.running,
         "jobs": job_info,
-        "timezone": "UTC"
+        "timezone": "UTC",
+        "default_time": "12:00 PM UTC"
+    }
+
+
+@api_router.post("/scheduler/configure")
+async def configure_scheduler(
+    request: Request,
+    max_applications: int = Query(10, description="Max daily applications: 10, 15, 20, or 25"),
+    schedule_time: str = Query("12:00", description="Schedule time in HH:MM format (24-hour)")
+):
+    """
+    Configure auto-apply scheduler settings.
+    - max_applications: Must be 10, 15, 20, or 25
+    - schedule_time: Time to run daily in HH:MM format (24-hour)
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Validate max_applications
+    valid_limits = [10, 15, 20, 25]
+    if max_applications not in valid_limits:
+        raise HTTPException(status_code=400, detail=f"max_applications must be one of: {valid_limits}")
+    
+    # Validate schedule_time format
+    try:
+        time_parts = schedule_time.split(":")
+        hour = int(time_parts[0])
+        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            raise ValueError("Invalid time")
+    except:
+        raise HTTPException(status_code=400, detail="schedule_time must be in HH:MM format (e.g., '12:00')")
+    
+    # Update user's auto-apply settings
+    await db.auto_apply_settings.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "max_applications_per_day": max_applications,
+                "schedule_time": schedule_time,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": "Scheduler configured successfully",
+        "max_applications_per_day": max_applications,
+        "schedule_time": schedule_time,
+        "note": f"Auto-apply will run daily at {schedule_time} UTC and process up to {max_applications} jobs"
     }
 
 
