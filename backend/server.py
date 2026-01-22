@@ -2883,7 +2883,7 @@ async def search_live_jobs(
             "query_used": query,
             "remote_only": remote_only,
             "source_filter": source,
-            "sources": ["Arbeitnow", "Remotive", "RemoteOK", "Jobicy", "FindWork"],
+            "sources": ["Arbeitnow", "Remotive", "RemoteOK", "Jobicy", "HackerNews"],
             "data_source": "enhanced_free_apis"
         }
         
