@@ -14,78 +14,49 @@
 **User's preferred language**: English
 
 **what currently exists?**
-The CareerQuest platform is a full-stack application with a React frontend and FastAPI backend. It supports JWT-based authentication and Google SSO. After multiple user complaints about the live site being broken, the agent has simplified the registration flow by removing the OTP verification, fixed the Google SSO callback mechanism, and resolved a critical CORS issue that prevented the app from working on the custom domain .
+The CareerQuest platform is a full-stack application featuring a React frontend and FastAPI backend, with JWT and Google SSO authentication. The job sourcing functionality has been significantly enhanced and separated into two distinct pages:
+1.  **Live Jobs:** This page uses an enhanced, custom-built scraper that fetches jobs from multiple free public APIs (Jobicy, Remotive, Arbeitnow, Findwork).
+2.  **Live Jobs 1:** This is a new, separate page that integrates multiple premium APIs provided by the user (Active Jobs DB, LinkedIn Jobs Search, JSearch) via RapidAPI. It features a robust failover and aggregation system that automatically cycles through the APIs if one fails or returns limited results, ensuring a consistent stream of job listings.
 
-Core functionalities that are now verified to be working include:
--   **Simplified User Authentication:** Direct email/password registration and a fixed Google SSO flow.
--   **Automated Resume Intelligence:** On upload, the system automatically scores the resume, creates a Master Resume, generates job-title-specific versions, and extracts key details to auto-fill the user's profile.
--   **Live Job Sourcing:** A custom web scraper provides real-time job listings.
--   **Profile Management:** A dashboard displays user stats and profile details, which can be edited.
--   **Enhanced UI/UX:** The application features a modern design with animations powered by .
+Both pages include features like search, filtering, recommendations based on the user's profile, and the Auto-Apply AI Agent. Several bugs related to the auto-apply feature, profile management (), and resume management UI have been fixed and verified.
 
 **Last working item**:
--   **Last item agent was working:** Refactoring the Run Auto-Apply feature. The user requested that it should use jobs already fetched by the system (not external APIs like JSearch) and that its settings should be automatically filled from the user's profile. The agent also began addressing a larger list of user-reported bugs.
+-   **Last item agent was working:** The user reported that searching with keywords like React, Java, or Python yielded no or very few results on both the Live Jobs and Live Jobs 1 pages. The agent began investigating and confirmed via API tests that the backend was returning data. A frontend screenshot showed that the search *did* work but only returned one result for React, suggesting the issue is with the quality and volume of data from the source APIs rather than a functional bug in the search handlers.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** Y
--   **Which testing method agent to use?** backend testing agent
+-   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** The  feature is not applying for jobs (P0)
--   **Issue 2:** The My Resume page is not generating a master resume and 4-5 different versions automatically (P1)
--   **Issue 3:** The My Profile page has a bug where  selections are not saved correctly (P1)
--   **Issue 4:** Implement a frontend UI for multiple resume management (P1)
--   **Issue 5:** The Resume AI download functionality is failing (P2)
--   **Issue 6:** The Email Center fails to connect email accounts via App Password (P2)
--   **Issue 7:** On the Live Jobs page, the View Original link should take the user to the specific job link on the source platform (P2)
--   **Issue 8:** Flaky frontend login during automated testing (P2)
+-   **Issue 1:** Job search functionality is not returning relevant or a sufficient number of results for specific keywords (e.g., React). (P0)
+-   **Issue 2:** The My Resume page is not generating a master resume and 4-5 different versions automatically. (P1)
+-   **Issue 3:** The Resume AI download functionality is failing. (P2)
+-   **Issue 4:** The Email Center fails to connect email accounts via App Password. (P2)
+-   **Issue 5:** On the Live Jobs page, the View Original link may take the user to a generic search page instead of the specific job link. (P2)
+-   **Issue 6:** Flaky frontend login during automated testing. (P2)
 
 **Issues Detail:**
--   **Issue 1:** The  feature is not applying for jobs
-    -   **Attempted fixes:** The agent refactored the backend  function to use the internal  instead of external APIs. An endpoint to auto-fill settings from the user's profile was also created and tested.
+-   **Issue 1:** Job search functionality is not returning relevant results
+    -   **Attempted fixes:** The agent tested the backend APIs directly and confirmed they return jobs for the specified queries. A frontend screenshot confirmed the UI displays the (few) results returned. The agent suspects the free APIs have limited data for specific tech keywords.
     -   **Next debug checklist:**
-        1.  Investigate  inside the  function.
-        2.  Add extensive logging to the  call to see what it returns (or if it's timing out).
-        3.  Verify that the  list is being populated correctly.
-        4.  If the scraper is the issue, debug  directly.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a core feature of the application for automating job applications.
+        1.  Analyze the backend scraper/API logic in  and  to see if filtering is too aggressive.
+        2.  Test the search on the Live Jobs 1 page (premium APIs) with various keywords to isolate whether the issue is with the free APIs, premium APIs, or both.
+        3.  Add logging to the frontend  functions in  and  to see the exact payload being sent and the raw response being received.
+    -   **Why fix this issue and what will be achieved with the fix?** Job search is a core function of the application. Fixing it is critical for user retention.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend
+    -   **Should Test frontend/backend/both after fix?** Both
 -   **Issue 2:** The My Resume page is not generating a master resume and 4-5 different versions automatically
-    -   **Attempted fixes:** The agent has repeatedly verified via backend API calls that the auto-generation works as expected upon upload. The issue seems to be a frontend refresh/feedback problem, which the agent tried to fix by increasing timeouts and improving loading toasts.
+    -   **Attempted fixes:** The agent has repeatedly verified via backend API calls that the auto-generation works as expected upon upload. The issue seems to be a frontend refresh/feedback problem.
     -   **Next debug checklist:**
         1.  Perform a clean end-to-end test on the UI.
         2.  Upload a resume and watch the browser's network tab and console.
-        3.  Confirm the  request completes successfully, even if it takes over 60 seconds.
-        4.  Ensure the frontend state (Zustand store) is updated upon success, triggering a re-render of the resumes list.
+        3.  Confirm the  request completes successfully and the frontend state (Zustand store) is updated to trigger a re-render.
     -   **Why fix this issue and what will be achieved with the fix?** This is a key AI feature. Fixing it will resolve a recurring user complaint.
     -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
--   **Issue 3:** The My Profile page has a bug where  selections are not saved correctly
-    -   **Attempted fixes:** Changed the backend  model from  to . Updated the  and  endpoints. Changed the frontend options to Fulltime, C2C, W2 Contract.
-    -   **Next debug checklist:**
-        1.  Log in and navigate to the profile page.
-        2.  Select one or more tax types and click Save.
-        3.  Refresh the page and verify the selections have persisted.
-    -   **Why fix this issue and what will be achieved with the fix?** Fixes a data integrity bug in the user profile.
-    -   **Status:** TESTING PENDING
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
--   **Issue 4:** Implement a frontend UI for multiple resume management
-    -   **Attempted fixes:** The agent implemented the backend logic: a 5-resume limit per user and an endpoint () to set a primary resume.
-    -   **Next debug checklist:**
-        1.  Modify .
-        2.  Add a Set as Primary button to each resume card.
-        3.  Add a visual indicator (e.g., a star icon or badge) for the primary resume.
-        4.  Disable the upload button when the user has 5 resumes.
-        5.  Call the  function on button click.
-    -   **Why fix this issue and what will be achieved with the fix?** Fulfills a user requirement for managing multiple resumes.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
--   **Issue 5:** The Resume AI download functionality is failing
+-   **Issue 3:** The Resume AI download functionality is failing
     -   **Attempted fixes:** None.
     -   **Next debug checklist:**
         1.  Investigate the Download button logic in .
@@ -94,30 +65,28 @@ Core functionalities that are now verified to be working include:
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both
--   **Issue 6:** The Email Center fails to connect email accounts via App Password
+-   **Issue 4:** The Email Center fails to connect email accounts via App Password
     -   **Attempted fixes:** None.
     -   **Next debug checklist:**
         1.  Examine the connection logic in  related to the email center.
-        2.  Verify the IMAP/SMTP connection parameters and authentication method.
-        3.  Research best practices for connecting to Gmail/Outlook programmatically in 2026, as App Passwords can be tricky. OAuth might be a better alternative.
+        2.  Verify the IMAP/SMTP connection parameters and authentication method. Research if OAuth is a better alternative.
     -   **Why fix this issue and what will be achieved with the fix?** Enables a core feature for the AI to manage email communication.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Backend
--   **Issue 7:** On the Live Jobs page, the View Original link should take the user to the specific job link on the source platform
-    -   **Attempted fixes:** Agent reviewed the code and confirmed it uses the  from the data.
+-   **Issue 5:** View Original link on Live Jobs page issue
+    -   **Attempted fixes:** None.
     -   **Next debug checklist:**
-        1.  Run the job scraper manually or via the API.
-        2.  Inspect the  field for several scraped jobs.
-        3.  If the link is a generic search page, the scraper logic in  needs to be improved to find the direct application link on each job posting page.
+        1.  Inspect the  field for several scraped jobs from both free and premium sources.
+        2.  If the link is generic, the scraper logic in  and the parsing logic in  need to be improved to find the direct application link.
     -   **Why fix this issue and what will be achieved with the fix?** Improves the user experience of viewing and applying for jobs.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Backend
--   **Issue 8:** Flaky frontend login during automated testing
+-   **Issue 6:** Flaky frontend login during automated testing
     -   **Attempted fixes:** None in this session.
     -   **Next debug checklist:**
-        1.  Examine  (Zustand store) for token logic.
+        1.  Examine  (Zustand store) for token persistence and rehydration logic.
         2.  Review  for the  interceptor implementation.
     -   **Why fix this issue and what will be achieved with the fix?** Critical for reliable automated testing and development velocity.
     -   **Status:** NOT STARTED
@@ -125,11 +94,7 @@ Core functionalities that are now verified to be working include:
     -   **Should Test frontend/backend/both after fix?** Frontend
 
 **In progress Task List**:
--   **Task 1:** Live Jobs Page Search Enhancement
-    -   **Where to resume:** . The agent has added the UI elements for a Remote Only switch and a multi-select Employment Type dropdown.
-    -   **What will be achieved with this?** Allows users to filter job searches more effectively as requested.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend
+-   None. The previous task was completed and the current focus is on bug fixing.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
@@ -138,22 +103,23 @@ Core functionalities that are now verified to be working include:
     -   **P2:** Implement full AI agent for handling email communications with recruiters.
 
 **Completed work in this session**
--   **Production Authentication Overhaul:**
-    -   **Simplified Registration:** Removed the entire OTP verification flow and replaced it with a simple email/password registration, resolving a major user blocker on the live site.
-    -   **Google SSO Fix:** Corrected the backend session exchange logic to generate and return a proper JWT token, making Google login functional.
-    -   **Custom Domain CORS Fix:** Resolved the Authentication Failed error on  by implementing a regex-based CORS policy in the FastAPI backend, allowing the custom domain.
--   **Deployment Readiness:**
-    -   Added  and  endpoints to the backend to satisfy Kubernetes deployment health checks.
-    -   Cleaned up and corrected various imports and environment variable handling ( override,  import).
--   **Bug Verification and Fixes:**
-    -   Verified that previous fixes for the Google button hover state and profile popup formatting were working correctly.
-    -   Confirmed the backend resume auto-generation (Master resume + 4 versions) works as expected and improved the frontend loading toast for better UX.
-    -   Confirmed the profile auto-fill from resume feature is working.
+-   **Multi-API Job Sourcing:**
+    -   **Enhanced Free Scraper:** Implemented  using multiple free public APIs (Jobicy, Remotive, etc.) and integrated it into the Live Jobs page.
+    -   **Premium API Failover System:** Created a robust failover and aggregation system for Live Jobs 1 that cycles through multiple user-provided RapidAPI keys (JSearch, Active Jobs DB, LinkedIn Jobs Search) to ensure high availability of job listings.
+-   **New Live Jobs 1 Page:**
+    -   Refactored the Live Jobs 1 feature from a tab into a completely separate page () with its own navigation, search, and auto-apply functionality, as requested by the user.
+-   **Bug Fixes & UX Improvements:**
+    -   Fixed  feature, which now successfully finds and processes jobs.
+    -   Resolved an  serialization error in the auto-apply settings endpoint.
+    -   Corrected the  vs  bug in the user profile.
+    -   Added UI for the Set as Primary resume feature.
+    -   Fixed the abrupt Profile Completeness popup to be less intrusive.
+    -   Ensured job recommendations on the Live Jobs page load automatically based on the user's profile.
 
 **Earlier issues found/mentioned but not fixed**
--   The flaky frontend login flow during automated testing remains unresolved.
--   AI-generated resume versions fail to download.
+-   Resume AI download functionality is failing.
 -   Email Center connection fails.
+-   View Original link on Live Jobs page may point to a generic search page.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Flaky frontend login during automated testing.
@@ -167,88 +133,94 @@ Core functionalities that are now verified to be working include:
 -   **Backend:** FastAPI, Python, MongoDB (motor)
 -   **Frontend:** React, Tailwind CSS, , , 
 -   **Authentication:** JWT, Emergent-managed Google Auth
--   **Integrations:** Web Scraping (BeautifulSoup), OpenAI
+-   **Integrations:** Web Scraping (BeautifulSoup), OpenAI, Multiple REST APIs (RapidAPI)
+-   **API Failover/Aggregation:** Custom logic to cycle through and combine results from multiple external APIs.
 -   **UI:** Shadcn/UI components, Custom animations
 
 **key DB schema**
--   **users:** The  field was changed to . The  is now correctly excluded from API responses.
--   **resumes:** Added a new field . A check now limits users to 5 resumes.
--   **auto_apply_settings:** The structure was updated to align with data auto-filled from the user profile.
+-   No schema changes in this session.
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : **Heavily modified.** Fixed CORS, auth flows, health checks, data models (, ), and refactored the auto-apply logic.
--   : **Rewritten** to remove the OTP flow and simplify registration.
--   : Modified to fix the Google SSO callback and improve error messages.
--   : Modified to add UI for new search filters (Remote Only, multi-select employment type) and an auto-fill button for settings.
--   : Logic updated to support the  array for multi-selection.
--   : Added new API functions for setting a primary resume and auto-filling auto-apply settings.
+-   : **Heavily modified** to add the multi-API failover and aggregation logic for Live Jobs 1, integrate the new enhanced scraper, and fix various bugs.
+-   : **New file** created to scrape multiple free job sites (Jobicy, Remotive, etc.).
+-   : **New file** created by copying and modifying  to serve as a separate page for premium jobs.
+-   : **Modified** to remove the Live Jobs 1 tab and logic, simplifying it to only use the free enhanced scraper.
+-   : Modified to add the Set as Primary button, a primary badge, and logic to disable the upload button at the 5-resume limit.
+-   : Modified to improve the profile completeness popup UX.
+-   : Updated with new API functions for .
+-   : Added an  function to refresh user data without affecting the auth token.
+-   : Updated to add the new  route.
+-   : Updated to add the Live Jobs 1 link to the sidebar.
 
 **Areas that need refactoring**:
--   ****: **Highest Priority.** Remains a large, unmanageable monolith that hinders development and debugging.
--   ****: Very large component that should be broken down.
+-   ****: **Highest Priority.** This monolith has grown even larger with the addition of the multi-API failover logic and needs to be broken down into smaller, manageable route and service files.
+-   ** & **: These two pages are now very large and share a lot of duplicate code. Common components (like , , search forms) should be extracted to reduce duplication.
 
 **key api endpoints**
 -   **NEW:**
-    -   : Sets a resume as primary.
-    -   : Fills auto-apply settings from the user's profile.
+    -   : Searches for jobs using the premium multi-API failover system.
 -   **MODIFIED:**
-    -   : Simplified to remove OTP logic.
-    -   : Now correctly returns a JWT  for Google SSO.
-    -   : Now handles  as a .
-    -   : Refactored to use the internal job scraper.
--   **FIXED/ADDED:**
-    -    & : Added for deployment readiness.
-    -   All  requests now correctly return  for valid origins due to the  fix.
+    -   : Now uses the new .
+    -   : Also uses the new .
+-   **FIXED:**
+    -   : Corrected a variable name ().
+    -   : Fixed an  serialization error.
 
 **Critical Info for New Agent**
--   **CORS & Deployment:** The CORS issue for the custom domain () and subdomains has been fixed in the code using . However, **these changes must be deployed** for the live site to work correctly. The user has linked the domain, but the running deployment is still on an old version.
--   **Simplified Auth:** The user insisted on removing the OTP flow. Registration is now a simple email/password form. Do not re-introduce OTP unless requested.
--   **Auto-Apply Debugging:** The  feature has been refactored but fails to find jobs. The next step is to debug the 's integration within this function to see why it's returning an empty list or failing silently.
+-   **Two-Tier Job Search:** The application now has two separate job search pages. Live Jobs uses a scraper for free APIs. Live Jobs 1 uses a multi-API failover system with user-provided premium keys. The current user complaint is that search results are poor on both.
+-   **API Limitations:** The JSearch API key for Live Jobs 1 has exceeded its monthly quota. The failover system handles this, but it means one of the primary data sources is unavailable. The free APIs used in Live Jobs appear to have limited data for specific tech keywords like React.
+-   **Hardcoded API Keys:** The premium RapidAPI keys are currently hardcoded in . They should be moved to the  file for better security and configuration management.
 
 **documents and test reports created in this job**
--    (updated)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Request:** Fix multiple issues:  on profile, auto-apply using wrong job source, add search dropdowns to Live Jobs, fix View Original link, allow multiple resume uploads, fix resume download, fix email center connection. (IN PROGRESS)
-9.  **Feedback:** The custom domain  is not working; auth is failing. (RESOLVED)
-8.  **Feedback:** The live website is still not working after the previous fix; auth is failing. (RESOLVED)
-7.  **Request:** Remove the OTP logic completely and fix the live website once and for all. (RESOLVED)
-6.  **Feedback:** The live website is not working; cannot sign up or sign in. (IN PROGRESS, leading to OTP removal)
-5.  **Request:** Analyze deployment error logs related to CORS  errors. (RESOLVED)
-4.  **Request:** Analyze deployment error logs related to  endpoint  errors. (RESOLVED)
-3.  **Request:** Call deployer agent and run a health check. (DONE)
-2.  **Feedback:** The profile should auto-fill from the resume, and the user should be able to edit/add details later. (VERIFIED)
-1.  **Feedback:** Resume auto-generation is not happening automatically on upload. (INVESTIGATED & VERIFIED, UX improved)
+10. **Request:** The Live Jobs 1 section is not visible. (RESOLVED - It was visible, agent confirmed with screenshot).
+9.  **Request:** Don't use a tab, create a completely separate Live Jobs 1 page with all the same features as Live Jobs. (IMPLEMENTED).
+8.  **Feedback:** The Live Jobs 1 section is not visible on the preview. (INVESTIGATED & RESOLVED).
+7.  **Request:** Implement a multi-API failover system for Live Jobs 1 using a list of 8 new API keys provided. (IMPLEMENTED).
+6.  **Info:** Provides API credentials for JSearch to be used in Live Jobs 1. (IMPLEMENTED).
+5.  **Feedback:** The job search is not working properly; wants more relevant and remote jobs. (INVESTIGATED & IN PROGRESS).
+4.  **Feedback:** Job recommendations aren't fetching automatically, and the profile completeness meter appears abruptly. (RESOLVED).
+3.  **Suggestion:** Proposes a potential enhancement for the auto-apply feature. (Future task).
+2.  **Request:** Please go ahead with the proposed plan. (ACKNOWLEDGED).
+1.  **Request:** Here are the API creds for Live Jobs 1 , create this new section. (IMPLEMENTED).
 
 **Project Health Check:**
 -   **Broken:**
-    -   The  feature is non-functional as it doesn't find any jobs to process.
+    -   Job search functionality delivers low-volume/low-relevance results, not meeting user expectations.
     -   Downloading AI-generated resume versions is reportedly failing.
     -   Connecting email accounts in the Email Center is reportedly failing.
-    -   The View Original link on job cards may not be pointing to the specific job URL, but a generic search page.
 -   **Mocked:**
-    -   No part of the application sends real emails. The OTP email was a simulation and has now been removed.
+    -   No mocked components.
 
 **3rd Party Integrations**
 -   **OpenAI (via ):** Used for AI resume analysis. (Uses Emergent LLM Key).
--   **Emergent-managed Google Auth:** Functional, implementation fixed in this session.
--   **Web Scraper (BeautifulSoup/requests):** Used for live job data.
--   **framer-motion:** Used for UI animations and transitions.
+-   **Emergent-managed Google Auth:** Functional.
+-   **Free Public APIs (for Live Jobs):** Jobicy, Remotive, Arbeitnow, Findwork.
+-   **RapidAPI (for Live Jobs 1):**
+    -   JSearch (Requires User API Key - currently **exceeded quota**)
+    -   Active Jobs DB (Requires User API Key)
+    -   LinkedIn Jobs Search (Requires User API Key)
+-   **framer-motion:** Used for UI animations.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (For initial backend bug fixes).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** []
--   **Known regressions:** The flaky frontend login during automated tests persists from previous forks.
+-   **Test files created:**
+    -   
+-   **Known regressions:** The flaky frontend login during automated tests persists.
 
 **Credentials to test flow:**
--   User registration can be tested with any email/password via the simplified registration form. No external keys are needed.
+-   User registration can be tested with any email/password.
+-   The RapidAPI key for Live Jobs 1 is currently hardcoded in .
 
 **What agent forgot to execute**
--   The agent was given a large list of bugs in message #409. While many were addressed, the following were not started:
+-   The agent did not start work on the list of P2 bugs from the initial handoff, including:
     -   Fixing the download of AI-generated resume versions.
     -   Fixing the Email Center connection issue.
--   The frontend UI for setting a primary resume was not implemented after the backend was completed.</analysis>
+    -   Investigating the View Original link issue.</analysis>
