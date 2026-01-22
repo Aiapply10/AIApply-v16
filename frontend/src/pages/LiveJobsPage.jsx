@@ -856,7 +856,7 @@ ${job?.description || job?.full_description || 'N/A'}
                       transition={{ duration: 0.3 }}
                     >
                       <p className={`text-sm text-slate-500 ${isHovered ? '' : 'line-clamp-2'}`}>
-                        {job.description}
+                        {stripHtml(job.description)}
                       </p>
                     </motion.div>
                   )}
