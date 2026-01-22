@@ -450,6 +450,7 @@ class EnhancedJobScraper:
             return cached[:limit]
         
         jobs = []
+        search_terms = self._get_search_terms(query)
         
         try:
             url = "https://jobicy.com/api/v2/remote-jobs"
@@ -468,8 +469,6 @@ class EnhancedJobScraper:
                 data = response.json()
                 job_list = data.get("jobs", [])
                 
-                query_lower = query.lower()
-                
                 for job in job_list:
                     try:
                         title = job.get("jobTitle", "")
@@ -478,8 +477,8 @@ class EnhancedJobScraper:
                         description = job.get("jobExcerpt", "")[:500]
                         job_type = job.get("jobType", "Full-time")
                         
-                        # Filter by query
-                        if query_lower not in title.lower() and query_lower not in description.lower():
+                        # Use improved matching with synonyms
+                        if not self._matches_query({'title': title, 'description': description}, search_terms):
                             continue
                         
                         # Check US or worldwide
