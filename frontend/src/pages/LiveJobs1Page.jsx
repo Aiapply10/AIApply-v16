@@ -654,6 +654,13 @@ ${job?.description || job?.full_description || 'N/A'}
     return salary;
   };
 
+  // Helper to strip HTML tags from job descriptions
+  const stripHtml = (html) => {
+    if (!html) return '';
+    const stripped = html.replace(/<[^>]*>/g, ' ');
+    return stripped.replace(/\s+/g, ' ').trim();
+  };
+
   const formatDateRelative = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
