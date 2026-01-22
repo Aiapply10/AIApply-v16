@@ -4457,6 +4457,41 @@ Return ONLY the cover letter text."""
                 "source": job.get("source", "system_scraper")
             })
             
+            # Save a copy of the tailored resume as a document
+            try:
+                from docx import Document as DocxDocument
+                from io import BytesIO
+                
+                doc = DocxDocument()
+                doc.add_heading(f"Resume - {job_title} at {company}", 0)
+                doc.add_paragraph(f"Application ID: {application_record['application_id']}")
+                doc.add_paragraph(f"Applied: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
+                doc.add_paragraph("---")
+                
+                for line in tailored_content.split('\n'):
+                    if line.strip():
+                        doc.add_paragraph(line)
+                
+                # Save to bytes
+                buffer = BytesIO()
+                doc.save(buffer)
+                resume_bytes = buffer.getvalue()
+                
+                # Store the resume document in the database
+                await db.saved_resumes.insert_one({
+                    "application_id": application_record["application_id"],
+                    "user_id": user_id,
+                    "job_title": job_title,
+                    "company": company,
+                    "resume_content": tailored_content,
+                    "resume_document": resume_bytes,
+                    "cover_letter": cover_letter_content,
+                    "saved_at": datetime.now(timezone.utc).isoformat()
+                })
+                logger.info(f"Saved resume copy for application {application_record['application_id']}")
+            except Exception as e:
+                logger.error(f"Error saving resume copy: {str(e)}")
+            
             applications.append({
                 "application_id": application_record["application_id"],
                 "job_id": job_id,
@@ -4464,7 +4499,9 @@ Return ONLY the cover letter text."""
                 "company": company,
                 "location": location_str,
                 "apply_link": apply_link,
-                "status": "ready_to_apply"
+                "status": "ready_to_apply",
+                "resume_saved": True,
+                "cover_letter_generated": bool(cover_letter_content)
             })
             
         except Exception as e:
