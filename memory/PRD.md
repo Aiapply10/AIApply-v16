@@ -102,11 +102,13 @@ Build a website where a job seeker can:
 - [x] ~~UI Enhancement - Animations & Interactivity~~ **COMPLETED Jan 19**
 - [x] ~~Production Auth Issues~~ **FIXED Jan 20** - Fixed Google auth (session endpoint now returns JWT token), simplified registration, fixed CORS for production
 - [x] ~~Run Auto-Apply not working~~ **FIXED Jan 20** - Fixed variable reference error, now uses internal job scraper successfully
+- [x] ~~Job search returning few/no results~~ **FIXED Jan 22** - Implemented synonym matching in enhanced_job_scraper.py. Now returns 20+ jobs for React/Python/Java searches.
 
 ### P1 - High Priority  
 - [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19**
 - [x] ~~Profile tax_types bug~~ **FIXED Jan 20** - Changed to array for multi-selection, backend now correctly handles List[str]
 - [x] ~~Multiple Resume Management UI~~ **COMPLETED Jan 20** - Added "Set as Primary" button, primary badge, 5-resume limit with UI indicator
+- [x] ~~Resume Download~~ **VERIFIED WORKING Jan 22** - Both DOCX and PDF downloads working correctly
 - [ ] Flaky frontend login during automated testing (recurring issue)
 - [ ] Backend refactoring - break down monolithic server.py
 
@@ -116,7 +118,6 @@ Build a website where a job seeker can:
 ### P2 - Future
 - [ ] LinkedIn SSO (needs user credentials)
 - [ ] System-generated mailbox (e.g., user@careerquest-mail.com)
-- [ ] Resume AI download functionality (user reported failing)
 - [ ] Email Center App Password connection fix
 - [ ] "View Original" link to point to specific job URL
 
