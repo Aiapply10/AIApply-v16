@@ -205,6 +205,47 @@ Build a website where a job seeker can:
 2. **HTML tags in job descriptions** - Added `stripHtml()` helper function to sanitize job descriptions in LiveJobsPage.jsx and LiveJobs1Page.jsx
 3. **FindWork API 401 error** - Replaced FindWork with HackerNews Jobs (via Algolia API) since FindWork now requires authentication
 
+### New Auto-Apply Features Implemented
+1. **Dynamic AI Context Updates (Step 1)** 
+   - ChatGPT prompts are dynamically updated with job title, description, and required technologies
+   - Keywords are extracted from each job posting for ATS optimization
+   - Context aligns strictly with target role requirements
+
+2. **Resume Update and Validation (Step 2)**
+   - AI cross-checks generated content against role requirements
+   - Tailored resume is validated and saved in Word (.docx) format
+   - Master resume is used as base, tailored versions created per job
+
+3. **Job Application Submission (Step 3)**
+   - Customized resume is attached to each application
+   - **Auto-generated cover letters** - AI creates personalized cover letters for each job
+   - Apply link provided for external job boards
+
+4. **Post-Submission Actions**
+   - Resume copy is saved with each application (`tailored_content` field)
+   - Applications tracked with `resume_version_saved: true` flag
+   - Download endpoint: `GET /api/applications/{id}/resume`
+   - Cover letter endpoint: `GET /api/applications/{id}/cover-letter`
+
+5. **Search and Tracking Rules**
+   - **Source filter** added to auto-apply settings (`source_filters` field)
+   - **Date-wise status tracking**: ready_to_apply, applied, pending, interview, rejected, accepted
+   - New endpoint: `GET /api/applications/tracking` with date/status/source filters
+   - Status update endpoint: `PUT /api/applications/{id}/status`
+
+6. **Scheduling and Execution**
+   - **Daily scheduler runs at 12:00 PM UTC** (default)
+   - **Configurable application limits: 10, 15, 20, 25** jobs per day
+   - Schedule config endpoint: `POST /api/scheduler/configure`
+   - Manual trigger: `POST /api/scheduler/trigger`
+
+### New API Endpoints
+- `GET /api/applications/tracking` - Get applications with date-wise status tracking
+- `PUT /api/applications/{application_id}/status` - Update application status
+- `GET /api/applications/{application_id}/resume` - Download tailored resume for application
+- `GET /api/applications/{application_id}/cover-letter` - Get cover letter for application
+- `POST /api/scheduler/configure` - Configure max applications (10/15/20/25) and schedule time
+
 ### Testing Results (iteration_7.json)
 - **Backend Tests**: 14/14 passed (100%)
 - **Job Search Results**:
@@ -214,14 +255,13 @@ Build a website where a job seeker can:
   - JavaScript: 23 jobs (Free APIs)
 - **Resume Download**: Both DOCX and PDF working correctly
 - **Recommendations**: 25 jobs based on user profile
+- **Auto-Apply**: 10 applications processed with cover letters generated
 
-### Technical Changes
-- New `TECH_SYNONYMS` dictionary with 20+ technology mappings
-- New `_matches_query()` method for fuzzy matching across job fields
-- New `_get_search_terms()` method to expand queries with synonyms
-- Updated all scraper methods (Arbeitnow, Remotive, RemoteOK, Jobicy) to use improved matching
-- Added HackerNews Jobs scraper as new source
-- 15-minute caching to reduce API calls
+### UI Updates
+- Added "Generate Cover Letter" toggle in Auto-Apply settings
+- Added "Daily Schedule Time (UTC)" dropdown (6AM, 9AM, 12PM, 3PM, 6PM, 9PM)
+- Added "Preferred Job Sources" badges (RemoteOK, Remotive, Arbeitnow, Jobicy, HackerNews)
+- Updated JOB_SOURCES to include HackerNews, removed FindWork
 
 ---
 
