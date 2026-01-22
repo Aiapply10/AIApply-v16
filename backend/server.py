@@ -4656,6 +4656,100 @@ async def update_application_status(
     }
 
 
+@api_router.get("/applications/{application_id}/resume")
+async def get_application_resume(application_id: str, request: Request):
+    """
+    Download the tailored resume that was used for a specific application.
+    Returns the resume as a Word document.
+    """
+    from docx import Document
+    from io import BytesIO
+    
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Check auto_applications first, then applications
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        application = await db.applications.find_one(
+            {"application_id": application_id, "user_id": user_id},
+            {"_id": 0}
+        )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Get the tailored content
+    content = application.get("tailored_content") or application.get("tailored_resume", "")
+    
+    if not content:
+        raise HTTPException(status_code=404, detail="No tailored resume found for this application")
+    
+    # Create Word document
+    doc = Document()
+    
+    # Add title
+    job_title = application.get("job_title", "Job Application")
+    company = application.get("company", application.get("company_name", ""))
+    doc.add_heading(f"Resume - {job_title} at {company}", 0)
+    
+    # Add content
+    for line in content.split('\n'):
+        if line.strip():
+            doc.add_paragraph(line)
+    
+    # Save to BytesIO
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    filename = f"Resume_{company.replace(' ', '_')}_{application_id}.docx"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@api_router.get("/applications/{application_id}/cover-letter")
+async def get_application_cover_letter(application_id: str, request: Request):
+    """
+    Get the cover letter that was generated for a specific application.
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Check auto_applications first, then applications
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        application = await db.applications.find_one(
+            {"application_id": application_id, "user_id": user_id},
+            {"_id": 0}
+        )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    cover_letter = application.get("cover_letter", "")
+    
+    return {
+        "application_id": application_id,
+        "job_title": application.get("job_title", ""),
+        "company": application.get("company", application.get("company_name", "")),
+        "cover_letter": cover_letter,
+        "has_cover_letter": bool(cover_letter)
+    }
+
+
 # ============ SCHEDULER MANAGEMENT ENDPOINTS ============
 
 @api_router.get("/scheduler/status")
