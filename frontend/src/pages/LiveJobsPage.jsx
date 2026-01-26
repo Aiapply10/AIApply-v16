@@ -128,6 +128,10 @@ export function LiveJobsPage() {
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
+  
+  // Submission state
+  const [submittingAppId, setSubmittingAppId] = useState(null);
+  const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
 
   // Job Source Platforms - Enhanced Free APIs
   const JOB_SOURCES = [
