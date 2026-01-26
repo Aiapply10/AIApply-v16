@@ -5436,7 +5436,7 @@ else:
     # Default origins for development and production
     origins_list = [
         "http://localhost:3000",
-        "https://jobbrew.preview.emergentagent.com",
+        "https://jobbooster-2.preview.emergentagent.com",
         "https://job-tailor-7.emergentagent.com",
         "https://job-tailor-7.emergent.host",
         # Custom domain
