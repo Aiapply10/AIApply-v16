@@ -2167,26 +2167,62 @@ ${job?.description || job?.full_description || 'N/A'}
               </div>
 
               {/* Schedule Time */}
-              <div className="space-y-2">
-                <Label className="font-semibold">Daily Schedule Time (UTC)</Label>
-                <Select
-                  value={autoApplySettings.schedule_time}
-                  onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, schedule_time: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'].map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time} UTC
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  The AI agent will run at this time every day
-                </p>
+              <div className="space-y-3 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-semibold flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-violet-600" />
+                      Daily Auto-Apply Schedule
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Automatically find and apply to matching jobs every day
+                    </p>
+                  </div>
+                  <Switch
+                    checked={autoApplySettings.schedule_enabled !== false}
+                    onCheckedChange={(checked) => setAutoApplySettings({ ...autoApplySettings, schedule_enabled: checked })}
+                  />
+                </div>
+                
+                {autoApplySettings.schedule_enabled !== false && (
+                  <div className="mt-3 pt-3 border-t border-violet-200 space-y-3">
+                    <div>
+                      <Label className="text-sm text-violet-700">Run Time (UTC)</Label>
+                      <Select
+                        value={autoApplySettings.schedule_time}
+                        onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, schedule_time: value })}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[
+                            { value: '06:00', label: '6:00 AM UTC (Early morning)' },
+                            { value: '09:00', label: '9:00 AM UTC (Morning)' },
+                            { value: '12:00', label: '12:00 PM UTC (Noon)' },
+                            { value: '15:00', label: '3:00 PM UTC (Afternoon)' },
+                            { value: '18:00', label: '6:00 PM UTC (Evening)' },
+                            { value: '21:00', label: '9:00 PM UTC (Night)' }
+                          ].map((time) => (
+                            <SelectItem key={time.value} value={time.value}>
+                              {time.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 p-2 bg-white rounded-md border border-violet-100">
+                      <Bot className="w-5 h-5 text-violet-600" />
+                      <div className="text-xs">
+                        <p className="font-medium text-violet-800">AI Agent will:</p>
+                        <p className="text-violet-600">
+                          Search jobs → Tailor resume → Generate cover letter → Auto-submit to up to {autoApplySettings.max_applications_per_day || 10} positions
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Source Filters */}
