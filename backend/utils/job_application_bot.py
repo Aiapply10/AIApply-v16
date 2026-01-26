@@ -143,8 +143,13 @@ class JobApplicationBot:
             logger.info(f"Applying to job on platform: {platform}")
             
             # Navigate to the application page
-            await self.page.goto(apply_url, wait_until='networkidle', timeout=30000)
-            await asyncio.sleep(2)
+            try:
+                await self.page.goto(apply_url, wait_until='domcontentloaded', timeout=45000)
+            except PlaywrightTimeout:
+                # Try with less strict waiting
+                await self.page.goto(apply_url, wait_until='commit', timeout=60000)
+            
+            await asyncio.sleep(3)
             
             # Take initial screenshot
             initial_screenshot = await self.take_screenshot(f"initial_{platform}")
