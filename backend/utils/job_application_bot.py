@@ -1092,32 +1092,32 @@ class JobApplicationBot:
             
                 # First pass: find all apply links and prefer external ones
                 for selector in apply_buttons:
-                try:
-                    elements = self.page.locator(selector)
-                    count = await elements.count()
-                    
-                    for i in range(min(count, 5)):  # Check up to 5 matches
-                        element = elements.nth(i)
-                        if await element.is_visible():
-                            href = await element.get_attribute('href')
-                            
-                            if href:
-                                # Prefer external links (not staying on remotive/remoteok)
-                                is_external = not ('remotive.com' in href.lower() or 
-                                                  'remoteok.com' in href.lower() or
-                                                  href.startswith('#') or
-                                                  href.startswith('/'))
+                    try:
+                        elements = self.page.locator(selector)
+                        count = await elements.count()
+                        
+                        for i in range(min(count, 5)):  # Check up to 5 matches
+                            element = elements.nth(i)
+                            if await element.is_visible():
+                                href = await element.get_attribute('href')
                                 
-                                self.log(f"Found link: {href[:80]}... (external={is_external})")
-                                
-                                if is_external:
-                                    external_apply_link = href
-                                    break
-                                elif not external_apply_link:
-                                    # Store as fallback
-                                    external_apply_link = href
+                                if href:
+                                    # Prefer external links (not staying on remotive/remoteok)
+                                    is_external = not ('remotive.com' in href.lower() or 
+                                                      'remoteok.com' in href.lower() or
+                                                      href.startswith('#') or
+                                                      href.startswith('/'))
                                     
-                except Exception as e:
+                                    self.log(f"Found link: {href[:80]}... (external={is_external})")
+                                    
+                                    if is_external:
+                                        external_apply_link = href
+                                        break
+                                    elif not external_apply_link:
+                                        # Store as fallback
+                                        external_apply_link = href
+                                        
+                    except Exception as e:
                     self.log(f"Selector check failed for {selector}: {str(e)}")
                     continue
                     
