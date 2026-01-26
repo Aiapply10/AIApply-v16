@@ -128,6 +128,7 @@ export function LiveJobsPage() {
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
+  const [viewingResumeApp, setViewingResumeApp] = useState(null); // For viewing tailored resume in history
   
   // Submission state
   const [submittingAppId, setSubmittingAppId] = useState(null);
