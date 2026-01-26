@@ -615,6 +615,90 @@ export function EmailCenterPage() {
                           </Button>
                         </div>
                       </div>
+                      
+                      {/* Test Connection Section */}
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm font-medium text-slate-700">Test Email Connection</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleTestConnection(account.account_id)}
+                              disabled={testingAccount === account.account_id}
+                              className="gap-2"
+                            >
+                              {testingAccount === account.account_id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Testing...
+                                </>
+                              ) : (
+                                <>
+                                  <Wifi className="w-4 h-4" />
+                                  Test Connection
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSendTestEmail(account.account_id)}
+                              disabled={sendingTestEmail === account.account_id}
+                              className="gap-2 bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100"
+                            >
+                              {sendingTestEmail === account.account_id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Sending...
+                                </>
+                              ) : (
+                                <>
+                                  <TestTube className="w-4 h-4" />
+                                  Send Test Email
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Test Results */}
+                        {testResults[account.account_id] && (
+                          <div className={`p-3 rounded-lg ${
+                            testResults[account.account_id].success 
+                              ? 'bg-green-50 border border-green-200' 
+                              : 'bg-red-50 border border-red-200'
+                          }`}>
+                            <div className="flex items-start gap-2">
+                              {testResults[account.account_id].success ? (
+                                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                              ) : (
+                                <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                              )}
+                              <div className="flex-1">
+                                <p className={`font-medium ${
+                                  testResults[account.account_id].success ? 'text-green-800' : 'text-red-800'
+                                }`}>
+                                  {testResults[account.account_id].success ? 'Connection Successful!' : 'Connection Failed'}
+                                </p>
+                                <div className="mt-2 space-y-1 text-sm">
+                                  <p className={testResults[account.account_id].imap_status === 'success' ? 'text-green-700' : 'text-red-700'}>
+                                    <strong>IMAP (Receiving):</strong> {testResults[account.account_id].imap_message || testResults[account.account_id].imap_status}
+                                  </p>
+                                  <p className={testResults[account.account_id].smtp_status === 'success' ? 'text-green-700' : 'text-red-700'}>
+                                    <strong>SMTP (Sending):</strong> {testResults[account.account_id].smtp_message || testResults[account.account_id].smtp_status}
+                                  </p>
+                                  {testResults[account.account_id].testEmailSent && (
+                                    <p className="text-violet-700 mt-2">
+                                      <strong>✉️ Test Email:</strong> {testResults[account.account_id].testEmailMessage}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
