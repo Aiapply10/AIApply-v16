@@ -311,6 +311,53 @@ export function EmailCenterPage() {
     }
   };
 
+  const handleTestConnection = async (accountId) => {
+    setTestingAccount(accountId);
+    try {
+      const response = await emailCenterAPI.testConnection(accountId);
+      setTestResults(prev => ({ ...prev, [accountId]: response.data }));
+      
+      if (response.data.success) {
+        toast.success('Connection test passed! Both IMAP and SMTP are working.');
+      } else {
+        toast.error('Connection test failed. Check the details below.');
+      }
+    } catch (error) {
+      toast.error('Failed to test connection');
+      setTestResults(prev => ({ 
+        ...prev, 
+        [accountId]: { success: false, message: error.response?.data?.detail || 'Test failed' } 
+      }));
+    } finally {
+      setTestingAccount(null);
+    }
+  };
+
+  const handleSendTestEmail = async (accountId) => {
+    setSendingTestEmail(accountId);
+    try {
+      const response = await emailCenterAPI.sendTestEmail(accountId);
+      
+      if (response.data.success) {
+        toast.success('Test email sent! Check your inbox.');
+        setTestResults(prev => ({ 
+          ...prev, 
+          [accountId]: { 
+            ...prev[accountId], 
+            testEmailSent: true, 
+            testEmailMessage: response.data.message 
+          } 
+        }));
+      } else {
+        toast.error(response.data.message || 'Failed to send test email');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to send test email');
+    } finally {
+      setSendingTestEmail(null);
+    }
+  };
+
   const handleUpdateSettings = async (key, value) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
