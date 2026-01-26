@@ -179,6 +179,7 @@ export function DashboardPage() {
       bgLight: 'bg-blue-50',
       iconColor: 'text-blue-600',
       description: 'Jobs applied to',
+      route: '/applications',
     },
     {
       label: 'Interviews',
@@ -188,6 +189,7 @@ export function DashboardPage() {
       bgLight: 'bg-orange-50',
       iconColor: 'text-orange-600',
       description: 'Scheduled',
+      route: '/applications?status=interview',
     },
     {
       label: 'Offers',
@@ -197,6 +199,7 @@ export function DashboardPage() {
       bgLight: 'bg-emerald-50',
       iconColor: 'text-emerald-600',
       description: 'Received',
+      route: '/applications?status=offer',
     },
     {
       label: 'Resumes',
@@ -206,6 +209,7 @@ export function DashboardPage() {
       bgLight: 'bg-violet-50',
       iconColor: 'text-violet-600',
       description: 'Uploaded',
+      route: '/resumes',
     },
   ];
 
