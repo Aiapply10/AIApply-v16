@@ -721,7 +721,7 @@ export function EmailCenterPage() {
                 <CardContent className="py-12 text-center">
                   <MailOpen className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 mb-2">No Messages</h3>
-                  <p className="text-slate-500">Your inbox is empty or we couldn't fetch messages.</p>
+                  <p className="text-slate-500">Your inbox is empty or we could not fetch messages.</p>
                   <Button variant="outline" className="mt-4" onClick={() => loadInbox()}>
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh Inbox
