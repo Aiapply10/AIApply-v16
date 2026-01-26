@@ -334,8 +334,9 @@ export function DashboardPage() {
                 whileHover={{ y: -6, scale: 1.02 }}
                 transition={{ type: 'spring', stiffness: 300 }}
                 className="h-full"
+                onClick={() => navigate(stat.route)}
               >
-                <Card className="bg-white border-slate-200 shadow-md hover:shadow-xl transition-shadow duration-300 h-full cursor-pointer group">
+                <Card className="bg-white border-slate-200 shadow-md hover:shadow-xl transition-shadow duration-300 h-full cursor-pointer group hover:border-blue-200">
                   <CardContent className="pt-6 h-full">
                     <div className="flex items-start justify-between">
                       <div>
@@ -357,13 +358,11 @@ export function DashboardPage() {
                         <stat.icon className="w-7 h-7 text-white" />
                       </motion.div>
                     </div>
-                    {/* Hover indicator */}
-                    <motion.div 
-                      className="h-1 bg-gradient-to-r mt-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ background: `linear-gradient(to right, var(--tw-gradient-stops))` }}
-                      initial={{ width: 0 }}
-                      whileHover={{ width: '100%' }}
-                    />
+                    {/* Click indicator */}
+                    <div className="flex items-center justify-end mt-4 text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>Click to view</span>
+                      <ChevronRight className="w-3 h-3 ml-1" />
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
