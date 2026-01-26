@@ -4561,12 +4561,16 @@ Return ONLY JSON: {{"score": number, "grade": "letter"}}"""
                 "resume_id": settings["resume_id"],
                 "cover_letter": cover_letter_content,
                 "tailored_resume": tailored_content,
+                "tailored_content": tailored_content,
+                "tailored_resume_content": tailored_content,
                 "status": "ready_to_apply",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "auto_applied": True,
                 "apply_link": apply_link,
-                "source": job.get("source", "system_scraper")
+                "source": job.get("source", "system_scraper"),
+                "ats_score": application_record.get("ats_score"),
+                "ats_grade": application_record.get("ats_grade")
             })
             
             # Save a copy of the tailored resume as a document
