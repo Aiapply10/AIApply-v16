@@ -2421,6 +2421,99 @@ ${job?.description || job?.full_description || 'N/A'}
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* View Tailored Resume Dialog */}
+        <Dialog open={!!viewingResumeApp} onOpenChange={() => setViewingResumeApp(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-500" />
+                Tailored Resume
+              </DialogTitle>
+              {viewingResumeApp && (
+                <DialogDescription>
+                  Resume tailored for: <span className="font-semibold">{viewingResumeApp.job_title}</span> at <span className="font-semibold">{viewingResumeApp.company}</span>
+                </DialogDescription>
+              )}
+            </DialogHeader>
+            
+            {viewingResumeApp && (
+              <Tabs defaultValue="resume" className="flex-1 flex flex-col min-h-0">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="resume" className="gap-2">
+                    <FileText className="w-4 h-4" />
+                    Resume
+                  </TabsTrigger>
+                  <TabsTrigger value="cover-letter" className="gap-2" disabled={!viewingResumeApp.cover_letter}>
+                    <Mail className="w-4 h-4" />
+                    Cover Letter
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="resume" className="flex-1 mt-4 overflow-hidden">
+                  <ScrollArea className="h-[50vh] border rounded-lg">
+                    <div className="p-4 whitespace-pre-wrap font-mono text-sm bg-slate-50">
+                      {viewingResumeApp.tailored_resume_content || viewingResumeApp.tailored_content || 'No tailored content available'}
+                    </div>
+                  </ScrollArea>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(viewingResumeApp.tailored_resume_content || viewingResumeApp.tailored_content);
+                        toast.success('Resume copied to clipboard');
+                      }}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        window.open(`${process.env.REACT_APP_BACKEND_URL}/api/applications/${viewingResumeApp.application_id}/saved-resume`, '_blank');
+                      }}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Word
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="cover-letter" className="flex-1 mt-4 overflow-hidden">
+                  {viewingResumeApp.cover_letter ? (
+                    <>
+                      <ScrollArea className="h-[50vh] border rounded-lg">
+                        <div className="p-4 whitespace-pre-wrap font-mono text-sm bg-slate-50">
+                          {viewingResumeApp.cover_letter}
+                        </div>
+                      </ScrollArea>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(viewingResumeApp.cover_letter);
+                            toast.success('Cover letter copied to clipboard');
+                          }}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Mail className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                      <p className="text-muted-foreground">No cover letter generated for this application</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
+          </DialogContent>
+        </Dialog>
     </DashboardLayout>
   );
 }
