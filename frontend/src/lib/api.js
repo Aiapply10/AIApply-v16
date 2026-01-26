@@ -171,6 +171,12 @@ export const autoApplyAPI = {
   run: () => api.post('/auto-apply/run'),
   autoFillSettings: () => api.post('/auto-apply/auto-fill-settings'),
   getStatus: () => api.get('/auto-apply/status'),
+  getActivityLog: (limit = 20) => api.get('/auto-apply/activity-log', { params: { limit } }),
+  // Automated submission
+  submitApplication: (applicationId) => api.post(`/auto-apply/submit/${applicationId}`),
+  submitBatch: (limit = 5) => api.post('/auto-apply/submit-batch', null, { params: { limit } }),
+  getSubmissionLogs: (limit = 20) => api.get('/auto-apply/submission-logs', { params: { limit } }),
+  getScreenshots: (applicationId) => api.get(`/auto-apply/screenshots/${applicationId}`),
 };
 
 // Email Center API
