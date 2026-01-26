@@ -4573,6 +4573,73 @@ async def get_auto_apply_status(request: Request):
     }
 
 
+@api_router.get("/auto-apply/activity-log")
+async def get_auto_apply_activity_log(request: Request, limit: int = 20):
+    """
+    Get detailed activity log of auto-apply actions.
+    Shows what the AI agent has done - jobs found, resumes tailored, applications prepared.
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get recent auto-applications with full details
+    applications = await db.auto_applications.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("applied_at", -1).limit(limit).to_list(limit)
+    
+    # Get scheduler run logs
+    scheduler_logs = await db.scheduler_logs.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("run_at", -1).limit(5).to_list(5)
+    
+    # Create activity entries
+    activity = []
+    
+    for app in applications:
+        activity.append({
+            "type": "application_created",
+            "timestamp": app.get("applied_at"),
+            "job_title": app.get("job_title"),
+            "company": app.get("company"),
+            "status": app.get("status"),
+            "resume_tailored": app.get("ats_optimized", False),
+            "cover_letter_generated": bool(app.get("cover_letter")),
+            "resume_saved": app.get("resume_version_saved", False),
+            "source": app.get("source"),
+            "application_id": app.get("application_id"),
+            "apply_link": app.get("apply_link")
+        })
+    
+    for log in scheduler_logs:
+        activity.append({
+            "type": "scheduler_run",
+            "timestamp": log.get("run_at"),
+            "jobs_processed": log.get("jobs_processed", 0),
+            "status": log.get("status"),
+            "message": log.get("message")
+        })
+    
+    # Sort by timestamp
+    activity.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    
+    # Get summary stats
+    total_apps = await db.auto_applications.count_documents({"user_id": user_id})
+    tailored_count = await db.auto_applications.count_documents({"user_id": user_id, "ats_optimized": True})
+    cover_letter_count = await db.auto_applications.count_documents({"user_id": user_id, "cover_letter": {"$exists": True, "$ne": ""}})
+    
+    return {
+        "activity": activity[:limit],
+        "summary": {
+            "total_applications": total_apps,
+            "resumes_tailored": tailored_count,
+            "cover_letters_generated": cover_letter_count,
+            "success_rate": f"{(tailored_count/total_apps*100):.1f}%" if total_apps > 0 else "0%"
+        }
+    }
+
+
 # ============ APPLICATION TRACKING ENDPOINTS ============
 
 @api_router.get("/applications/tracking")
