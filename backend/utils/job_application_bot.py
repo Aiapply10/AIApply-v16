@@ -1034,30 +1034,64 @@ class JobApplicationBot:
             screenshot = await self.take_screenshot("remote_board_listing")
             result["screenshots"].append(screenshot)
             
-            # Enhanced apply button selectors - ordered by specificity
-            apply_buttons = [
-                # Remotive specific
-                'a[href*="jobs."][href*="apply"]',  # External apply links
-                'a:has-text("Apply for this position")',
-                'a.btn:has-text("Apply")',
-                'button:has-text("Apply for this position")',
-                # RemoteOK specific
-                'a.apply-btn',
-                'a[data-job-apply]',
-                # Generic
-                'a:has-text("Apply Now")',
-                'a:has-text("Apply")',
-                'button:has-text("Apply Now")',
-                'button:has-text("Apply")',
-                '.apply-button a',
-                '.apply-button',
-                'a[href*="apply"]',
-            ]
+            # Scroll down to reveal apply buttons that might be hidden
+            await self.page.evaluate('window.scrollBy(0, 500)')
+            await asyncio.sleep(0.5)
             
+            # Try to extract apply links directly from the DOM (even if not visible)
             external_apply_link = None
             
-            # First pass: find all apply links and prefer external ones
-            for selector in apply_buttons:
+            dom_links = await self.page.evaluate('''
+                () => {
+                    const links = [];
+                    // Find all links with external apply URLs
+                    document.querySelectorAll('a[href*="apply"], a[href*="jobs."], a[href*="greenhouse"], a[href*="lever"]').forEach(el => {
+                        const href = el.href;
+                        // Prefer external links (not the same domain)
+                        if (href && !href.includes('remotive.com') && !href.includes('remoteok.com') && !href.startsWith('#')) {
+                            links.push({
+                                href: href,
+                                text: el.textContent.trim().substring(0, 50)
+                            });
+                        }
+                    });
+                    return links;
+                }
+            ''')
+            
+            # Check for external apply links from DOM first
+            if dom_links:
+                for link in dom_links:
+                    href = link.get('href', '')
+                    if href and ('apply' in href.lower() or 'jobs.' in href.lower()):
+                        external_apply_link = href
+                        self.log(f"Found external link from DOM: {href[:80]}...")
+                        break
+            
+            # Fallback to traditional selector approach if no external link found
+            if not external_apply_link:
+                # Enhanced apply button selectors - ordered by specificity
+                apply_buttons = [
+                    # Remotive specific
+                    'a[href*="jobs."][href*="apply"]',  # External apply links
+                    'a:has-text("Apply for this position")',
+                    'a.btn:has-text("Apply")',
+                    'button:has-text("Apply for this position")',
+                    # RemoteOK specific
+                    'a.apply-btn',
+                    'a[data-job-apply]',
+                    # Generic
+                    'a:has-text("Apply Now")',
+                    'a:has-text("Apply")',
+                    'button:has-text("Apply Now")',
+                    'button:has-text("Apply")',
+                    '.apply-button a',
+                    '.apply-button',
+                    'a[href*="apply"]',
+                ]
+            
+                # First pass: find all apply links and prefer external ones
+                for selector in apply_buttons:
                 try:
                     elements = self.page.locator(selector)
                     count = await elements.count()
