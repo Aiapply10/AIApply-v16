@@ -197,6 +197,15 @@ export const emailCenterAPI = {
   getSettings: () => api.get('/email-center/settings'),
   updateSettings: (data) => api.post('/email-center/settings', data),
   getHistory: (limit = 50) => api.get('/email-center/history', { params: { limit } }),
+  
+  // Test & Diagnostics
+  testConnection: (accountId) => api.post('/email-center/test-connection', null, {
+    params: { account_id: accountId }
+  }),
+  sendTestEmail: (accountId) => api.post('/email-center/send-test-email', null, {
+    params: { account_id: accountId }
+  }),
+  getTestLogs: (limit = 10) => api.get('/email-center/test-logs', { params: { limit } }),
 };
 
 export default api;
