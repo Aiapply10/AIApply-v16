@@ -1010,47 +1010,133 @@ class JobApplicationBot:
             result["status"] = "redirect_to_company"
             self.log("Processing remote job board listing")
             
+            # First, try to close any popup overlays (common on Remotive)
+            popup_close_selectors = [
+                'button[aria-label="Close"]',
+                'button:has-text("×")',
+                'button:has-text("Close")',
+                '.modal-close',
+                '[data-dismiss="modal"]',
+                'button.close',
+                'div[role="dialog"] button',
+            ]
+            for selector in popup_close_selectors:
+                try:
+                    close_btn = self.page.locator(selector).first
+                    if await close_btn.count() > 0 and await close_btn.is_visible():
+                        await close_btn.click(force=True)
+                        self.log(f"Closed popup using: {selector}")
+                        await asyncio.sleep(1)
+                        break
+                except:
+                    continue
+            
             screenshot = await self.take_screenshot("remote_board_listing")
             result["screenshots"].append(screenshot)
             
-            # These boards usually redirect to company sites
+            # Enhanced apply button selectors - ordered by specificity
             apply_buttons = [
-                'a.apply',
+                # Remotive specific
+                'a[href*="jobs."][href*="apply"]',  # External apply links
+                'a:has-text("Apply for this position")',
+                'a.btn:has-text("Apply")',
+                'button:has-text("Apply for this position")',
+                # RemoteOK specific
+                'a.apply-btn',
+                'a[data-job-apply]',
+                # Generic
+                'a:has-text("Apply Now")',
                 'a:has-text("Apply")',
+                'button:has-text("Apply Now")',
                 'button:has-text("Apply")',
+                '.apply-button a',
                 '.apply-button',
                 'a[href*="apply"]',
             ]
             
+            external_apply_link = None
+            
+            # First pass: find all apply links and prefer external ones
             for selector in apply_buttons:
                 try:
-                    button = self.page.locator(selector).first
-                    if await button.count() > 0:
-                        href = await button.get_attribute('href')
-                        if href:
-                            result["redirect_url"] = href
-                            self.log(f"Found apply link: {href}")
+                    elements = self.page.locator(selector)
+                    count = await elements.count()
+                    
+                    for i in range(min(count, 5)):  # Check up to 5 matches
+                        element = elements.nth(i)
+                        if await element.is_visible():
+                            href = await element.get_attribute('href')
                             
-                            # Navigate to the actual application
-                            await self.page.goto(href, wait_until='domcontentloaded', timeout=30000)
-                            await asyncio.sleep(3)
-                            
-                            # Now detect the platform and apply
-                            new_platform = self.detect_platform(href)
-                            self.log(f"Redirected to platform: {new_platform}")
-                            
-                            if new_platform == 'greenhouse':
-                                return await self._apply_greenhouse(user_data, resume_path, cover_letter, result)
-                            elif new_platform == 'lever':
-                                return await self._apply_lever(user_data, resume_path, cover_letter, result)
-                            else:
-                                return await self._apply_generic(user_data, resume_path, cover_letter, result)
+                            if href:
+                                # Prefer external links (not staying on remotive/remoteok)
+                                is_external = not ('remotive.com' in href.lower() or 
+                                                  'remoteok.com' in href.lower() or
+                                                  href.startswith('#') or
+                                                  href.startswith('/'))
+                                
+                                self.log(f"Found link: {href[:80]}... (external={is_external})")
+                                
+                                if is_external:
+                                    external_apply_link = href
+                                    break
+                                elif not external_apply_link:
+                                    # Store as fallback
+                                    external_apply_link = href
+                                    
                 except Exception as e:
-                    self.log(f"Apply button click failed: {str(e)}")
+                    self.log(f"Selector check failed for {selector}: {str(e)}")
                     continue
                     
-            result["status"] = "manual_apply_required"
-            result["error"] = "Could not find apply button. Manual application may be required."
+                if external_apply_link and ('remotive.com' not in external_apply_link.lower() and 
+                                            'remoteok.com' not in external_apply_link.lower()):
+                    break
+            
+            if external_apply_link:
+                result["redirect_url"] = external_apply_link
+                self.log(f"Following apply link: {external_apply_link}")
+                
+                try:
+                    # Navigate to the actual application
+                    await self.page.goto(external_apply_link, wait_until='domcontentloaded', timeout=30000)
+                    await asyncio.sleep(3)
+                    
+                    # Check the new URL
+                    new_url = self.page.url
+                    self.log(f"Now on: {new_url}")
+                    
+                    # Take screenshot after redirect
+                    redirect_screenshot = await self.take_screenshot("remote_board_redirected")
+                    result["screenshots"].append(redirect_screenshot)
+                    
+                    # Detect the platform and apply
+                    new_platform = self.detect_platform(new_url)
+                    result["platform"] = new_platform
+                    self.log(f"Redirected to platform: {new_platform}")
+                    
+                    if new_platform == 'greenhouse':
+                        return await self._apply_greenhouse(user_data, resume_path, cover_letter, result)
+                    elif new_platform == 'lever':
+                        return await self._apply_lever(user_data, resume_path, cover_letter, result)
+                    elif new_platform == 'workday':
+                        return await self._apply_workday(user_data, resume_path, cover_letter, result)
+                    elif new_platform == 'smartrecruiters':
+                        return await self._apply_smartrecruiters(user_data, resume_path, cover_letter, result)
+                    elif new_platform == 'ashby':
+                        return await self._apply_ashby(user_data, resume_path, cover_letter, result)
+                    elif new_platform in ['linkedin', 'indeed', 'glassdoor']:
+                        return await self._apply_job_board(new_platform, user_data, resume_path, cover_letter, result)
+                    else:
+                        return await self._apply_generic(user_data, resume_path, cover_letter, result)
+                        
+                except Exception as e:
+                    self.log(f"Failed to navigate to apply link: {str(e)}")
+                    result["error"] = f"Failed to access application page: {str(e)}"
+                    result["status"] = "navigation_failed"
+                    return result
+            else:
+                self.log("No apply link found on page")
+                result["status"] = "manual_apply_required"
+                result["error"] = "Could not find apply button. Manual application may be required."
             
         except Exception as e:
             self.log(f"Remote board error: {str(e)}")
