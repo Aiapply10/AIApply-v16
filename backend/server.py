@@ -4617,7 +4617,9 @@ Return ONLY JSON: {{"score": number, "grade": "letter"}}"""
                 "apply_link": apply_link,
                 "status": "ready_to_apply",
                 "resume_saved": True,
-                "cover_letter_generated": bool(cover_letter_content)
+                "cover_letter_generated": bool(cover_letter_content),
+                "ats_score": application_record.get("ats_score"),
+                "ats_grade": application_record.get("ats_grade")
             })
             
         except Exception as e:
@@ -4633,10 +4635,99 @@ Return ONLY JSON: {{"score": number, "grade": "letter"}}"""
         }
     )
     
+    # AUTO-SUBMIT: If auto_submit is enabled in settings, automatically submit applications
+    submitted_apps = []
+    auto_submit_enabled = settings.get("auto_submit_enabled", True)  # Default to enabled
+    
+    if auto_submit_enabled and applications:
+        logger.info(f"Auto-submitting {len(applications)} applications...")
+        
+        from utils.job_application_bot import apply_to_job_automated
+        
+        # Get user profile data for form filling
+        user_profile = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+        user_data = {
+            "full_name": user_profile.get("full_name", ""),
+            "first_name": user_profile.get("full_name", "").split()[0] if user_profile.get("full_name") else "",
+            "last_name": user_profile.get("full_name", "").split()[-1] if user_profile.get("full_name") and len(user_profile.get("full_name", "").split()) > 1 else "",
+            "email": user_profile.get("email", ""),
+            "phone": user_profile.get("phone", ""),
+            "location": user_profile.get("location", ""),
+            "linkedin_url": user_profile.get("linkedin_url", user_profile.get("linkedin_profile", "")),
+            "current_company": user_profile.get("current_company", ""),
+            "job_title": user_profile.get("job_title", user_profile.get("primary_technology", ""))
+        }
+        
+        # Submit each application using Playwright
+        for app in applications[:5]:  # Limit to 5 auto-submissions per batch to avoid overload
+            try:
+                apply_link = app.get("apply_link")
+                if not apply_link:
+                    continue
+                    
+                logger.info(f"Auto-submitting: {app['job_title']} at {app['company']}")
+                
+                # Get the tailored resume content for this application
+                app_record = await db.auto_applications.find_one(
+                    {"application_id": app["application_id"]},
+                    {"_id": 0}
+                )
+                
+                resume_content = app_record.get("tailored_content", "") if app_record else ""
+                cover_letter = app_record.get("cover_letter", "") if app_record else ""
+                
+                # Submit using Playwright bot
+                result = await apply_to_job_automated(
+                    apply_url=apply_link,
+                    user_data=user_data,
+                    resume_path=None,  # Use form filling instead of file upload for now
+                    cover_letter=cover_letter
+                )
+                
+                # Update application status based on result
+                new_status = "applied" if result.get("success") else "submission_failed"
+                
+                await db.auto_applications.update_one(
+                    {"application_id": app["application_id"]},
+                    {"$set": {
+                        "status": new_status,
+                        "submission_result": result.get("status"),
+                        "submission_error": result.get("error"),
+                        "submission_screenshots": result.get("screenshots", []),
+                        "submitted_at": datetime.now(timezone.utc).isoformat() if result.get("success") else None,
+                        "platform_detected": result.get("platform")
+                    }}
+                )
+                
+                await db.applications.update_one(
+                    {"application_id": app["application_id"]},
+                    {"$set": {
+                        "status": new_status,
+                        "submitted_at": datetime.now(timezone.utc).isoformat() if result.get("success") else None
+                    }}
+                )
+                
+                submitted_apps.append({
+                    "application_id": app["application_id"],
+                    "job_title": app["job_title"],
+                    "company": app["company"],
+                    "status": new_status,
+                    "platform": result.get("platform"),
+                    "success": result.get("success", False)
+                })
+                
+                logger.info(f"Submission result for {app['job_title']}: {new_status}")
+                
+            except Exception as e:
+                logger.error(f"Auto-submit error for {app['application_id']}: {str(e)}")
+                continue
+    
     return {
-        "message": f"Successfully processed {len(applications)} job applications",
+        "message": f"Successfully processed {len(applications)} job applications" + (f", auto-submitted {len(submitted_apps)}" if submitted_apps else ""),
         "applied_count": len(applications),
+        "submitted_count": len(submitted_apps),
         "applications": applications,
+        "submitted_applications": submitted_apps,
         "remaining_today": remaining - len(applications)
     }
 
