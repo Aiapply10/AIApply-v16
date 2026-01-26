@@ -48,7 +48,11 @@ import {
   ExternalLink,
   Copy,
   Edit3,
-  Zap
+  Zap,
+  TestTube,
+  CheckCircle,
+  XCircle,
+  Wifi
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
@@ -72,6 +76,9 @@ export function EmailCenterPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('accounts');
+  const [testingAccount, setTestingAccount] = useState(null);
+  const [sendingTestEmail, setSendingTestEmail] = useState(null);
+  const [testResults, setTestResults] = useState({});
   
   // Dialogs
   const [showConnectDialog, setShowConnectDialog] = useState(false);
