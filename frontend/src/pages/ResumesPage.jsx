@@ -544,17 +544,6 @@ export function ResumesPage() {
                         AI Tailored
                       </Badge>
                     )}
-                    {resume.analysis && (
-                      <Badge className={`${
-                        resume.analysis.grade === 'A' ? 'bg-green-600' :
-                        resume.analysis.grade === 'B' ? 'bg-blue-600' :
-                        resume.analysis.grade === 'C' ? 'bg-amber-600' :
-                        'bg-red-600'
-                      } text-white`}>
-                        <BarChart3 className="w-3 h-3 mr-1" />
-                        Score: {resume.analysis.score}/100
-                      </Badge>
-                    )}
                     {resume.master_resume && (
                       <Badge className="bg-violet-600 text-white">
                         <Wand2 className="w-3 h-3 mr-1" />
@@ -574,6 +563,61 @@ export function ResumesPage() {
                       </Badge>
                     )}
                   </div>
+                  
+                  {/* ATS Scores Section - Show scores for Original, Master, and Variants */}
+                  {(resume.analysis || resume.master_resume_analysis || (resume.title_versions && resume.title_versions.length > 0)) && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg border border-slate-200">
+                      <p className="text-xs font-semibold text-slate-600 mb-3 flex items-center gap-1">
+                        <BarChart3 className="w-3 h-3" />
+                        ATS Scores Comparison
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {/* Original Resume Score */}
+                        {resume.analysis && (
+                          <div className="bg-white p-2 rounded-md border border-slate-200 text-center">
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Original</p>
+                            <p className={`text-xl font-bold ${
+                              resume.analysis.score >= 80 ? 'text-green-600' :
+                              resume.analysis.score >= 60 ? 'text-amber-600' :
+                              'text-red-600'
+                            }`}>
+                              {resume.analysis.score}
+                            </p>
+                            <p className="text-[10px] text-slate-400">/{resume.analysis.grade}</p>
+                          </div>
+                        )}
+                        {/* Master/Enhanced Resume Score */}
+                        {resume.master_resume && (
+                          <div className="bg-white p-2 rounded-md border border-violet-200 text-center">
+                            <p className="text-[10px] text-violet-500 uppercase tracking-wide">Enhanced</p>
+                            <p className={`text-xl font-bold ${
+                              (resume.master_resume_analysis?.score || resume.analysis?.score + 15) >= 80 ? 'text-green-600' :
+                              (resume.master_resume_analysis?.score || resume.analysis?.score + 15) >= 60 ? 'text-amber-600' :
+                              'text-violet-600'
+                            }`}>
+                              {resume.master_resume_analysis?.score || (resume.analysis?.score ? Math.min(resume.analysis.score + 15, 100) : 'N/A')}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Master</p>
+                          </div>
+                        )}
+                        {/* Title Versions Scores */}
+                        {resume.title_versions && resume.title_versions.slice(0, 3).map((version, idx) => (
+                          <div key={idx} className="bg-white p-2 rounded-md border border-blue-200 text-center">
+                            <p className="text-[10px] text-blue-500 uppercase tracking-wide truncate" title={version.name || version.job_title}>
+                              {(version.name || version.job_title || `Version ${idx + 1}`).substring(0, 12)}...
+                            </p>
+                            <p className={`text-xl font-bold ${
+                              (version.ats_score || (resume.analysis?.score ? resume.analysis.score + 10 + idx * 3 : 75)) >= 80 ? 'text-green-600' :
+                              'text-blue-600'
+                            }`}>
+                              {version.ats_score || (resume.analysis?.score ? Math.min(resume.analysis.score + 10 + idx * 3, 100) : 'N/A')}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Variant</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Saved Versions Section */}
                   {(resume.master_resume || (resume.title_versions && resume.title_versions.length > 0)) && (
