@@ -2269,22 +2269,22 @@ ${job?.description || job?.full_description || 'N/A'}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {formatDate(item.applied_at)}
+                          {formatDate(item.applied_at || item.created_at)}
                         </span>
-                        {item.resume_saved && (
+                        {(item.resume_saved || item.tailored_resume_content || item.tailored_content) && (
                           <span className="flex items-center gap-1 text-green-600">
                             <CheckCircle2 className="w-3 h-3" />
-                            Resume Saved
+                            Resume Tailored
                           </span>
                         )}
-                        {item.cover_letter_generated && (
+                        {(item.cover_letter_generated || item.cover_letter) && (
                           <span className="flex items-center gap-1 text-violet-600">
                             <FileText className="w-3 h-3" />
                             Cover Letter
                           </span>
                         )}
                       </div>
-                      <div className="flex gap-2 mt-3">
+                      <div className="flex gap-2 mt-3 flex-wrap">
                         {item.apply_link && (
                           <Button
                             variant="outline"
@@ -2293,6 +2293,18 @@ ${job?.description || job?.full_description || 'N/A'}
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
                             View Job
+                          </Button>
+                        )}
+                        {/* View Tailored Resume Button */}
+                        {(item.tailored_resume_content || item.tailored_content) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                            onClick={() => setViewingResumeApp(item)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            View Resume
                           </Button>
                         )}
                         <Button
@@ -2304,7 +2316,7 @@ ${job?.description || job?.full_description || 'N/A'}
                           }}
                         >
                           <Download className="w-3 h-3 mr-1" />
-                          Resume
+                          Download
                         </Button>
                         {item.status === 'ready_to_apply' && (
                           <Button
@@ -2330,6 +2342,12 @@ ${job?.description || job?.full_description || 'N/A'}
                           <Badge className="bg-green-100 text-green-700">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
                             Submitted
+                          </Badge>
+                        )}
+                        {item.status === 'submission_failed' && (
+                          <Badge className="bg-red-100 text-red-700">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Failed
                           </Badge>
                         )}
                       </div>
