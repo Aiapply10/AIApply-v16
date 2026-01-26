@@ -2210,18 +2210,42 @@ ${job?.description || job?.full_description || 'N/A'}
                           <Clock className="w-3 h-3" />
                           {formatDate(item.applied_at)}
                         </span>
+                        {item.resume_saved && (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Resume Saved
+                          </span>
+                        )}
+                        {item.cover_letter_generated && (
+                          <span className="flex items-center gap-1 text-violet-600">
+                            <FileText className="w-3 h-3" />
+                            Cover Letter
+                          </span>
+                        )}
                       </div>
-                      {item.apply_link && (
+                      <div className="flex gap-2 mt-3">
+                        {item.apply_link && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(item.apply_link, '_blank')}
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            View Job
+                          </Button>
+                        )}
                         <Button
-                          variant="link"
+                          variant="outline"
                           size="sm"
-                          className="p-0 mt-2"
-                          onClick={() => window.open(item.apply_link, '_blank')}
+                          onClick={() => {
+                            // Download tailored resume
+                            window.open(`${process.env.REACT_APP_BACKEND_URL}/api/applications/${item.application_id}/saved-resume`, '_blank');
+                          }}
                         >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          View Job
+                          <Download className="w-3 h-3 mr-1" />
+                          Resume
                         </Button>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
