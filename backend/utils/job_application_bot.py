@@ -1,14 +1,15 @@
 """
 Job Application Bot - Automated job application submission using Playwright
-Supports multiple job platforms: LinkedIn Easy Apply, Indeed, Direct Company Sites
+Supports multiple job platforms: Greenhouse, Lever, Workday, SmartRecruiters, Jobvite, and more.
 """
 import asyncio
 import os
 import uuid
 import base64
 import logging
+import re
 from datetime import datetime, timezone
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from playwright.async_api import async_playwright, Page, Browser, TimeoutError as PlaywrightTimeout
 
 logger = logging.getLogger(__name__)
@@ -29,12 +30,17 @@ class JobApplicationBot:
         self.context = None
         self.page: Optional[Page] = None
         self.playwright = None
+        self.debug_logs: List[str] = []
+        
+    def log(self, message: str):
+        """Add to debug logs and log to logger"""
+        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
+        log_entry = f"[{timestamp}] {message}"
+        self.debug_logs.append(log_entry)
+        logger.info(message)
         
     async def start(self):
         """Initialize the browser"""
-        import os
-        
-        # Set Playwright browsers path if not in default location
         if os.path.exists('/pw-browsers'):
             os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
         
@@ -45,15 +51,24 @@ class JobApplicationBot:
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process'
             ]
         )
         self.context = await self.browser.new_context(
             viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            locale='en-US',
+            timezone_id='America/New_York'
         )
         self.page = await self.context.new_page()
-        logger.info("Browser started successfully")
+        
+        # Set default timeouts
+        self.page.set_default_timeout(30000)
+        self.page.set_default_navigation_timeout(45000)
+        
+        self.log("Browser started successfully")
         
     async def stop(self):
         """Close the browser"""
@@ -63,7 +78,7 @@ class JobApplicationBot:
             await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
-        logger.info("Browser stopped")
+        self.log("Browser stopped")
         
     async def take_screenshot(self, name: str) -> str:
         """Take a screenshot and return the file path"""
@@ -71,7 +86,7 @@ class JobApplicationBot:
         filename = f"{name}_{timestamp}.png"
         filepath = os.path.join(SCREENSHOTS_DIR, filename)
         await self.page.screenshot(path=filepath, full_page=False)
-        logger.info(f"Screenshot saved: {filepath}")
+        self.log(f"Screenshot saved: {filepath}")
         return filepath
         
     async def screenshot_to_base64(self) -> str:
@@ -82,27 +97,77 @@ class JobApplicationBot:
     def detect_platform(self, url: str) -> str:
         """Detect which job platform the URL belongs to"""
         url_lower = url.lower()
-        if 'linkedin.com' in url_lower:
-            return 'linkedin'
-        elif 'indeed.com' in url_lower:
-            return 'indeed'
-        elif 'glassdoor.com' in url_lower:
-            return 'glassdoor'
-        elif 'lever.co' in url_lower:
-            return 'lever'
-        elif 'greenhouse.io' in url_lower:
+        
+        # ATS Platforms
+        if 'greenhouse.io' in url_lower or 'boards.greenhouse' in url_lower:
             return 'greenhouse'
-        elif 'workday' in url_lower:
+        elif 'lever.co' in url_lower or 'jobs.lever' in url_lower:
+            return 'lever'
+        elif 'workday' in url_lower or 'myworkdayjobs' in url_lower:
             return 'workday'
         elif 'smartrecruiters' in url_lower:
             return 'smartrecruiters'
         elif 'jobvite' in url_lower:
             return 'jobvite'
+        elif 'icims' in url_lower:
+            return 'icims'
+        elif 'breezy' in url_lower or 'breezyhr' in url_lower:
+            return 'breezy'
+        elif 'ashbyhq' in url_lower:
+            return 'ashby'
+        elif 'recruitee' in url_lower:
+            return 'recruitee'
+        elif 'bamboohr' in url_lower:
+            return 'bamboohr'
+        # Job Boards (usually redirect to company)
+        elif 'linkedin.com' in url_lower:
+            return 'linkedin'
+        elif 'indeed.com' in url_lower:
+            return 'indeed'
+        elif 'glassdoor.com' in url_lower:
+            return 'glassdoor'
         elif 'remoteok.com' in url_lower or 'remotive.com' in url_lower:
             return 'remote_board'
+        elif 'dice.com' in url_lower:
+            return 'dice'
+        elif 'angel.co' in url_lower or 'wellfound.com' in url_lower:
+            return 'angellist'
         else:
             return 'generic'
             
+    async def wait_and_click(self, selectors: List[str], timeout: int = 5000) -> bool:
+        """Try multiple selectors and click the first visible one"""
+        for selector in selectors:
+            try:
+                element = self.page.locator(selector).first
+                await element.wait_for(state="visible", timeout=timeout)
+                if await element.is_enabled():
+                    await element.scroll_into_view_if_needed()
+                    await asyncio.sleep(0.3)
+                    await element.click(force=True)
+                    self.log(f"Clicked: {selector}")
+                    return True
+            except Exception:
+                continue
+        return False
+        
+    async def wait_and_fill(self, selectors: List[str], value: str, timeout: int = 3000) -> bool:
+        """Try multiple selectors and fill the first visible one"""
+        if not value:
+            return False
+            
+        for selector in selectors:
+            try:
+                element = self.page.locator(selector).first
+                await element.wait_for(state="visible", timeout=timeout)
+                await element.scroll_into_view_if_needed()
+                await element.fill(str(value))
+                self.log(f"Filled '{selector}' with value")
+                return True
+            except Exception:
+                continue
+        return False
+        
     async def apply_to_job(
         self,
         apply_url: str,
@@ -112,16 +177,9 @@ class JobApplicationBot:
     ) -> Dict:
         """
         Apply to a job using the provided URL and user data.
-        
-        Args:
-            apply_url: The job application URL
-            user_data: User profile data (name, email, phone, etc.)
-            resume_path: Path to resume file (optional)
-            cover_letter: Cover letter text (optional)
-            
-        Returns:
-            Dict with status, screenshots, and any error messages
         """
+        self.debug_logs = []  # Reset logs for new application
+        
         result = {
             "success": False,
             "platform": "unknown",
@@ -130,7 +188,8 @@ class JobApplicationBot:
             "screenshots": [],
             "error": None,
             "submitted_at": None,
-            "form_filled": False
+            "form_filled": False,
+            "debug_logs": []
         }
         
         try:
@@ -140,125 +199,175 @@ class JobApplicationBot:
             # Detect platform
             platform = self.detect_platform(apply_url)
             result["platform"] = platform
-            logger.info(f"Applying to job on platform: {platform}")
+            self.log(f"Detected platform: {platform} for URL: {apply_url}")
             
             # Navigate to the application page
             try:
                 await self.page.goto(apply_url, wait_until='domcontentloaded', timeout=45000)
             except PlaywrightTimeout:
-                # Try with less strict waiting
+                self.log("First navigation attempt timed out, retrying with less strict waiting")
                 await self.page.goto(apply_url, wait_until='commit', timeout=60000)
             
-            await asyncio.sleep(3)
+            await asyncio.sleep(2)
+            
+            # Wait for page to stabilize
+            await self._wait_for_page_load()
             
             # Take initial screenshot
             initial_screenshot = await self.take_screenshot(f"initial_{platform}")
             result["screenshots"].append(initial_screenshot)
             
             # Apply based on platform
-            if platform == 'linkedin':
-                result = await self._apply_linkedin(user_data, resume_path, cover_letter, result)
-            elif platform == 'indeed':
-                result = await self._apply_indeed(user_data, resume_path, cover_letter, result)
+            if platform == 'greenhouse':
+                result = await self._apply_greenhouse(user_data, resume_path, cover_letter, result)
             elif platform == 'lever':
                 result = await self._apply_lever(user_data, resume_path, cover_letter, result)
-            elif platform == 'greenhouse':
-                result = await self._apply_greenhouse(user_data, resume_path, cover_letter, result)
+            elif platform == 'workday':
+                result = await self._apply_workday(user_data, resume_path, cover_letter, result)
+            elif platform == 'smartrecruiters':
+                result = await self._apply_smartrecruiters(user_data, resume_path, cover_letter, result)
+            elif platform == 'ashby':
+                result = await self._apply_ashby(user_data, resume_path, cover_letter, result)
+            elif platform == 'breezy':
+                result = await self._apply_breezy(user_data, resume_path, cover_letter, result)
+            elif platform in ['linkedin', 'indeed', 'glassdoor']:
+                result = await self._apply_job_board(platform, user_data, resume_path, cover_letter, result)
             elif platform == 'remote_board':
                 result = await self._apply_remote_board(user_data, resume_path, cover_letter, result)
             else:
                 result = await self._apply_generic(user_data, resume_path, cover_letter, result)
                 
         except PlaywrightTimeout as e:
-            logger.error(f"Timeout during application: {str(e)}")
+            self.log(f"Timeout during application: {str(e)}")
             result["error"] = f"Page timeout: {str(e)}"
             result["status"] = "timeout"
         except Exception as e:
-            logger.error(f"Error during application: {str(e)}")
+            self.log(f"Error during application: {str(e)}")
             result["error"] = str(e)
             result["status"] = "error"
             
+        result["debug_logs"] = self.debug_logs
         return result
         
-    async def _fill_common_fields(self, user_data: Dict):
-        """Fill common form fields found on most job application forms"""
-        field_mappings = [
-            # Name fields
-            (['[name="name"]', '[name="fullName"]', '[name="full_name"]', '#name', '#fullName', 
-              'input[placeholder*="name" i]', 'input[aria-label*="name" i]'], 
-             user_data.get('full_name', '')),
+    async def _wait_for_page_load(self):
+        """Wait for page to be fully loaded and interactive"""
+        try:
+            # Wait for network to be idle
+            await self.page.wait_for_load_state('networkidle', timeout=10000)
+        except:
+            pass
             
-            # First name
-            (['[name="firstName"]', '[name="first_name"]', '#firstName', '#first_name',
-              'input[placeholder*="first name" i]', 'input[aria-label*="first name" i]'], 
-             user_data.get('first_name', '')),
-            
-            # Last name
-            (['[name="lastName"]', '[name="last_name"]', '#lastName', '#last_name',
-              'input[placeholder*="last name" i]', 'input[aria-label*="last name" i]'], 
-             user_data.get('last_name', '')),
-            
-            # Email
-            (['[name="email"]', '[type="email"]', '#email', 
-              'input[placeholder*="email" i]', 'input[aria-label*="email" i]'], 
-             user_data.get('email', '')),
-            
-            # Phone
-            (['[name="phone"]', '[name="phoneNumber"]', '[name="phone_number"]', '[type="tel"]',
-              '#phone', '#phoneNumber', 'input[placeholder*="phone" i]', 'input[aria-label*="phone" i]'], 
-             user_data.get('phone', '')),
-            
-            # LinkedIn URL
-            (['[name="linkedin"]', '[name="linkedinUrl"]', 'input[placeholder*="linkedin" i]'], 
-             user_data.get('linkedin_url', '')),
-            
-            # Current company
-            (['[name="company"]', '[name="currentCompany"]', 'input[placeholder*="company" i]'], 
-             user_data.get('current_company', '')),
-            
-            # Current title
-            (['[name="title"]', '[name="currentTitle"]', '[name="job_title"]', 
-              'input[placeholder*="title" i]', 'input[placeholder*="position" i]'], 
-             user_data.get('job_title', '')),
-            
-            # Location
-            (['[name="location"]', '[name="city"]', 'input[placeholder*="location" i]', 
-              'input[placeholder*="city" i]'], 
-             user_data.get('location', '')),
-        ]
+        # Additional wait for dynamic content
+        await asyncio.sleep(1)
         
+    async def _fill_common_fields(self, user_data: Dict) -> List[str]:
+        """Fill common form fields found on most job application forms"""
         filled_fields = []
         
-        for selectors, value in field_mappings:
-            if not value:
-                continue
+        field_configs = [
+            # Full name / Name
+            {
+                "selectors": [
+                    'input[name="name"]', 'input[name="fullName"]', 'input[name="full_name"]',
+                    '#name', '#fullName', 'input[placeholder*="full name" i]',
+                    'input[aria-label*="full name" i]', 'input[data-qa="name"]'
+                ],
+                "value": user_data.get('full_name', '')
+            },
+            # First name
+            {
+                "selectors": [
+                    'input[name="firstName"]', 'input[name="first_name"]', 'input[name="first-name"]',
+                    '#firstName', '#first_name', 'input[placeholder*="first name" i]',
+                    'input[aria-label*="first name" i]', 'input[data-qa="first-name"]'
+                ],
+                "value": user_data.get('first_name', '')
+            },
+            # Last name
+            {
+                "selectors": [
+                    'input[name="lastName"]', 'input[name="last_name"]', 'input[name="last-name"]',
+                    '#lastName', '#last_name', 'input[placeholder*="last name" i]',
+                    'input[aria-label*="last name" i]', 'input[data-qa="last-name"]'
+                ],
+                "value": user_data.get('last_name', '')
+            },
+            # Email
+            {
+                "selectors": [
+                    'input[name="email"]', 'input[type="email"]', '#email',
+                    'input[placeholder*="email" i]', 'input[aria-label*="email" i]',
+                    'input[data-qa="email"]', 'input[autocomplete="email"]'
+                ],
+                "value": user_data.get('email', '')
+            },
+            # Phone
+            {
+                "selectors": [
+                    'input[name="phone"]', 'input[name="phoneNumber"]', 'input[name="phone_number"]',
+                    'input[type="tel"]', '#phone', '#phoneNumber',
+                    'input[placeholder*="phone" i]', 'input[aria-label*="phone" i]',
+                    'input[data-qa="phone"]', 'input[autocomplete="tel"]'
+                ],
+                "value": user_data.get('phone', '')
+            },
+            # LinkedIn URL
+            {
+                "selectors": [
+                    'input[name="linkedin"]', 'input[name="linkedinUrl"]', 'input[name="linkedin_url"]',
+                    '#linkedin', 'input[placeholder*="linkedin" i]', 'input[aria-label*="linkedin" i]'
+                ],
+                "value": user_data.get('linkedin_url', '')
+            },
+            # Location / City
+            {
+                "selectors": [
+                    'input[name="location"]', 'input[name="city"]', '#location', '#city',
+                    'input[placeholder*="location" i]', 'input[placeholder*="city" i]',
+                    'input[aria-label*="location" i]'
+                ],
+                "value": user_data.get('location', '')
+            },
+            # Current company
+            {
+                "selectors": [
+                    'input[name="company"]', 'input[name="currentCompany"]', 'input[name="current_company"]',
+                    '#company', 'input[placeholder*="company" i]', 'input[aria-label*="company" i]'
+                ],
+                "value": user_data.get('current_company', '')
+            },
+            # Current title / Position
+            {
+                "selectors": [
+                    'input[name="title"]', 'input[name="currentTitle"]', 'input[name="job_title"]',
+                    '#title', 'input[placeholder*="title" i]', 'input[placeholder*="position" i]',
+                    'input[aria-label*="title" i]'
+                ],
+                "value": user_data.get('job_title', '')
+            },
+        ]
+        
+        for config in field_configs:
+            if await self.wait_and_fill(config["selectors"], config["value"], timeout=2000):
+                filled_fields.append(config["selectors"][0])
                 
-            for selector in selectors:
-                try:
-                    element = self.page.locator(selector).first
-                    if await element.count() > 0 and await element.is_visible():
-                        await element.fill(str(value))
-                        filled_fields.append(selector)
-                        logger.info(f"Filled field {selector} with value")
-                        break
-                except Exception as e:
-                    continue
-                    
         return filled_fields
         
     async def _upload_resume(self, resume_path: str) -> bool:
         """Try to upload resume using various selectors"""
         if not resume_path or not os.path.exists(resume_path):
+            self.log(f"Resume path invalid or doesn't exist: {resume_path}")
             return False
             
         upload_selectors = [
-            'input[type="file"]',
-            'input[name="resume"]',
-            'input[name="cv"]',
-            'input[accept=".pdf,.doc,.docx"]',
-            '[data-testid="resume-upload"]',
-            '.resume-upload input',
-            '#resume-upload',
+            'input[type="file"][accept*=".pdf"]',
+            'input[type="file"][accept*=".doc"]',
+            'input[type="file"][name*="resume" i]',
+            'input[type="file"][name*="cv" i]',
+            'input[type="file"][id*="resume" i]',
+            'input[type="file"][id*="cv" i]',
+            'input[type="file"][data-qa*="resume" i]',
+            'input[type="file"]',  # Generic fallback
         ]
         
         for selector in upload_selectors:
@@ -266,12 +375,14 @@ class JobApplicationBot:
                 file_input = self.page.locator(selector).first
                 if await file_input.count() > 0:
                     await file_input.set_input_files(resume_path)
-                    logger.info(f"Uploaded resume using selector: {selector}")
+                    self.log(f"Uploaded resume using selector: {selector}")
                     await asyncio.sleep(2)  # Wait for upload
                     return True
             except Exception as e:
+                self.log(f"Resume upload failed with {selector}: {str(e)}")
                 continue
                 
+        self.log("No file upload field found")
         return False
         
     async def _fill_cover_letter(self, cover_letter: str) -> bool:
@@ -280,14 +391,17 @@ class JobApplicationBot:
             return False
             
         cover_letter_selectors = [
-            'textarea[name="coverLetter"]',
-            'textarea[name="cover_letter"]',
-            '#coverLetter',
-            '#cover_letter',
+            'textarea[name*="cover" i]',
+            'textarea[name*="letter" i]',
+            'textarea[id*="cover" i]',
+            '#coverLetter', '#cover_letter', '#cover-letter',
             'textarea[placeholder*="cover letter" i]',
             'textarea[aria-label*="cover letter" i]',
+            'textarea[data-qa*="cover" i]',
             '.cover-letter textarea',
             'textarea[name="message"]',
+            'textarea[name="comments"]',
+            'div[contenteditable="true"][aria-label*="cover" i]',
         ]
         
         for selector in cover_letter_selectors:
@@ -295,275 +409,304 @@ class JobApplicationBot:
                 element = self.page.locator(selector).first
                 if await element.count() > 0 and await element.is_visible():
                     await element.fill(cover_letter)
-                    logger.info(f"Filled cover letter using selector: {selector}")
+                    self.log(f"Filled cover letter using selector: {selector}")
                     return True
-            except Exception as e:
+            except Exception:
                 continue
                 
+        self.log("No cover letter field found")
         return False
         
-    async def _click_submit(self) -> bool:
-        """Try to find and click the submit button"""
+    async def _detect_success(self) -> Tuple[bool, str]:
+        """Detect if submission was successful by looking for confirmation indicators"""
+        success_patterns = [
+            ('text="Thank you"', 'thank_you'),
+            ('text="Application submitted"', 'submitted'),
+            ('text="Successfully submitted"', 'success'),
+            ('text="received your application"', 'received'),
+            ('text="application has been received"', 'received'),
+            ('text="You have applied"', 'applied'),
+            ('text="Application complete"', 'complete'),
+            ('.confirmation', 'confirmation_class'),
+            ('.success-message', 'success_class'),
+            ('[data-qa="confirmation"]', 'confirmation_qa'),
+            ('h1:has-text("Thank")', 'thank_heading'),
+            ('h2:has-text("Thank")', 'thank_heading'),
+        ]
+        
+        for selector, indicator in success_patterns:
+            try:
+                if await self.page.locator(selector).count() > 0:
+                    self.log(f"Success detected via: {indicator}")
+                    return True, indicator
+            except:
+                continue
+                
+        return False, "none"
+        
+    async def _click_submit_button(self) -> bool:
+        """Try to find and click the submit button with platform-aware selectors"""
         submit_selectors = [
+            # Specific submit buttons
             'button[type="submit"]',
             'input[type="submit"]',
+            
+            # Text-based buttons
+            'button:has-text("Submit Application")',
             'button:has-text("Submit")',
+            'button:has-text("Apply Now")',
             'button:has-text("Apply")',
             'button:has-text("Send Application")',
-            'button:has-text("Submit Application")',
+            'button:has-text("Complete Application")',
+            'button:has-text("Finish")',
+            
+            # Data attribute based
+            '[data-qa="submit-application"]',
             '[data-testid="submit-button"]',
+            '[data-testid="apply-button"]',
+            '[aria-label="Submit application"]',
+            '[aria-label="Submit"]',
+            
+            # Class-based
             '.submit-btn',
+            '.apply-btn',
+            '.btn-submit',
+            '.button--submit',
             '#submit-application',
+            '#submit-btn',
+            
+            # Link-based apply buttons
+            'a:has-text("Submit Application")',
+            'a:has-text("Apply")',
         ]
         
         for selector in submit_selectors:
             try:
                 button = self.page.locator(selector).first
-                if await button.count() > 0 and await button.is_visible():
-                    await button.click()
-                    logger.info(f"Clicked submit button: {selector}")
-                    await asyncio.sleep(3)  # Wait for submission
-                    return True
+                if await button.count() > 0:
+                    is_visible = await button.is_visible()
+                    is_enabled = await button.is_enabled()
+                    
+                    if is_visible and is_enabled:
+                        await button.scroll_into_view_if_needed()
+                        await asyncio.sleep(0.5)
+                        await button.click(force=True)
+                        self.log(f"Clicked submit button: {selector}")
+                        await asyncio.sleep(3)  # Wait for submission
+                        return True
             except Exception as e:
+                self.log(f"Submit attempt failed with {selector}: {str(e)}")
                 continue
                 
+        self.log("No submit button found")
         return False
-        
-    async def _apply_lever(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Apply to jobs on Lever ATS"""
+
+    # ==================== PLATFORM-SPECIFIC HANDLERS ====================
+
+    async def _apply_greenhouse(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on Greenhouse ATS - specific handling"""
         try:
-            # Lever forms are usually straightforward
             result["status"] = "filling_form"
+            self.log("Starting Greenhouse application")
             
-            # Fill common fields
-            filled = await self._fill_common_fields(user_data)
-            result["form_filled"] = len(filled) > 0
+            # Greenhouse-specific selectors for fields
+            gh_field_mappings = [
+                # First name
+                (['#first_name', 'input[name="job_application[first_name]"]', 
+                  'input[autocomplete="given-name"]'], user_data.get('first_name', '')),
+                # Last name
+                (['#last_name', 'input[name="job_application[last_name]"]',
+                  'input[autocomplete="family-name"]'], user_data.get('last_name', '')),
+                # Email
+                (['#email', 'input[name="job_application[email]"]', 
+                  'input[type="email"]'], user_data.get('email', '')),
+                # Phone
+                (['#phone', 'input[name="job_application[phone]"]',
+                  'input[type="tel"]'], user_data.get('phone', '')),
+                # LinkedIn
+                (['input[name*="linkedin" i]', 'input[placeholder*="LinkedIn" i]'], 
+                 user_data.get('linkedin_url', '')),
+                # Location
+                (['input[name*="location" i]', '#location'], user_data.get('location', '')),
+            ]
             
-            # Upload resume
+            filled_count = 0
+            for selectors, value in gh_field_mappings:
+                if value and await self.wait_and_fill(selectors, value, timeout=2000):
+                    filled_count += 1
+                    
+            result["form_filled"] = filled_count > 0
+            self.log(f"Filled {filled_count} Greenhouse fields")
+            
+            # Upload resume - Greenhouse uses data-qa attributes
             if resume_path:
-                await self._upload_resume(resume_path)
+                gh_resume_selectors = [
+                    'input[type="file"][data-source="attach"]',
+                    'input[type="file"][id="resume_upload"]',
+                    'input[type="file"][name="job_application[resume]"]',
+                    'input[type="file"]'
+                ]
                 
-            # Fill cover letter
+                for selector in gh_resume_selectors:
+                    try:
+                        file_input = self.page.locator(selector).first
+                        if await file_input.count() > 0:
+                            await file_input.set_input_files(resume_path)
+                            self.log(f"Greenhouse resume uploaded via: {selector}")
+                            await asyncio.sleep(2)
+                            break
+                    except:
+                        continue
+                        
+            # Fill cover letter if there's a field
             if cover_letter:
                 await self._fill_cover_letter(cover_letter)
                 
             # Take screenshot before submit
-            form_screenshot = await self.take_screenshot("lever_form_filled")
-            result["screenshots"].append(form_screenshot)
-            
-            # Click submit
-            submitted = await self._click_submit()
-            
-            if submitted:
-                await asyncio.sleep(2)
-                confirmation_screenshot = await self.take_screenshot("lever_submitted")
-                result["screenshots"].append(confirmation_screenshot)
-                result["success"] = True
-                result["status"] = "submitted"
-                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
-            else:
-                result["status"] = "submit_button_not_found"
-                
-        except Exception as e:
-            result["error"] = str(e)
-            result["status"] = "error"
-            
-        return result
-        
-    async def _apply_greenhouse(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Apply to jobs on Greenhouse ATS"""
-        try:
-            result["status"] = "filling_form"
-            
-            # Greenhouse forms often have specific field IDs
-            filled = await self._fill_common_fields(user_data)
-            result["form_filled"] = len(filled) > 0
-            
-            # Upload resume
-            if resume_path:
-                await self._upload_resume(resume_path)
-                
-            # Fill cover letter
-            if cover_letter:
-                await self._fill_cover_letter(cover_letter)
-                
-            # Take screenshot
             form_screenshot = await self.take_screenshot("greenhouse_form_filled")
             result["screenshots"].append(form_screenshot)
             
-            # Submit
-            submitted = await self._click_submit()
-            
-            if submitted:
-                await asyncio.sleep(2)
-                confirmation_screenshot = await self.take_screenshot("greenhouse_submitted")
-                result["screenshots"].append(confirmation_screenshot)
-                result["success"] = True
-                result["status"] = "submitted"
-                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
-            else:
-                result["status"] = "submit_button_not_found"
-                
-        except Exception as e:
-            result["error"] = str(e)
-            result["status"] = "error"
-            
-        return result
-        
-    async def _apply_linkedin(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Apply to jobs on LinkedIn - Note: Requires login"""
-        result["status"] = "requires_login"
-        result["error"] = "LinkedIn requires authentication. Please use LinkedIn Easy Apply directly or connect your LinkedIn account."
-        
-        # Take screenshot showing login required
-        screenshot = await self.take_screenshot("linkedin_login_required")
-        result["screenshots"].append(screenshot)
-        
-        return result
-        
-    async def _apply_indeed(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Apply to jobs on Indeed - Note: Often requires login"""
-        try:
-            result["status"] = "checking_page"
-            
-            # Check if login is required
-            login_required = await self.page.locator('text="Sign in"').count() > 0
-            
-            if login_required:
-                result["status"] = "requires_login"
-                result["error"] = "Indeed requires authentication for this application."
-                screenshot = await self.take_screenshot("indeed_login_required")
-                result["screenshots"].append(screenshot)
-                return result
-                
-            # Try to fill form if no login required
-            result["status"] = "filling_form"
-            filled = await self._fill_common_fields(user_data)
-            result["form_filled"] = len(filled) > 0
-            
-            if resume_path:
-                await self._upload_resume(resume_path)
-                
-            form_screenshot = await self.take_screenshot("indeed_form_filled")
-            result["screenshots"].append(form_screenshot)
-            
-            # Submit
-            submitted = await self._click_submit()
-            
-            if submitted:
-                await asyncio.sleep(2)
-                confirmation_screenshot = await self.take_screenshot("indeed_submitted")
-                result["screenshots"].append(confirmation_screenshot)
-                result["success"] = True
-                result["status"] = "submitted"
-                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
-            else:
-                result["status"] = "submit_button_not_found"
-                
-        except Exception as e:
-            result["error"] = str(e)
-            result["status"] = "error"
-            
-        return result
-        
-    async def _apply_remote_board(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Apply to jobs on remote job boards (RemoteOK, Remotive, etc.)"""
-        try:
-            result["status"] = "redirect_to_company"
-            
-            # Most remote job boards redirect to company's application page
-            # Take a screenshot of the job listing
-            screenshot = await self.take_screenshot("remote_board_listing")
-            result["screenshots"].append(screenshot)
-            
-            # Look for "Apply" button that redirects
-            apply_buttons = [
-                'a:has-text("Apply")',
-                'button:has-text("Apply")',
-                '.apply-button',
-                '[data-testid="apply-button"]',
+            # Greenhouse submit button selectors
+            gh_submit_selectors = [
+                'button[type="submit"]',
+                'input[type="submit"][value="Submit Application"]',
+                'input[type="submit"]',
+                '#submit_app',
+                'button:has-text("Submit Application")',
+                'button:has-text("Submit")',
             ]
             
-            for selector in apply_buttons:
-                try:
-                    button = self.page.locator(selector).first
-                    if await button.count() > 0:
-                        # Get the href if it's a link
-                        href = await button.get_attribute('href')
-                        if href:
-                            result["redirect_url"] = href
-                            await button.click()
-                            await asyncio.sleep(3)
-                            
-                            # Now we're on the actual application page
-                            redirect_screenshot = await self.take_screenshot("redirected_application")
-                            result["screenshots"].append(redirect_screenshot)
-                            
-                            # Try generic application
-                            return await self._apply_generic(user_data, resume_path, cover_letter, result)
-                except Exception:
-                    continue
-                    
-            result["status"] = "manual_apply_required"
-            result["error"] = "Could not find apply button. Manual application may be required."
-            
-        except Exception as e:
-            result["error"] = str(e)
-            result["status"] = "error"
-            
-        return result
-        
-    async def _apply_generic(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
-        """Generic application handler for unknown platforms"""
-        try:
-            result["status"] = "filling_form"
-            
-            # Fill common fields
-            filled = await self._fill_common_fields(user_data)
-            result["form_filled"] = len(filled) > 0
-            
-            # Upload resume
-            resume_uploaded = False
-            if resume_path:
-                resume_uploaded = await self._upload_resume(resume_path)
-                
-            # Fill cover letter
-            if cover_letter:
-                await self._fill_cover_letter(cover_letter)
-                
-            # Take screenshot of filled form
-            form_screenshot = await self.take_screenshot("generic_form_filled")
-            result["screenshots"].append(form_screenshot)
-            
-            # Check for required fields that might be empty
-            # (This is a simplified check)
-            
-            # Try to submit
-            submitted = await self._click_submit()
+            submitted = await self.wait_and_click(gh_submit_selectors, timeout=5000)
             
             if submitted:
                 await asyncio.sleep(3)
                 
-                # Check for success indicators
-                success_indicators = [
-                    'text="Thank you"',
-                    'text="Application submitted"',
-                    'text="Successfully applied"',
-                    'text="received your application"',
-                    '.success-message',
-                    '.confirmation',
+                # Check for success
+                is_success, indicator = await self._detect_success()
+                
+                confirmation_screenshot = await self.take_screenshot("greenhouse_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                if is_success:
+                    result["success"] = True
+                    result["status"] = "submitted"
+                    result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+                    self.log(f"Greenhouse submission successful: {indicator}")
+                else:
+                    # Check for errors
+                    error_text = await self._get_error_messages()
+                    if error_text:
+                        result["status"] = "validation_error"
+                        result["error"] = error_text
+                    else:
+                        result["success"] = True
+                        result["status"] = "submitted_unconfirmed"
+                        result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"Greenhouse error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_lever(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on Lever ATS - specific handling"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting Lever application")
+            
+            # Wait for Lever's dynamic form to load
+            await asyncio.sleep(2)
+            
+            # Lever-specific field selectors
+            lever_fields = [
+                # Full name
+                (['input[name="name"]', 'input[placeholder*="Full name" i]', 
+                  '#name'], user_data.get('full_name', '')),
+                # Email
+                (['input[name="email"]', 'input[type="email"]', '#email'], 
+                 user_data.get('email', '')),
+                # Phone
+                (['input[name="phone"]', 'input[type="tel"]', '#phone'], 
+                 user_data.get('phone', '')),
+                # Current company
+                (['input[name="org"]', 'input[placeholder*="Current company" i]'], 
+                 user_data.get('current_company', '')),
+                # LinkedIn
+                (['input[name*="linkedin" i]', 'input[placeholder*="LinkedIn" i]'], 
+                 user_data.get('linkedin_url', '')),
+                # Location
+                (['input[name="location"]', '#location'], user_data.get('location', '')),
+            ]
+            
+            filled_count = 0
+            for selectors, value in lever_fields:
+                if value and await self.wait_and_fill(selectors, value, timeout=2000):
+                    filled_count += 1
+                    
+            result["form_filled"] = filled_count > 0
+            self.log(f"Filled {filled_count} Lever fields")
+            
+            # Lever resume upload
+            if resume_path:
+                lever_upload_selectors = [
+                    'input[type="file"][name="resume"]',
+                    'input.file-input',
+                    'input[type="file"]'
                 ]
                 
-                is_success = False
-                for indicator in success_indicators:
+                for selector in lever_upload_selectors:
                     try:
-                        if await self.page.locator(indicator).count() > 0:
-                            is_success = True
+                        file_input = self.page.locator(selector).first
+                        if await file_input.count() > 0:
+                            await file_input.set_input_files(resume_path)
+                            self.log(f"Lever resume uploaded via: {selector}")
+                            await asyncio.sleep(2)
                             break
                     except:
                         continue
+                        
+            # Cover letter for Lever
+            if cover_letter:
+                lever_cl_selectors = [
+                    'textarea[name="comments"]',
+                    'textarea[placeholder*="Add a cover letter" i]',
+                    'textarea'
+                ]
+                for selector in lever_cl_selectors:
+                    try:
+                        element = self.page.locator(selector).first
+                        if await element.count() > 0 and await element.is_visible():
+                            await element.fill(cover_letter)
+                            self.log("Lever cover letter filled")
+                            break
+                    except:
+                        continue
+                        
+            # Take screenshot
+            form_screenshot = await self.take_screenshot("lever_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            # Lever submit buttons
+            lever_submit_selectors = [
+                'button.postings-btn',
+                'button[type="submit"]',
+                'button:has-text("Submit application")',
+                'button:has-text("Submit")',
+                '.btn-send',
+            ]
+            
+            submitted = await self.wait_and_click(lever_submit_selectors, timeout=5000)
+            
+            if submitted:
+                await asyncio.sleep(3)
                 
-                confirmation_screenshot = await self.take_screenshot("generic_submitted")
+                is_success, indicator = await self._detect_success()
+                
+                confirmation_screenshot = await self.take_screenshot("lever_submitted")
                 result["screenshots"].append(confirmation_screenshot)
                 
                 if is_success:
@@ -571,17 +714,459 @@ class JobApplicationBot:
                     result["status"] = "submitted"
                     result["submitted_at"] = datetime.now(timezone.utc).isoformat()
                 else:
-                    result["status"] = "submitted_unconfirmed"
-                    result["success"] = True  # Assume success if we clicked submit
-                    result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+                    error_text = await self._get_error_messages()
+                    if error_text:
+                        result["status"] = "validation_error"
+                        result["error"] = error_text
+                    else:
+                        result["success"] = True
+                        result["status"] = "submitted_unconfirmed"
+                        result["submitted_at"] = datetime.now(timezone.utc).isoformat()
             else:
                 result["status"] = "submit_button_not_found"
                 
         except Exception as e:
+            self.log(f"Lever error: {str(e)}")
             result["error"] = str(e)
             result["status"] = "error"
             
         return result
+
+    async def _apply_workday(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on Workday - multi-step process"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting Workday application")
+            
+            # Workday has complex multi-step forms
+            # First, try to click "Apply" button if on job listing page
+            apply_buttons = [
+                'button[data-automation-id="jobPostingApplyButton"]',
+                'button:has-text("Apply")',
+                'a:has-text("Apply")',
+            ]
+            await self.wait_and_click(apply_buttons, timeout=5000)
+            await asyncio.sleep(3)
+            
+            # Workday might ask for login - check and note
+            login_check = self.page.locator('input[type="password"], [data-automation-id="signIn"]')
+            if await login_check.count() > 0:
+                self.log("Workday requires authentication")
+                result["status"] = "requires_login"
+                result["error"] = "Workday requires account creation/login"
+                screenshot = await self.take_screenshot("workday_login_required")
+                result["screenshots"].append(screenshot)
+                return result
+                
+            # Try manual apply if available
+            manual_apply = ['button:has-text("Apply Manually")', 'a:has-text("Manual Application")']
+            await self.wait_and_click(manual_apply, timeout=3000)
+            await asyncio.sleep(2)
+            
+            # Workday field selectors
+            workday_fields = [
+                (['input[data-automation-id="firstName"]', '#firstName'], user_data.get('first_name', '')),
+                (['input[data-automation-id="lastName"]', '#lastName'], user_data.get('last_name', '')),
+                (['input[data-automation-id="email"]', '#email'], user_data.get('email', '')),
+                (['input[data-automation-id="phone"]', '#phone'], user_data.get('phone', '')),
+            ]
+            
+            filled_count = 0
+            for selectors, value in workday_fields:
+                if value and await self.wait_and_fill(selectors, value, timeout=2000):
+                    filled_count += 1
+                    
+            result["form_filled"] = filled_count > 0
+            
+            # Resume upload for Workday
+            if resume_path:
+                workday_upload = [
+                    'input[data-automation-id="resumeUpload"]',
+                    'input[type="file"]'
+                ]
+                for selector in workday_upload:
+                    try:
+                        file_input = self.page.locator(selector).first
+                        if await file_input.count() > 0:
+                            await file_input.set_input_files(resume_path)
+                            self.log("Workday resume uploaded")
+                            await asyncio.sleep(2)
+                            break
+                    except:
+                        continue
+                        
+            form_screenshot = await self.take_screenshot("workday_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            # Workday submit - often "Next" then "Submit"
+            next_buttons = ['button:has-text("Next")', 'button:has-text("Continue")']
+            if await self.wait_and_click(next_buttons, timeout=3000):
+                await asyncio.sleep(2)
+                
+            submit_buttons = [
+                'button[data-automation-id="submitButton"]',
+                'button:has-text("Submit")',
+                'button:has-text("Submit Application")',
+            ]
+            
+            submitted = await self.wait_and_click(submit_buttons, timeout=5000)
+            
+            if submitted:
+                await asyncio.sleep(3)
+                is_success, _ = await self._detect_success()
+                confirmation_screenshot = await self.take_screenshot("workday_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                result["success"] = is_success
+                result["status"] = "submitted" if is_success else "submitted_unconfirmed"
+                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"Workday error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_smartrecruiters(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on SmartRecruiters"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting SmartRecruiters application")
+            
+            # Click Apply if on listing page
+            await self.wait_and_click(['button.apply-btn', 'button:has-text("Apply")'], timeout=5000)
+            await asyncio.sleep(2)
+            
+            # SmartRecruiters fields
+            sr_fields = [
+                (['input[name="firstName"]', '#firstName'], user_data.get('first_name', '')),
+                (['input[name="lastName"]', '#lastName'], user_data.get('last_name', '')),
+                (['input[name="email"]', '#email'], user_data.get('email', '')),
+                (['input[name="phone"]', '#phone'], user_data.get('phone', '')),
+            ]
+            
+            filled_count = 0
+            for selectors, value in sr_fields:
+                if value and await self.wait_and_fill(selectors, value, timeout=2000):
+                    filled_count += 1
+                    
+            result["form_filled"] = filled_count > 0
+            
+            if resume_path:
+                await self._upload_resume(resume_path)
+                
+            if cover_letter:
+                await self._fill_cover_letter(cover_letter)
+                
+            form_screenshot = await self.take_screenshot("smartrecruiters_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            submitted = await self._click_submit_button()
+            
+            if submitted:
+                await asyncio.sleep(3)
+                is_success, _ = await self._detect_success()
+                confirmation_screenshot = await self.take_screenshot("smartrecruiters_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                result["success"] = is_success or True  # Assume success if clicked
+                result["status"] = "submitted" if is_success else "submitted_unconfirmed"
+                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"SmartRecruiters error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_ashby(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on Ashby ATS"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting Ashby application")
+            
+            # Ashby uses modern React forms
+            await asyncio.sleep(2)
+            
+            # Fill fields
+            filled = await self._fill_common_fields(user_data)
+            result["form_filled"] = len(filled) > 0
+            
+            if resume_path:
+                await self._upload_resume(resume_path)
+                
+            if cover_letter:
+                await self._fill_cover_letter(cover_letter)
+                
+            form_screenshot = await self.take_screenshot("ashby_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            # Ashby submit
+            ashby_submit = [
+                'button[type="submit"]',
+                'button:has-text("Submit")',
+                'button:has-text("Apply")',
+            ]
+            
+            submitted = await self.wait_and_click(ashby_submit, timeout=5000)
+            
+            if submitted:
+                await asyncio.sleep(3)
+                is_success, _ = await self._detect_success()
+                confirmation_screenshot = await self.take_screenshot("ashby_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                result["success"] = is_success or True
+                result["status"] = "submitted" if is_success else "submitted_unconfirmed"
+                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"Ashby error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_breezy(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on BreezyHR"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting BreezyHR application")
+            
+            # Fill common fields
+            filled = await self._fill_common_fields(user_data)
+            result["form_filled"] = len(filled) > 0
+            
+            if resume_path:
+                await self._upload_resume(resume_path)
+                
+            if cover_letter:
+                await self._fill_cover_letter(cover_letter)
+                
+            form_screenshot = await self.take_screenshot("breezy_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            submitted = await self._click_submit_button()
+            
+            if submitted:
+                await asyncio.sleep(3)
+                is_success, _ = await self._detect_success()
+                confirmation_screenshot = await self.take_screenshot("breezy_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                result["success"] = is_success or True
+                result["status"] = "submitted" if is_success else "submitted_unconfirmed"
+                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"BreezyHR error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_job_board(self, platform: str, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Handle major job boards that require authentication"""
+        result["status"] = "requires_login"
+        result["error"] = f"{platform.title()} requires authentication. Please apply directly through the {platform.title()} website or use the direct apply link."
+        
+        screenshot = await self.take_screenshot(f"{platform}_login_required")
+        result["screenshots"].append(screenshot)
+        
+        # Try to find direct apply link
+        direct_links = [
+            'a:has-text("Apply on company site")',
+            'a:has-text("Apply directly")',
+            'a[href*="apply"]',
+        ]
+        
+        for selector in direct_links:
+            try:
+                link = self.page.locator(selector).first
+                if await link.count() > 0:
+                    href = await link.get_attribute('href')
+                    if href:
+                        result["redirect_url"] = href
+                        self.log(f"Found direct apply link: {href}")
+                        break
+            except:
+                continue
+                
+        return result
+
+    async def _apply_remote_board(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on remote job boards (RemoteOK, Remotive, etc.)"""
+        try:
+            result["status"] = "redirect_to_company"
+            self.log("Processing remote job board listing")
+            
+            screenshot = await self.take_screenshot("remote_board_listing")
+            result["screenshots"].append(screenshot)
+            
+            # These boards usually redirect to company sites
+            apply_buttons = [
+                'a.apply',
+                'a:has-text("Apply")',
+                'button:has-text("Apply")',
+                '.apply-button',
+                'a[href*="apply"]',
+            ]
+            
+            for selector in apply_buttons:
+                try:
+                    button = self.page.locator(selector).first
+                    if await button.count() > 0:
+                        href = await button.get_attribute('href')
+                        if href:
+                            result["redirect_url"] = href
+                            self.log(f"Found apply link: {href}")
+                            
+                            # Navigate to the actual application
+                            await self.page.goto(href, wait_until='domcontentloaded', timeout=30000)
+                            await asyncio.sleep(3)
+                            
+                            # Now detect the platform and apply
+                            new_platform = self.detect_platform(href)
+                            self.log(f"Redirected to platform: {new_platform}")
+                            
+                            if new_platform == 'greenhouse':
+                                return await self._apply_greenhouse(user_data, resume_path, cover_letter, result)
+                            elif new_platform == 'lever':
+                                return await self._apply_lever(user_data, resume_path, cover_letter, result)
+                            else:
+                                return await self._apply_generic(user_data, resume_path, cover_letter, result)
+                except Exception as e:
+                    self.log(f"Apply button click failed: {str(e)}")
+                    continue
+                    
+            result["status"] = "manual_apply_required"
+            result["error"] = "Could not find apply button. Manual application may be required."
+            
+        except Exception as e:
+            self.log(f"Remote board error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _apply_generic(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Generic application handler for unknown platforms"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting generic application flow")
+            
+            # First look for an "Apply" button if we're on a job listing page
+            apply_entry_buttons = [
+                'button:has-text("Apply Now")',
+                'button:has-text("Apply")',
+                'a:has-text("Apply Now")',
+                'a:has-text("Apply")',
+                '.apply-btn',
+                '#apply-button',
+            ]
+            
+            clicked_apply = await self.wait_and_click(apply_entry_buttons, timeout=3000)
+            if clicked_apply:
+                await asyncio.sleep(2)
+                self.log("Clicked apply entry button")
+                
+            # Fill all possible form fields
+            filled = await self._fill_common_fields(user_data)
+            result["form_filled"] = len(filled) > 0
+            self.log(f"Filled {len(filled)} generic fields")
+            
+            # Upload resume
+            if resume_path:
+                resume_uploaded = await self._upload_resume(resume_path)
+                self.log(f"Resume upload: {'success' if resume_uploaded else 'no field found'}")
+                
+            # Fill cover letter
+            if cover_letter:
+                cl_filled = await self._fill_cover_letter(cover_letter)
+                self.log(f"Cover letter: {'filled' if cl_filled else 'no field found'}")
+                
+            # Take screenshot of filled form
+            form_screenshot = await self.take_screenshot("generic_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            # Try to submit
+            submitted = await self._click_submit_button()
+            
+            if submitted:
+                await asyncio.sleep(3)
+                
+                # Check for success indicators
+                is_success, indicator = await self._detect_success()
+                
+                confirmation_screenshot = await self.take_screenshot("generic_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                # Check for error messages
+                error_text = await self._get_error_messages()
+                
+                if is_success:
+                    result["success"] = True
+                    result["status"] = "submitted"
+                    result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+                    self.log(f"Generic submission successful via: {indicator}")
+                elif error_text:
+                    result["status"] = "validation_error"
+                    result["error"] = error_text
+                    self.log(f"Form validation error: {error_text}")
+                else:
+                    # Assume success if we clicked submit and no errors
+                    result["success"] = True
+                    result["status"] = "submitted_unconfirmed"
+                    result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+                    self.log("Submit clicked, assuming success (unconfirmed)")
+            else:
+                result["status"] = "submit_button_not_found"
+                self.log("Could not find submit button")
+                
+        except Exception as e:
+            self.log(f"Generic application error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
+    async def _get_error_messages(self) -> Optional[str]:
+        """Try to find and return any error messages on the page"""
+        error_selectors = [
+            '.error-message',
+            '.error',
+            '.validation-error',
+            '[role="alert"]',
+            '.form-error',
+            '.field-error',
+            '.invalid-feedback',
+            'span.error',
+            'div.error',
+        ]
+        
+        errors = []
+        for selector in error_selectors:
+            try:
+                elements = self.page.locator(selector)
+                count = await elements.count()
+                for i in range(min(count, 3)):  # Limit to 3 errors
+                    text = await elements.nth(i).text_content()
+                    if text and text.strip():
+                        errors.append(text.strip())
+            except:
+                continue
+                
+        return "; ".join(errors) if errors else None
 
 
 # Singleton instance
