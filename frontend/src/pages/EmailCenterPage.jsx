@@ -435,11 +435,15 @@ export function EmailCenterPage() {
             </div>
           </motion.div>
 
-          {/* Quick Stats with Animation */}
+          {/* Quick Stats with Animation - Now Clickable */}
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="cursor-pointer">
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }} 
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setActiveTab('accounts')}
+              >
+                <Card className="cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-blue-100">
@@ -455,8 +459,12 @@ export function EmailCenterPage() {
               </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="cursor-pointer">
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }} 
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setActiveTab('history')}
+              >
+                <Card className="cursor-pointer hover:border-green-300 hover:shadow-md transition-all">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-green-100">
@@ -472,8 +480,12 @@ export function EmailCenterPage() {
               </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="cursor-pointer">
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }} 
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setActiveTab('inbox')}
+              >
+                <Card className="cursor-pointer hover:border-orange-300 hover:shadow-md transition-all">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-orange-100">
@@ -489,8 +501,12 @@ export function EmailCenterPage() {
               </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="cursor-pointer">
+              <motion.div 
+                whileHover={{ y: -4, scale: 1.02 }} 
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setActiveTab('settings')}
+              >
+                <Card className="cursor-pointer hover:border-violet-300 hover:shadow-md transition-all">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
                       <div className="p-3 rounded-xl bg-violet-100">
