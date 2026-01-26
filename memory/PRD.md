@@ -29,6 +29,7 @@ Build a website where a job seeker can:
 
 ### 3. AI Job Application
 - AI agent applies for jobs using updated resume and cover letter
+- **Browser Automation (Playwright)** - IMPLEMENTED Jan 26
 
 ### 4. Job Sourcing
 - Web scraper for Indeed, Dice, RemoteOK (DONE - replaced paid APIs)
@@ -47,12 +48,11 @@ Build a website where a job seeker can:
 
 ---
 
-## Completed Features (as of January 13, 2026)
+## Completed Features (as of January 26, 2026)
 
 ### Authentication & User Management
 - [x] JWT-based authentication
 - [x] Emergent-managed Google SSO
-- [x] **Email OTP Verification for signup** (Jan 13)
 - [x] Profile management with photo upload
 - [x] Profile completeness meter
 - [ ] LinkedIn SSO (BLOCKED - needs credentials)
@@ -62,21 +62,37 @@ Build a website where a job seeker can:
 - [x] AI-powered resume tailoring with custom prompts
 - [x] Word document generation
 - [x] Resume storage and management
-- [x] **AUTOMATIC Resume Analysis on Upload** (Jan 14)
+- [x] **AUTOMATIC Resume Analysis on Upload**
   - Score (0-100) with letter grade shown immediately
   - Missing info popup (phone, address, LinkedIn, etc.)
   - Enhanced master resume created automatically
   - 3-4 job title versions generated automatically
-  - All happens on upload - NO manual button clicks needed
 
 ### Job Features
-- [x] Web scraper for real-time job listings (Indeed, Dice, RemoteOK)
+- [x] Web scraper for real-time job listings (Remotive, RemoteOK, Arbeitnow, Jobicy, HackerNews)
 - [x] Job recommendations based on user skills
 - [x] 3-Step Apply Wizard (Tailor prompt -> Generate resume -> Preview & Apply)
 - [x] Auto-Apply AI Agent panel with daily scheduler
-- [x] Profile gating (must have tech & resume to see jobs)
 
-### Email Center (NEW - Jan 13, 2026)
+### Auto-Apply Browser Automation (NEW - Jan 26, 2026)
+- [x] **Playwright Integration** for browser automation
+- [x] **Multi-Platform Support**: Greenhouse, Lever, Workday, SmartRecruiters, Ashby, Breezy
+- [x] **Remote Job Board Handling**: Remotive, RemoteOK with redirect to company portals
+- [x] **DOM-Based Link Detection**: Finds external apply links even when hidden
+- [x] **Form Field Filling**: First name, last name, email, phone, LinkedIn, location
+- [x] **Screenshot Capture**: Initial, form_filled, submitted states
+- [x] **Application Status Tracking**: ready_to_apply, applied, submission_failed, validation_error, requires_login
+- [x] **Submission Logs**: Detailed debug logs stored in MongoDB
+
+### Applications Tracking Page
+- [x] Stats cards: Total, Ready, Applied, Pending, Interview, Rejected, Accepted
+- [x] Search and filter by status/date
+- [x] View Resume dialog with tailored content
+- [x] Cover Letter tab
+- [x] Submit button triggers Playwright automation
+- [x] Download resume per application
+
+### Email Center
 - [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
 - [x] View inbox messages
 - [x] AI compose job application emails
@@ -91,35 +107,34 @@ Build a website where a job seeker can:
 
 ---
 
+## Known Limitations
+
+### Browser Automation Limitations
+1. **Platform-Specific Forms**: Some company portals use non-standard field selectors, causing validation errors
+2. **Login Required**: LinkedIn, Indeed, Glassdoor require user authentication
+3. **Multi-Step Forms**: Complex Workday applications may not complete all steps
+4. **CAPTCHA**: Sites with CAPTCHA protection cannot be automated
+
+### Expected Submission Statuses
+- `submitted` - Successfully submitted with confirmation detected
+- `submitted_unconfirmed` - Form submitted but no confirmation detected
+- `validation_error` - Form fields didn't match selectors, validation failed
+- `requires_login` - Platform requires authentication
+- `error` - Technical error during submission
+
+---
+
 ## In Progress / Pending
 
-### P0 - Critical
-- [x] ~~OTP Email Verification~~ **REMOVED Jan 20** - Simplified to simple email/password registration
-- [x] ~~Email Center~~ **COMPLETED Jan 13**
-- [x] ~~Google login button hover bug~~ **VERIFIED FIXED Jan 19**
-- [x] ~~Profile popup raw field names~~ **VERIFIED FIXED Jan 19**
-- [x] ~~Job search not fetching from multiple platforms~~ **FIXED Jan 19**
-- [x] ~~UI Enhancement - Animations & Interactivity~~ **COMPLETED Jan 19**
-- [x] ~~Production Auth Issues~~ **FIXED Jan 20** - Fixed Google auth (session endpoint now returns JWT token), simplified registration, fixed CORS for production
-- [x] ~~Run Auto-Apply not working~~ **FIXED Jan 20** - Fixed variable reference error, now uses internal job scraper successfully
-- [x] ~~Job search returning few/no results~~ **FIXED Jan 22** - Implemented synonym matching in enhanced_job_scraper.py. Now returns 20+ jobs for React/Python/Java searches.
-
 ### P1 - High Priority  
-- [x] ~~Resume auto-generation~~ **VERIFIED WORKING Jan 19**
-- [x] ~~Profile tax_types bug~~ **FIXED Jan 20** - Changed to array for multi-selection, backend now correctly handles List[str]
-- [x] ~~Multiple Resume Management UI~~ **COMPLETED Jan 20** - Added "Set as Primary" button, primary badge, 5-resume limit with UI indicator
-- [x] ~~Resume Download~~ **VERIFIED WORKING Jan 22** - Both DOCX and PDF downloads working correctly
-- [ ] Flaky frontend login during automated testing (recurring issue)
-- [ ] Backend refactoring - break down monolithic server.py
-
-### P1 - Upcoming
 - [ ] Reporting dashboards (company & candidate views)
+- [ ] Backend refactoring - break down monolithic server.py (5500+ lines)
 
 ### P2 - Future
 - [ ] LinkedIn SSO (needs user credentials)
 - [ ] System-generated mailbox (e.g., user@careerquest-mail.com)
 - [ ] Email Center App Password connection fix
-- [ ] "View Original" link to point to specific job URL
+- [ ] Improve field selector coverage for more company portals
 
 ---
 
@@ -130,6 +145,7 @@ Build a website where a job seeker can:
 - Database: MongoDB (motor)
 - Authentication: JWT + Google OAuth
 - Background Jobs: APScheduler
+- Browser Automation: **Playwright**
 - Email: IMAP/SMTP for user email integration
 
 ### Frontend
@@ -141,170 +157,38 @@ Build a website where a job seeker can:
 ### Integrations
 - OpenAI (via emergentintegrations) - Resume tailoring, Email composition
 - Web Scraper (BeautifulSoup) - Job sourcing
-- Resend - Email OTP (MOCKED in demo without valid key)
 - IMAP/SMTP - User email integration
+- **Playwright** - Browser automation for job submission
 
 ### Key Files
 - `/app/backend/server.py` - Main backend (needs refactoring)
-- `/app/backend/utils/job_scraper.py` - Web scraper for jobs
-- `/app/frontend/src/pages/AuthPages.jsx` - Login/Register with OTP
+- `/app/backend/utils/job_application_bot.py` - **NEW** Playwright browser automation
+- `/app/backend/utils/enhanced_job_scraper.py` - Free job API scraper
+- `/app/frontend/src/pages/ApplicationsPage.jsx` - Applications tracking
 - `/app/frontend/src/pages/LiveJobsPage.jsx` - Job listings and auto-apply
-- `/app/frontend/src/pages/EmailCenterPage.jsx` - **NEW** Email Center
 
 ---
 
-## API Endpoints (Email Center)
+## API Endpoints (Browser Automation)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/email-center/accounts | List connected email accounts |
-| POST | /api/email-center/connect/imap | Connect email via IMAP/SMTP |
-| POST | /api/email-center/connect/gmail/init | Get Gmail IMAP setup instructions |
-| POST | /api/email-center/connect/outlook/init | Get Outlook IMAP setup instructions |
-| DELETE | /api/email-center/accounts/{id} | Disconnect email account |
-| PUT | /api/email-center/accounts/{id}/primary | Set as primary account |
-| GET | /api/email-center/inbox | Get inbox messages |
-| POST | /api/email-center/send | Send email |
-| POST | /api/email-center/ai/compose-application | AI compose job application |
-| POST | /api/email-center/ai/draft-reply | AI draft reply to recruiter |
-| GET | /api/email-center/settings | Get email settings |
-| POST | /api/email-center/settings | Update email settings |
-| GET | /api/email-center/history | Get email history |
+| POST | /api/auto-apply/submit/{application_id} | Trigger Playwright submission for single application |
+| POST | /api/auto-apply/submit-batch | Trigger batch submission for multiple applications |
+| GET | /api/auto-apply/submission-logs | Get submission attempt logs |
+| GET | /api/auto-apply/screenshots/{application_id} | Get screenshot paths for application |
 
 ---
 
-## Known Issues & Limitations
-
-1. **OTP Email Service (MOCKED)**: Resend API key not configured. OTPs logged to console.
-2. **LinkedIn SSO (BLOCKED)**: Requires LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET.
-3. **Job Scraping**: Web scrapers can be brittle if site layouts change.
-4. **Flaky Tests**: Frontend login flow unreliable in automated testing.
-5. **Email Integration**: Requires App Password (not regular password) for Gmail/Outlook.
-
----
+## Test Reports
+- `/app/test_reports/iteration_8.json` - Browser automation tests (14/14 passed)
+- `/app/test_reports/iteration_7.json` - Job search tests (14/14 passed)
 
 ## Test Credentials
 - Test User: `test_autoapply@example.com` / `testpass123`
 - Test Resume ID: `resume_8c4696bc3a38`
-
-## Test Reports
-- `/app/test_reports/iteration_4.json` - OTP verification tests
-- `/app/test_reports/iteration_5.json` - Email Center tests (23 tests passed)
-- `/app/test_reports/iteration_6.json` - Auto-Apply & Resume management tests (17 tests passed, 100%)
+- Test Application IDs: `test_app_a011c536` (Remotive->BNSF), `test_app_4d521969` (RemoteOK)
 
 ---
 
-*Last updated: January 22, 2026*
-
----
-
-## Session Fixes (Jan 22, 2026)
-
-### Bug Fixes
-1. **Job Search returning few/no results (P0)** - Implemented improved synonym matching in `enhanced_job_scraper.py`. Added `TECH_SYNONYMS` dictionary that maps technology keywords to related terms (e.g., "react" → ["react", "reactjs", "frontend", "javascript", "typescript"]). Search now returns 20-37 jobs for React/Python/Java queries.
-2. **HTML tags in job descriptions** - Added `stripHtml()` helper function to sanitize job descriptions in LiveJobsPage.jsx and LiveJobs1Page.jsx
-3. **FindWork API 401 error** - Replaced FindWork with HackerNews Jobs (via Algolia API) since FindWork now requires authentication
-
-### New Auto-Apply Features Implemented
-1. **Dynamic AI Context Updates (Step 1)** 
-   - ChatGPT prompts are dynamically updated with job title, description, and required technologies
-   - Keywords are extracted from each job posting for ATS optimization
-   - Context aligns strictly with target role requirements
-
-2. **Resume Update and Validation (Step 2)**
-   - AI cross-checks generated content against role requirements
-   - Tailored resume is validated and saved in Word (.docx) format
-   - Master resume is used as base, tailored versions created per job
-
-3. **Job Application Submission (Step 3)**
-   - Customized resume is attached to each application
-   - **Auto-generated cover letters** - AI creates personalized cover letters for each job
-   - Apply link provided for external job boards
-
-4. **Post-Submission Actions**
-   - Resume copy is saved with each application (`tailored_content` field)
-   - Applications tracked with `resume_version_saved: true` flag
-   - Download endpoint: `GET /api/applications/{id}/resume`
-   - Cover letter endpoint: `GET /api/applications/{id}/cover-letter`
-
-5. **Search and Tracking Rules**
-   - **Source filter** added to auto-apply settings (`source_filters` field)
-   - **Date-wise status tracking**: ready_to_apply, applied, pending, interview, rejected, accepted
-   - New endpoint: `GET /api/applications/tracking` with date/status/source filters
-   - Status update endpoint: `PUT /api/applications/{id}/status`
-
-6. **Scheduling and Execution**
-   - **Daily scheduler runs at 12:00 PM UTC** (default)
-   - **Configurable application limits: 10, 15, 20, 25** jobs per day
-   - Schedule config endpoint: `POST /api/scheduler/configure`
-   - Manual trigger: `POST /api/scheduler/trigger`
-
-### New API Endpoints
-- `GET /api/applications/tracking` - Get applications with date-wise status tracking
-- `PUT /api/applications/{application_id}/status` - Update application status
-- `GET /api/applications/{application_id}/resume` - Download tailored resume for application
-- `GET /api/applications/{application_id}/cover-letter` - Get cover letter for application
-- `POST /api/scheduler/configure` - Configure max applications (10/15/20/25) and schedule time
-
-### Testing Results (iteration_7.json)
-- **Backend Tests**: 14/14 passed (100%)
-- **Job Search Results**:
-  - React: 20 jobs (Free APIs), 10 jobs (Premium APIs)
-  - Python: 37 jobs (Free APIs)
-  - Java: 24 jobs (Free APIs)
-  - JavaScript: 23 jobs (Free APIs)
-- **Resume Download**: Both DOCX and PDF working correctly
-- **Recommendations**: 25 jobs based on user profile
-- **Auto-Apply**: 10 applications processed with cover letters generated
-
-### UI Updates
-- Added "Generate Cover Letter" toggle in Auto-Apply settings
-- Added "Daily Schedule Time (UTC)" dropdown (6AM, 9AM, 12PM, 3PM, 6PM, 9PM)
-- Added "Preferred Job Sources" badges (RemoteOK, Remotive, Arbeitnow, Jobicy, HackerNews)
-- Updated JOB_SOURCES to include HackerNews, removed FindWork
-
----
-
-## Session Fixes (Jan 20, 2026)
-
-### Bug Fixes
-1. **Run Auto-Apply not working (P0)** - Fixed `original_content` undefined variable to `resume_content` in server.py line 3855
-2. **Auto-Apply Settings ObjectId error** - Added filter to exclude `_id` from response in update_auto_apply_settings
-3. **Profile tax_types not saving** - Fixed backend to use `tax_types` (plural) consistently across all endpoints
-4. **Multiple Resume Management** - Added "Set as Primary" button, primary badge (amber star), and 5-resume limit with UI indicator
-5. **Job Recommendations not loading** - Fixed LiveJobsPage to fetch fresh user profile on load to get primary_technology
-6. **Profile Completeness popup abrupt** - Added 1.5s delay and 24-hour dismissal memory via localStorage
-7. **Job Search not working properly** - Implemented enhanced free job scraper with 5 sources (Arbeitnow, Remotive, RemoteOK, Jobicy, FindWork)
-8. **Live Jobs 1 Page** - Separate page with multi-API failover (JSearch → Active Jobs DB → LinkedIn Jobs Search)
-
-### New Features
-- Resume card shows primary status with amber star icon and "Primary" badge
-- Upload button shows "(X/5)" count and disables at 5 resumes
-- Auto-apply now uses internal job scraper (Dice, RemoteOK, LinkedIn) instead of external APIs
-- Zustand store now has `updateUser()` method to update user without changing token
-- **Enhanced Job Search** with multiple FREE API sources returning 15-20+ jobs
-- **Remote Jobs Only** toggle for filtering remote positions
-- **Multi-select Employment Type** filter (Full Time, Part Time, Contract, C2C, W2)
-- **Job Platform** dropdown to filter by source
-- **Live Jobs 1 Page** - Separate premium search page with:
-  - Automatic API failover (JSearch → Active Jobs DB → LinkedIn Jobs Search)
-  - Sources: Indeed, LinkedIn, Glassdoor, ZipRecruiter & more
-  - Full Auto-Apply AI Agent support
-  - Same features as original Live Jobs page
-  - Added to sidebar navigation as separate menu item
-
----
-
-## Session Fixes (Jan 19, 2026)
-
-### Bug Fixes
-1. **Quick Actions hover transparency** - Fixed button hover states to maintain readable text
-2. **Auto-Apply button grayed out** - Now enables when profile reaches 80%, shows clear message when incomplete
-3. **Non-US jobs appearing** - Strengthened location filtering with stricter US-only validation
-4. **Settings/History popup alignment** - FIXED: Moved all dialogs OUTSIDE of PageTransition wrapper (CSS transforms from framer-motion break fixed positioning)
-5. **Profile completion popup** - FIXED: Now shows automatically on login unless profile is 100% complete, and properly centered
-
-### Animation Consistency
-- Added framer-motion animations to Email Center page (stat cards with hover lift)
-- Added animations to Live Jobs Auto-Apply stat cards
-- All pages now have consistent PageTransition and StaggerContainer animations
+*Last updated: January 26, 2026*
