@@ -4176,7 +4176,7 @@ async def toggle_auto_apply(request: Request):
 
 @api_router.get("/auto-apply/history")
 async def get_auto_apply_history(request: Request, limit: int = 50):
-    """Get user's auto-apply history"""
+    """Get user's auto-apply history with full details including tailored resume and cover letter"""
     user = await get_current_user(request)
     
     history = await db.auto_applications.find(
@@ -4184,7 +4184,14 @@ async def get_auto_apply_history(request: Request, limit: int = 50):
         {"_id": 0}
     ).sort("applied_at", -1).limit(limit).to_list(limit)
     
-    return {"history": history, "total": len(history)}
+    # Enhance with readable status
+    for item in history:
+        # Add helpful flags
+        item["resume_saved"] = item.get("resume_version_saved", False)
+        item["cover_letter_generated"] = bool(item.get("cover_letter"))
+        item["ats_optimized"] = item.get("ats_optimized", False)
+    
+    return {"applications": history, "total": len(history)}
 
 @api_router.post("/auto-apply/run")
 async def run_auto_apply(request: Request):
