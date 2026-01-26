@@ -5701,6 +5701,250 @@ async def send_email(
     
     raise HTTPException(status_code=400, detail="Unsupported email provider")
 
+
+@api_router.post("/email-center/test-connection")
+async def test_email_connection(
+    account_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Test the email connection by:
+    1. Testing IMAP connection (receiving)
+    2. Testing SMTP connection (sending)
+    3. Optionally sending a test email to self
+    """
+    # Find the account to test
+    query = {"user_id": current_user["user_id"]}
+    if account_id:
+        query["account_id"] = account_id
+    else:
+        query["is_primary"] = True
+    
+    account = await db.email_accounts.find_one(query)
+    
+    if not account:
+        return {
+            "success": False,
+            "imap_status": "not_configured",
+            "smtp_status": "not_configured",
+            "message": "No email account connected. Please connect an account first."
+        }
+    
+    results = {
+        "account_email": account["email_address"],
+        "provider": account["provider"],
+        "imap_status": "not_tested",
+        "smtp_status": "not_tested",
+        "imap_message": "",
+        "smtp_message": "",
+        "success": False
+    }
+    
+    # Test IMAP (receiving)
+    if account["provider"] == "imap":
+        try:
+            import imaplib
+            
+            if account.get("use_ssl", True):
+                mail = imaplib.IMAP4_SSL(account["imap_host"], account.get("imap_port", 993))
+            else:
+                mail = imaplib.IMAP4(account["imap_host"], account.get("imap_port", 143))
+            
+            mail.login(account["email_address"], account["password"])
+            mail.select("INBOX")
+            
+            # Count emails
+            status, messages = mail.search(None, "ALL")
+            email_count = len(messages[0].split()) if messages[0] else 0
+            
+            mail.logout()
+            
+            results["imap_status"] = "success"
+            results["imap_message"] = f"Connected successfully! Found {email_count} emails in inbox."
+            
+        except imaplib.IMAP4.error as e:
+            results["imap_status"] = "auth_failed"
+            results["imap_message"] = f"Authentication failed: {str(e)}. Check your App Password."
+        except Exception as e:
+            results["imap_status"] = "failed"
+            results["imap_message"] = f"Connection failed: {str(e)}"
+    
+    # Test SMTP (sending)
+    if account["provider"] == "imap":
+        try:
+            import smtplib
+            
+            if account.get("smtp_port") == 465:
+                server = smtplib.SMTP_SSL(account["smtp_host"], account["smtp_port"])
+            else:
+                server = smtplib.SMTP(account["smtp_host"], account.get("smtp_port", 587))
+                server.starttls()
+            
+            server.login(account["email_address"], account["password"])
+            server.quit()
+            
+            results["smtp_status"] = "success"
+            results["smtp_message"] = "SMTP connection successful! Ready to send emails."
+            
+        except smtplib.SMTPAuthenticationError as e:
+            results["smtp_status"] = "auth_failed"
+            results["smtp_message"] = f"SMTP authentication failed: {str(e)}. Check your App Password."
+        except Exception as e:
+            results["smtp_status"] = "failed"
+            results["smtp_message"] = f"SMTP connection failed: {str(e)}"
+    
+    # Overall success
+    results["success"] = results["imap_status"] == "success" and results["smtp_status"] == "success"
+    
+    # Update account status in database
+    await db.email_accounts.update_one(
+        {"account_id": account["account_id"]},
+        {
+            "$set": {
+                "connection_tested": True,
+                "connection_status": "connected" if results["success"] else "failed",
+                "last_test": datetime.now(timezone.utc).isoformat(),
+                "test_results": results
+            }
+        }
+    )
+    
+    return results
+
+
+@api_router.post("/email-center/send-test-email")
+async def send_test_email(
+    account_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Send a test email to yourself to verify the email connection works.
+    """
+    # Find the account to use
+    query = {"user_id": current_user["user_id"]}
+    if account_id:
+        query["account_id"] = account_id
+    else:
+        query["is_primary"] = True
+    
+    account = await db.email_accounts.find_one(query)
+    
+    if not account:
+        raise HTTPException(status_code=400, detail="No email account connected")
+    
+    if account["provider"] != "imap":
+        raise HTTPException(status_code=400, detail="Test email only supported for IMAP accounts")
+    
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        # Create test email
+        msg = MIMEMultipart()
+        msg["From"] = account["email_address"]
+        msg["To"] = account["email_address"]  # Send to self
+        msg["Subject"] = f"🧪 CareerQuest Test Email - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}"
+        
+        body = f"""
+Hello from CareerQuest! 🎉
+
+This is a test email to verify your email connection is working properly.
+
+✅ If you received this email, your SMTP (sending) is working!
+✅ If you can see this in your inbox, your IMAP (receiving) is also working!
+
+Account Details:
+- Email: {account["email_address"]}
+- SMTP Host: {account["smtp_host"]}
+- IMAP Host: {account["imap_host"]}
+- Test Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
+
+Your CareerQuest Email Center is ready to:
+- Compose AI-powered job application emails
+- Auto-reply to recruiter messages
+- Track email conversations
+
+Best regards,
+CareerQuest AI Assistant
+"""
+        
+        msg.attach(MIMEText(body, "plain"))
+        
+        # Connect and send
+        if account.get("smtp_port") == 465:
+            server = smtplib.SMTP_SSL(account["smtp_host"], account["smtp_port"])
+        else:
+            server = smtplib.SMTP(account["smtp_host"], account.get("smtp_port", 587))
+            server.starttls()
+        
+        server.login(account["email_address"], account["password"])
+        server.send_message(msg)
+        server.quit()
+        
+        # Log the test email
+        test_log = {
+            "test_id": f"test_{uuid.uuid4().hex[:12]}",
+            "user_id": current_user["user_id"],
+            "account_id": account["account_id"],
+            "email_address": account["email_address"],
+            "test_type": "send_test_email",
+            "status": "sent",
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "message": "Test email sent successfully"
+        }
+        
+        await db.email_test_logs.insert_one(test_log)
+        
+        # Update account with test status
+        await db.email_accounts.update_one(
+            {"account_id": account["account_id"]},
+            {
+                "$set": {
+                    "test_email_sent": True,
+                    "last_test_email": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": f"Test email sent successfully to {account['email_address']}! Check your inbox.",
+            "sent_to": account["email_address"],
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "note": "The email should arrive within a few minutes. Check your inbox and spam folder."
+        }
+        
+    except smtplib.SMTPAuthenticationError as e:
+        return {
+            "success": False,
+            "message": f"Authentication failed: {str(e)}",
+            "error_type": "auth_failed",
+            "suggestion": "Please verify your App Password is correct. For Gmail, create an App Password at https://myaccount.google.com/apppasswords"
+        }
+    except Exception as e:
+        logger.error(f"Failed to send test email: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Failed to send test email: {str(e)}",
+            "error_type": "send_failed"
+        }
+
+
+@api_router.get("/email-center/test-logs")
+async def get_email_test_logs(
+    limit: int = 10,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get email test logs for the user"""
+    logs = await db.email_test_logs.find(
+        {"user_id": current_user["user_id"]},
+        {"_id": 0}
+    ).sort("sent_at", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs}
+
+
 @api_router.post("/email-center/ai/compose-application")
 async def ai_compose_application(
     data: AIComposeRequest,
