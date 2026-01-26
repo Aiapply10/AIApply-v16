@@ -1118,12 +1118,12 @@ class JobApplicationBot:
                                         external_apply_link = href
                                         
                     except Exception as e:
-                    self.log(f"Selector check failed for {selector}: {str(e)}")
-                    continue
+                        self.log(f"Selector check failed for {selector}: {str(e)}")
+                        continue
                     
-                if external_apply_link and ('remotive.com' not in external_apply_link.lower() and 
-                                            'remoteok.com' not in external_apply_link.lower()):
-                    break
+                    if external_apply_link and ('remotive.com' not in external_apply_link.lower() and 
+                                                'remoteok.com' not in external_apply_link.lower()):
+                        break
             
             if external_apply_link:
                 result["redirect_url"] = external_apply_link
