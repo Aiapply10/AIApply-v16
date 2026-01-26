@@ -2272,6 +2272,17 @@ ${job?.description || job?.full_description || 'N/A'}
                           <Clock className="w-3 h-3" />
                           {formatDate(item.applied_at || item.created_at)}
                         </span>
+                        {/* ATS Score */}
+                        {(item.ats_score || item.ats_grade) && (
+                          <span className={`flex items-center gap-1 font-medium ${
+                            (item.ats_score || 0) >= 90 ? 'text-green-600' :
+                            (item.ats_score || 0) >= 80 ? 'text-blue-600' :
+                            'text-amber-600'
+                          }`}>
+                            <Target className="w-3 h-3" />
+                            ATS: {item.ats_score || 'N/A'}
+                          </span>
+                        )}
                         {(item.resume_saved || item.tailored_resume_content || item.tailored_content) && (
                           <span className="flex items-center gap-1 text-green-600">
                             <CheckCircle2 className="w-3 h-3" />
