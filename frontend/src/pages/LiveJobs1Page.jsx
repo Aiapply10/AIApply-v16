@@ -122,6 +122,7 @@ export function LiveJobs1Page() {
     auto_tailor_resume: true
   });
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
+  const [viewingResumeApp, setViewingResumeApp] = useState(null); // For viewing tailored resume in history
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
 
