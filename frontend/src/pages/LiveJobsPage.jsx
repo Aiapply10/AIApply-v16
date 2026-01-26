@@ -234,7 +234,8 @@ export function LiveJobsPage() {
   const loadAutoApplyHistory = async () => {
     try {
       const res = await autoApplyAPI.getHistory(50);
-      setAutoApplyHistory(res.data.history || []);
+      // API returns 'applications' not 'history'
+      setAutoApplyHistory(res.data.applications || res.data.history || []);
     } catch (error) {
       console.error('Error loading history:', error);
     }
