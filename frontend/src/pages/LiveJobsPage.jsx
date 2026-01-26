@@ -64,7 +64,8 @@ import {
   TrendingUp,
   Zap,
   Award,
-  Star
+  Star,
+  Mail
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
