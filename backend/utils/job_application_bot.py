@@ -32,6 +32,12 @@ class JobApplicationBot:
         
     async def start(self):
         """Initialize the browser"""
+        import os
+        
+        # Set Playwright browsers path if not in default location
+        if os.path.exists('/pw-browsers'):
+            os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
+        
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
             headless=True,
