@@ -1104,14 +1104,34 @@ ${job?.description || job?.full_description || 'N/A'}
             
             {/* Next Scheduled Run Info */}
             {autoApplyStatus?.enabled && (
-              <div className="mt-4 p-3 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-200">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-violet-600" />
-                  <p className="text-sm text-violet-800">
-                    <strong>Next scheduled run:</strong> {autoApplyStatus?.schedule_time || '12:00'} UTC daily
-                    {' '}• Will apply to up to <strong>{autoApplyStatus?.max_daily || 10}</strong> jobs automatically
-                  </p>
+              <div className="mt-4 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-violet-100 rounded-lg">
+                      <Clock className="w-5 h-5 text-violet-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-violet-800">
+                        Daily Auto-Apply {autoApplyStatus?.schedule_enabled !== false ? 'Active' : 'Paused'}
+                      </p>
+                      <p className="text-xs text-violet-600">
+                        {autoApplyStatus?.schedule_enabled !== false ? (
+                          <>Runs at <strong>{autoApplyStatus?.schedule_time || '12:00'} UTC</strong> • Applies to up to <strong>{autoApplyStatus?.max_daily || 10}</strong> jobs/day</>
+                        ) : (
+                          'Enable in Settings to auto-apply daily'
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className={autoApplyStatus?.schedule_enabled !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}>
+                    {autoApplyStatus?.schedule_enabled !== false ? 'Scheduled' : 'Paused'}
+                  </Badge>
                 </div>
+                {autoApplyStatus?.last_scheduled_run && (
+                  <p className="text-xs text-violet-500 mt-2 pl-12">
+                    Last scheduled run: {formatDate(autoApplyStatus.last_scheduled_run)}
+                  </p>
+                )}
               </div>
             )}
             
