@@ -613,6 +613,61 @@ ${job?.description || job?.full_description || 'N/A'}
     }
   };
 
+  // Handle single application submission
+  const handleSubmitApplication = async (applicationId) => {
+    setSubmittingAppId(applicationId);
+    try {
+      const response = await autoApplyAPI.submitApplication(applicationId);
+      
+      if (response.data.success) {
+        toast.success(`Application submitted successfully to ${response.data.platform}!`);
+        // Refresh the history to show updated status
+        loadAutoApplyHistory();
+      } else {
+        toast.error(response.data.message || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast.error(error.response?.data?.detail || 'Failed to submit application');
+    } finally {
+      setSubmittingAppId(null);
+    }
+  };
+
+  // Handle batch submission
+  const handleBatchSubmit = async () => {
+    const pendingCount = autoApplyHistory.filter(i => i.status === 'ready_to_apply').length;
+    if (pendingCount === 0) {
+      toast.info('No pending applications to submit');
+      return;
+    }
+    
+    setIsBatchSubmitting(true);
+    try {
+      const response = await autoApplyAPI.submitBatch(Math.min(pendingCount, 5));
+      
+      toast.success(`Submitted ${response.data.submitted} of ${response.data.total_processed} applications`);
+      
+      // Show detailed results
+      if (response.data.results) {
+        const successful = response.data.results.filter(r => r.success).length;
+        const failed = response.data.results.filter(r => !r.success).length;
+        
+        if (failed > 0) {
+          toast.warning(`${failed} application(s) failed. Check the history for details.`);
+        }
+      }
+      
+      // Refresh history
+      loadAutoApplyHistory();
+    } catch (error) {
+      console.error('Error in batch submission:', error);
+      toast.error('Batch submission failed');
+    } finally {
+      setIsBatchSubmitting(false);
+    }
+  };
+
   const handleDownloadTailoredResume = async (format, versionName = 'default') => {
     if (!tailorForm.resume_id) return;
     
