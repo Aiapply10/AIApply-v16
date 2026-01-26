@@ -2245,6 +2245,32 @@ ${job?.description || job?.full_description || 'N/A'}
                           <Download className="w-3 h-3 mr-1" />
                           Resume
                         </Button>
+                        {item.status === 'ready_to_apply' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleSubmitApplication(item.application_id)}
+                            disabled={submittingAppId === item.application_id}
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
+                          >
+                            {submittingAppId === item.application_id ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-3 h-3 mr-1" />
+                                Submit Now
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        {item.status === 'applied' && (
+                          <Badge className="bg-green-100 text-green-700">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Submitted
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2256,6 +2282,29 @@ ${job?.description || job?.full_description || 'N/A'}
                 </div>
               )}
             </ScrollArea>
+            
+            {/* Batch Submit Button */}
+            {autoApplyHistory.some(item => item.status === 'ready_to_apply') && (
+              <div className="pt-4 border-t">
+                <Button
+                  onClick={handleBatchSubmit}
+                  disabled={isBatchSubmitting}
+                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600"
+                >
+                  {isBatchSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting Applications...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-4 h-4 mr-2" />
+                      Submit All Pending Applications ({autoApplyHistory.filter(i => i.status === 'ready_to_apply').length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
 
