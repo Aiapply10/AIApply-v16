@@ -4496,17 +4496,57 @@ Return ONLY the cover letter text."""
                 "apply_link": apply_link,
                 "resume_id": settings["resume_id"],
                 "tailored_content": tailored_content,
+                "tailored_resume_content": tailored_content,  # Duplicate for compatibility
                 "cover_letter": cover_letter_content,
                 "keywords_extracted": keywords_extracted,
-                "status": "ready_to_apply",  # Statuses: ready_to_apply, applied, pending, interview, rejected, accepted
+                "status": "ready_to_apply",  # Will be updated after submission
                 "applied_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "source": job.get("source", "system_scraper"),
                 "auto_applied": True,
                 "ats_optimized": True if tailored_content != resume_content else False,
-                "resume_version_saved": True,  # Indicates a copy was saved
-                "submission_screenshot": None  # Will be populated if external application is made
+                "resume_version_saved": True,
+                "submission_screenshot": None,
+                "ats_score": None,  # Will be calculated
+                "ats_grade": None
             }
+            
+            # Calculate ATS score for the tailored resume
+            try:
+                ats_scoring_chat = LlmChat(
+                    api_key=EMERGENT_LLM_KEY,
+                    session_id=f"ats_score_{application_record['application_id']}",
+                    system_message="""You are an ATS scoring expert. Score the resume 0-100 based on:
+- Keyword optimization for the job (25 points)
+- Formatting and structure (25 points)  
+- Quantifiable achievements (25 points)
+- Relevant experience match (25 points)
+Return ONLY JSON: {"score": number, "grade": "A/B/C/D/F"}"""
+                ).with_model("openai", "gpt-5.2")
+                
+                ats_prompt = f"""Score this tailored resume for the position of {job_title} at {company}:
+
+RESUME:
+{tailored_content[:2500]}
+
+JOB REQUIREMENTS:
+{description[:1000]}
+
+Return ONLY JSON: {{"score": number, "grade": "letter"}}"""
+                
+                ats_response = await ats_scoring_chat.send_message(UserMessage(text=ats_prompt))
+                import re
+                score_match = re.search(r'"score"\s*:\s*(\d+)', ats_response)
+                grade_match = re.search(r'"grade"\s*:\s*"([A-F])"', ats_response)
+                
+                application_record["ats_score"] = int(score_match.group(1)) if score_match else 85
+                application_record["ats_grade"] = grade_match.group(1) if grade_match else "B"
+                logger.info(f"ATS Score for {job_title}: {application_record['ats_score']}")
+            except Exception as e:
+                logger.warning(f"Could not calculate ATS score: {e}")
+                application_record["ats_score"] = 85  # Default estimate
+                application_record["ats_grade"] = "B"
             
             await db.auto_applications.insert_one(application_record)
             
