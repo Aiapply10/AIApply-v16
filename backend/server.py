@@ -4185,6 +4185,9 @@ async def auto_fill_settings_from_profile(request: Request):
         "max_applications_per_day": 10,
         "auto_tailor_resume": True,
         "enabled": True,
+        "schedule_enabled": True,  # Enable daily scheduled runs by default
+        "schedule_time": "12:00",  # Default to noon UTC
+        "auto_submit_enabled": True,  # Auto-submit applications
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
