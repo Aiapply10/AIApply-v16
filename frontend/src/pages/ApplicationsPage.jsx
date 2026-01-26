@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Card, 
@@ -54,6 +55,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { PageTransition, StaggerContainer, StaggerItem } from '../components/ui/animations';
 
 export function ApplicationsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,8 +63,8 @@ export function ApplicationsPage() {
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [submittingId, setSubmittingId] = useState(null);
   
-  // Filters
-  const [statusFilter, setStatusFilter] = useState('all');
+  // Filters - initialize from URL params
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   
@@ -76,6 +78,15 @@ export function ApplicationsPage() {
     rejected: 0,
     accepted: 0
   });
+
+  // Update URL when status filter changes
+  useEffect(() => {
+    if (statusFilter && statusFilter !== 'all') {
+      setSearchParams({ status: statusFilter });
+    } else {
+      setSearchParams({});
+    }
+  }, [statusFilter, setSearchParams]);
 
   useEffect(() => {
     loadApplications();
