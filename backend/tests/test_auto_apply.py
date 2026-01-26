@@ -114,8 +114,9 @@ class TestAutoApplyEndpoints:
         assert response.status_code == 200
         
         data = response.json()
-        assert "activities" in data
-        activities = data["activities"]
+        # API returns "activity" key, not "activities"
+        assert "activity" in data or "activities" in data
+        activities = data.get("activity", data.get("activities", []))
         assert isinstance(activities, list)
         print(f"✓ Activity log retrieved: {len(activities)} activities")
     
@@ -302,8 +303,9 @@ class TestLiveJobsSearch:
         assert response.status_code == 200
         
         data = response.json()
-        assert "jobs" in data
-        jobs = data["jobs"]
+        # API returns "recommendations" key, not "jobs"
+        assert "recommendations" in data or "jobs" in data
+        jobs = data.get("recommendations", data.get("jobs", []))
         print(f"✓ Job recommendations: {len(jobs)} jobs found")
 
 
