@@ -404,6 +404,17 @@ export function ApplicationsPage() {
                               
                               {/* Features */}
                               <div className="flex items-center gap-2 mt-3">
+                                {/* ATS Score Badge */}
+                                {(app.ats_score || app.ats_grade) && (
+                                  <Badge className={`text-xs ${
+                                    (app.ats_score || 0) >= 90 ? 'bg-green-100 text-green-700 border-green-200' :
+                                    (app.ats_score || 0) >= 80 ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                    'bg-amber-100 text-amber-700 border-amber-200'
+                                  }`}>
+                                    <Target className="w-3 h-3 mr-1" />
+                                    ATS: {app.ats_score || 'N/A'} ({app.ats_grade || 'B'})
+                                  </Badge>
+                                )}
                                 {app.resume_saved && (
                                   <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                                     <FileText className="w-3 h-3 mr-1" />
@@ -416,7 +427,7 @@ export function ApplicationsPage() {
                                     Cover Letter
                                   </Badge>
                                 )}
-                                {app.ats_optimized && (
+                                {app.ats_optimized && !app.ats_score && (
                                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                                     <Target className="w-3 h-3 mr-1" />
                                     ATS Optimized
