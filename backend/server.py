@@ -4640,6 +4640,286 @@ async def get_auto_apply_activity_log(request: Request, limit: int = 20):
     }
 
 
+# ============ AUTOMATED JOB SUBMISSION ENDPOINTS ============
+
+class AutoSubmitRequest(BaseModel):
+    application_id: str
+    submit_now: bool = True
+
+@api_router.post("/auto-apply/submit/{application_id}")
+async def submit_application_automated(
+    application_id: str,
+    request: Request
+):
+    """
+    Actually submit a prepared application using browser automation.
+    This will navigate to the job site, fill the form, and submit.
+    """
+    from utils.job_application_bot import apply_to_job_automated
+    
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get the application
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    if not application.get("apply_link"):
+        raise HTTPException(status_code=400, detail="No apply link available for this application")
+    
+    # Get user profile data
+    user_profile = await db.users.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    # Prepare user data for form filling
+    user_data = {
+        "full_name": user_profile.get("full_name", ""),
+        "first_name": user_profile.get("full_name", "").split()[0] if user_profile.get("full_name") else "",
+        "last_name": user_profile.get("full_name", "").split()[-1] if user_profile.get("full_name") else "",
+        "email": user_profile.get("email", ""),
+        "phone": user_profile.get("phone", ""),
+        "location": user_profile.get("location", ""),
+        "linkedin_url": user_profile.get("linkedin_url", ""),
+        "current_company": user_profile.get("current_company", ""),
+        "job_title": user_profile.get("primary_technology", ""),
+    }
+    
+    # Get resume file path if available
+    resume_path = None
+    saved_resume = await db.saved_resumes.find_one(
+        {"application_id": application_id, "user_id": user_id}
+    )
+    
+    if saved_resume and saved_resume.get("resume_document"):
+        # Save resume to temp file
+        resume_path = f"/tmp/resume_{application_id}.docx"
+        with open(resume_path, "wb") as f:
+            f.write(saved_resume["resume_document"])
+    
+    # Get cover letter
+    cover_letter = application.get("cover_letter", "")
+    
+    # Log the submission attempt
+    submission_log = {
+        "submission_id": f"sub_{uuid.uuid4().hex[:12]}",
+        "application_id": application_id,
+        "user_id": user_id,
+        "apply_link": application.get("apply_link"),
+        "job_title": application.get("job_title"),
+        "company": application.get("company"),
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "status": "in_progress"
+    }
+    await db.submission_logs.insert_one(submission_log)
+    
+    try:
+        # Run the automated submission
+        result = await apply_to_job_automated(
+            apply_url=application.get("apply_link"),
+            user_data=user_data,
+            resume_path=resume_path,
+            cover_letter=cover_letter
+        )
+        
+        # Update submission log
+        await db.submission_logs.update_one(
+            {"submission_id": submission_log["submission_id"]},
+            {
+                "$set": {
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                    "status": "completed" if result.get("success") else "failed",
+                    "result": {
+                        "success": result.get("success"),
+                        "platform": result.get("platform"),
+                        "status": result.get("status"),
+                        "error": result.get("error"),
+                        "submitted_at": result.get("submitted_at"),
+                        "form_filled": result.get("form_filled")
+                    },
+                    "screenshots": result.get("screenshots", [])
+                }
+            }
+        )
+        
+        # Update application status
+        new_status = "applied" if result.get("success") else "submission_failed"
+        await db.auto_applications.update_one(
+            {"application_id": application_id},
+            {
+                "$set": {
+                    "status": new_status,
+                    "submission_result": result,
+                    "submitted_at": result.get("submitted_at"),
+                    "submission_screenshots": result.get("screenshots", [])
+                }
+            }
+        )
+        
+        # Also update in main applications collection
+        await db.applications.update_one(
+            {"application_id": application_id},
+            {
+                "$set": {
+                    "status": new_status,
+                    "submitted_at": result.get("submitted_at")
+                }
+            }
+        )
+        
+        return {
+            "success": result.get("success"),
+            "application_id": application_id,
+            "platform": result.get("platform"),
+            "status": result.get("status"),
+            "error": result.get("error"),
+            "submitted_at": result.get("submitted_at"),
+            "screenshots_count": len(result.get("screenshots", [])),
+            "screenshots": result.get("screenshots", []),
+            "message": "Application submitted successfully!" if result.get("success") else f"Submission failed: {result.get('error') or result.get('status')}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error during automated submission: {str(e)}")
+        
+        await db.submission_logs.update_one(
+            {"submission_id": submission_log["submission_id"]},
+            {
+                "$set": {
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                    "status": "error",
+                    "error": str(e)
+                }
+            }
+        )
+        
+        return {
+            "success": False,
+            "application_id": application_id,
+            "error": str(e),
+            "message": f"Submission error: {str(e)}"
+        }
+    finally:
+        # Clean up temp file
+        if resume_path and os.path.exists(resume_path):
+            try:
+                os.remove(resume_path)
+            except:
+                pass
+
+
+@api_router.post("/auto-apply/submit-batch")
+async def submit_batch_applications(
+    request: Request,
+    limit: int = Query(5, description="Maximum number of applications to submit")
+):
+    """
+    Submit multiple pending applications using browser automation.
+    This processes applications with status 'ready_to_apply'.
+    """
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get pending applications
+    pending = await db.auto_applications.find(
+        {"user_id": user_id, "status": "ready_to_apply"},
+        {"_id": 0}
+    ).limit(limit).to_list(limit)
+    
+    if not pending:
+        return {
+            "message": "No pending applications to submit",
+            "submitted": 0,
+            "results": []
+        }
+    
+    results = []
+    for app in pending:
+        try:
+            # Submit each application
+            # Note: This is synchronous to avoid overwhelming the system
+            response = await submit_application_automated(app["application_id"], request)
+            results.append({
+                "application_id": app["application_id"],
+                "job_title": app.get("job_title"),
+                "company": app.get("company"),
+                "success": response.get("success"),
+                "status": response.get("status"),
+                "error": response.get("error")
+            })
+            
+            # Small delay between submissions to avoid detection
+            await asyncio.sleep(5)
+            
+        except Exception as e:
+            results.append({
+                "application_id": app["application_id"],
+                "job_title": app.get("job_title"),
+                "company": app.get("company"),
+                "success": False,
+                "error": str(e)
+            })
+    
+    successful = sum(1 for r in results if r.get("success"))
+    
+    return {
+        "message": f"Processed {len(results)} applications, {successful} successful",
+        "submitted": successful,
+        "total_processed": len(results),
+        "results": results
+    }
+
+
+@api_router.get("/auto-apply/submission-logs")
+async def get_submission_logs(
+    request: Request,
+    limit: int = 20
+):
+    """Get logs of automated submission attempts"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    logs = await db.submission_logs.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("started_at", -1).limit(limit).to_list(limit)
+    
+    return {"logs": logs}
+
+
+@api_router.get("/auto-apply/screenshots/{application_id}")
+async def get_submission_screenshots(
+    application_id: str,
+    request: Request
+):
+    """Get screenshots from a submission attempt"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get the application
+    application = await db.auto_applications.find_one(
+        {"application_id": application_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    screenshots = application.get("submission_screenshots", [])
+    
+    return {
+        "application_id": application_id,
+        "screenshots": screenshots,
+        "submission_result": application.get("submission_result", {})
+    }
+
+
 # ============ APPLICATION TRACKING ENDPOINTS ============
 
 @api_router.get("/applications/tracking")
