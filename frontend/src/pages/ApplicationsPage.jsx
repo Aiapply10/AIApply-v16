@@ -225,9 +225,31 @@ export function ApplicationsPage() {
       }
     } catch (error) {
       console.error('Error submitting:', error);
-      toast.error(error.response?.data?.detail || 'Failed to submit application');
+      
+      // Handle 503 - Browser automation not available
+      if (error.response?.status === 503) {
+        // Find the application and open its job link
+        const app = applications.find(a => a.application_id === applicationId);
+        if (app?.apply_link) {
+          toast.info('Opening job page for manual application...', { duration: 3000 });
+          window.open(app.apply_link, '_blank');
+        } else {
+          toast.warning('Browser automation unavailable. Please use "View Job" to apply manually.');
+        }
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to submit application');
+      }
     } finally {
       setSubmittingId(null);
+    }
+  };
+
+  // Open job link for manual application
+  const handleApplyManually = (applyLink) => {
+    if (applyLink) {
+      window.open(applyLink, '_blank');
+    } else {
+      toast.error('No application link available');
     }
   };
 
