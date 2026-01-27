@@ -396,6 +396,21 @@ export function ApplicationsPage() {
                 </Card>
               </motion.div>
             </StaggerItem>
+            {/* Failed Card */}
+            <StaggerItem>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('submission_failed')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'submission_failed' ? 'ring-2 ring-orange-400' : ''} bg-gradient-to-br from-orange-50 to-orange-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-orange-700">{stats.failed}</p>
+                    <p className="text-sm text-orange-600">Failed</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </StaggerItem>
           </StaggerContainer>
 
           {/* Filters */}
@@ -428,6 +443,7 @@ export function ApplicationsPage() {
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="interview">Interview</SelectItem>
                       <SelectItem value="rejected">Rejected</SelectItem>
+                      <SelectItem value="submission_failed">Failed</SelectItem>
                       <SelectItem value="accepted">Accepted</SelectItem>
                     </SelectContent>
                   </Select>
