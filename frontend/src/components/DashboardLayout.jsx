@@ -36,7 +36,6 @@ const candidateNavItems = [
   { href: '/resumes', label: 'My Resumes', icon: FileText, color: 'text-cyan-600', bgColor: 'bg-cyan-100' },
   { href: '/live-jobs', label: 'Live Jobs', icon: Sparkles, color: 'text-orange-600', bgColor: 'bg-orange-100' },
   { href: '/live-jobs-1', label: 'Live Jobs 1', icon: Globe, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-  { href: '/jobs', label: 'Job Portals', icon: Briefcase, color: 'text-emerald-600', bgColor: 'bg-emerald-100' },
   { href: '/applications', label: 'Applications', icon: Send, color: 'text-amber-600', bgColor: 'bg-amber-100' },
   { href: '/email-center', label: 'Email Center', icon: Mail, color: 'text-indigo-600', bgColor: 'bg-indigo-100' },
   { href: '/reports', label: 'My Reports', icon: BarChart3, color: 'text-rose-600', bgColor: 'bg-rose-100' },
