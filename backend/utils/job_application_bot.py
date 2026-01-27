@@ -279,7 +279,9 @@ class JobApplicationBot:
                 "selectors": [
                     'input[name="firstName"]', 'input[name="first_name"]', 'input[name="first-name"]',
                     '#firstName', '#first_name', 'input[placeholder*="first name" i]',
-                    'input[aria-label*="first name" i]', 'input[data-qa="first-name"]'
+                    'input[aria-label*="first name" i]', 'input[data-qa="first-name"]',
+                    'input[id*="firstName" i]', 'input[id*="first_name" i]',
+                    'input[autocomplete="given-name"]'
                 ],
                 "value": user_data.get('first_name', '')
             },
@@ -288,7 +290,9 @@ class JobApplicationBot:
                 "selectors": [
                     'input[name="lastName"]', 'input[name="last_name"]', 'input[name="last-name"]',
                     '#lastName', '#last_name', 'input[placeholder*="last name" i]',
-                    'input[aria-label*="last name" i]', 'input[data-qa="last-name"]'
+                    'input[aria-label*="last name" i]', 'input[data-qa="last-name"]',
+                    'input[id*="lastName" i]', 'input[id*="last_name" i]',
+                    'input[autocomplete="family-name"]'
                 ],
                 "value": user_data.get('last_name', '')
             },
@@ -297,7 +301,8 @@ class JobApplicationBot:
                 "selectors": [
                     'input[name="email"]', 'input[type="email"]', '#email',
                     'input[placeholder*="email" i]', 'input[aria-label*="email" i]',
-                    'input[data-qa="email"]', 'input[autocomplete="email"]'
+                    'input[data-qa="email"]', 'input[autocomplete="email"]',
+                    'input[id*="email" i]', 'input[name*="email" i]'
                 ],
                 "value": user_data.get('email', '')
             },
@@ -307,7 +312,9 @@ class JobApplicationBot:
                     'input[name="phone"]', 'input[name="phoneNumber"]', 'input[name="phone_number"]',
                     'input[type="tel"]', '#phone', '#phoneNumber',
                     'input[placeholder*="phone" i]', 'input[aria-label*="phone" i]',
-                    'input[data-qa="phone"]', 'input[autocomplete="tel"]'
+                    'input[data-qa="phone"]', 'input[autocomplete="tel"]',
+                    'input[id*="phone" i]', 'input[name*="mobile" i]',
+                    'input[placeholder*="mobile" i]'
                 ],
                 "value": user_data.get('phone', '')
             },
@@ -315,7 +322,9 @@ class JobApplicationBot:
             {
                 "selectors": [
                     'input[name="linkedin"]', 'input[name="linkedinUrl"]', 'input[name="linkedin_url"]',
-                    '#linkedin', 'input[placeholder*="linkedin" i]', 'input[aria-label*="linkedin" i]'
+                    '#linkedin', 'input[placeholder*="linkedin" i]', 'input[aria-label*="linkedin" i]',
+                    'input[id*="linkedin" i]', 'input[name*="social" i]',
+                    'input[placeholder*="linkedin.com" i]'
                 ],
                 "value": user_data.get('linkedin_url', '')
             },
@@ -324,15 +333,54 @@ class JobApplicationBot:
                 "selectors": [
                     'input[name="location"]', 'input[name="city"]', '#location', '#city',
                     'input[placeholder*="location" i]', 'input[placeholder*="city" i]',
-                    'input[aria-label*="location" i]'
+                    'input[aria-label*="location" i]', 'input[id*="location" i]',
+                    'input[id*="city" i]'
                 ],
                 "value": user_data.get('location', '')
+            },
+            # Address / Street Address
+            {
+                "selectors": [
+                    'input[name="address"]', 'input[name="streetAddress"]', 'input[name="street"]',
+                    '#address', '#streetAddress', 'input[placeholder*="address" i]',
+                    'input[placeholder*="street" i]', 'input[aria-label*="address" i]',
+                    'input[autocomplete="street-address"]', 'input[id*="address" i]'
+                ],
+                "value": user_data.get('address', user_data.get('location', ''))
+            },
+            # State
+            {
+                "selectors": [
+                    'input[name="state"]', 'input[name="region"]', '#state',
+                    'input[placeholder*="state" i]', 'input[aria-label*="state" i]',
+                    'input[autocomplete="address-level1"]'
+                ],
+                "value": user_data.get('state', '')
+            },
+            # Zip/Postal Code
+            {
+                "selectors": [
+                    'input[name="zip"]', 'input[name="zipCode"]', 'input[name="postalCode"]',
+                    '#zip', '#zipCode', '#postalCode', 'input[placeholder*="zip" i]',
+                    'input[placeholder*="postal" i]', 'input[autocomplete="postal-code"]',
+                    'input[id*="zip" i]', 'input[type="text"][maxlength="5"]'
+                ],
+                "value": user_data.get('zip_code', '')
+            },
+            # Country
+            {
+                "selectors": [
+                    'input[name="country"]', '#country', 'input[placeholder*="country" i]',
+                    'input[autocomplete="country-name"]'
+                ],
+                "value": user_data.get('country', 'United States')
             },
             # Current company
             {
                 "selectors": [
                     'input[name="company"]', 'input[name="currentCompany"]', 'input[name="current_company"]',
-                    '#company', 'input[placeholder*="company" i]', 'input[aria-label*="company" i]'
+                    '#company', 'input[placeholder*="company" i]', 'input[aria-label*="company" i]',
+                    'input[placeholder*="current employer" i]', 'input[id*="company" i]'
                 ],
                 "value": user_data.get('current_company', '')
             },
@@ -341,17 +389,193 @@ class JobApplicationBot:
                 "selectors": [
                     'input[name="title"]', 'input[name="currentTitle"]', 'input[name="job_title"]',
                     '#title', 'input[placeholder*="title" i]', 'input[placeholder*="position" i]',
-                    'input[aria-label*="title" i]'
+                    'input[aria-label*="title" i]', 'input[placeholder*="current role" i]',
+                    'input[id*="title" i]', 'input[id*="position" i]'
                 ],
                 "value": user_data.get('job_title', '')
+            },
+            # Website/Portfolio
+            {
+                "selectors": [
+                    'input[name="website"]', 'input[name="portfolio"]', 'input[name="personal_website"]',
+                    '#website', '#portfolio', 'input[placeholder*="website" i]',
+                    'input[placeholder*="portfolio" i]', 'input[type="url"]',
+                    'input[aria-label*="website" i]'
+                ],
+                "value": user_data.get('website', user_data.get('portfolio_url', ''))
+            },
+            # GitHub
+            {
+                "selectors": [
+                    'input[name="github"]', 'input[name="githubUrl"]', '#github',
+                    'input[placeholder*="github" i]', 'input[aria-label*="github" i]'
+                ],
+                "value": user_data.get('github_url', '')
+            },
+            # Years of experience
+            {
+                "selectors": [
+                    'input[name="experience"]', 'input[name="years_experience"]',
+                    'input[name="yearsOfExperience"]', '#experience',
+                    'input[placeholder*="years" i][placeholder*="experience" i]',
+                    'input[aria-label*="experience" i]'
+                ],
+                "value": user_data.get('years_experience', '')
             },
         ]
         
         for config in field_configs:
             if await self.wait_and_fill(config["selectors"], config["value"], timeout=2000):
                 filled_fields.append(config["selectors"][0])
+        
+        # Handle dropdowns for common required fields
+        await self._fill_common_dropdowns(user_data)
                 
         return filled_fields
+    
+    async def _fill_common_dropdowns(self, user_data: Dict):
+        """Fill common dropdown fields like work authorization, gender, etc."""
+        
+        # Work authorization dropdown
+        work_auth_selectors = [
+            'select[name*="authorization" i]', 'select[name*="work_auth" i]',
+            'select[name*="legal" i]', 'select[id*="authorization" i]',
+            '[data-qa*="authorization"]'
+        ]
+        
+        for selector in work_auth_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    # Try to select "Yes" or affirmative option
+                    await dropdown.select_option(label="Yes")
+                    self.log(f"Selected work authorization: Yes")
+                    break
+            except:
+                try:
+                    # Try clicking radio buttons for work authorization
+                    yes_options = [
+                        'input[type="radio"][value*="yes" i]',
+                        'label:has-text("authorized to work")',
+                        'label:has-text("Yes, I am")'
+                    ]
+                    for opt in yes_options:
+                        el = self.page.locator(opt).first
+                        if await el.count() > 0:
+                            await el.click(force=True)
+                            self.log("Clicked work authorization yes option")
+                            break
+                except:
+                    continue
+        
+        # Sponsorship dropdown (usually "No" means doesn't need sponsorship)
+        sponsorship_selectors = [
+            'select[name*="sponsor" i]', 'select[id*="sponsor" i]',
+            '[data-qa*="sponsor"]'
+        ]
+        
+        for selector in sponsorship_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    await dropdown.select_option(label="No")
+                    self.log("Selected sponsorship: No")
+                    break
+            except:
+                try:
+                    no_options = [
+                        'input[type="radio"][name*="sponsor" i][value*="no" i]',
+                        'label:has-text("do not require")'
+                    ]
+                    for opt in no_options:
+                        el = self.page.locator(opt).first
+                        if await el.count() > 0:
+                            await el.click(force=True)
+                            self.log("Clicked sponsorship no option")
+                            break
+                except:
+                    continue
+        
+        # Gender (Decline to answer is safest)
+        gender_value = user_data.get('gender', 'Decline')
+        gender_selectors = [
+            'select[name*="gender" i]', 'select[id*="gender" i]'
+        ]
+        
+        for selector in gender_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    # Try "Decline to self-identify" first, then actual value
+                    try:
+                        await dropdown.select_option(label="Decline to self-identify")
+                    except:
+                        try:
+                            await dropdown.select_option(label="Prefer not to say")
+                        except:
+                            await dropdown.select_option(label=gender_value)
+                    self.log("Selected gender option")
+                    break
+            except:
+                continue
+        
+        # Veteran status (usually "No" or "Decline")
+        veteran_selectors = [
+            'select[name*="veteran" i]', 'select[id*="veteran" i]'
+        ]
+        
+        for selector in veteran_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    try:
+                        await dropdown.select_option(label="I am not a veteran")
+                    except:
+                        try:
+                            await dropdown.select_option(label="No")
+                        except:
+                            await dropdown.select_option(label="Decline to self-identify")
+                    self.log("Selected veteran status")
+                    break
+            except:
+                continue
+        
+        # Disability status (usually "Decline")
+        disability_selectors = [
+            'select[name*="disability" i]', 'select[id*="disability" i]'
+        ]
+        
+        for selector in disability_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    try:
+                        await dropdown.select_option(label="Decline to self-identify")
+                    except:
+                        await dropdown.select_option(label="I don't wish to answer")
+                    self.log("Selected disability status")
+                    break
+            except:
+                continue
+        
+        # Race/Ethnicity (usually "Decline")
+        race_selectors = [
+            'select[name*="race" i]', 'select[name*="ethnicity" i]',
+            'select[id*="race" i]', 'select[id*="ethnicity" i]'
+        ]
+        
+        for selector in race_selectors:
+            try:
+                dropdown = self.page.locator(selector).first
+                if await dropdown.count() > 0:
+                    try:
+                        await dropdown.select_option(label="Decline to self-identify")
+                    except:
+                        await dropdown.select_option(label="Prefer not to say")
+                    self.log("Selected race/ethnicity option")
+                    break
+            except:
+                continue
         
     async def _upload_resume(self, resume_path: str) -> bool:
         """Try to upload resume using various selectors"""
