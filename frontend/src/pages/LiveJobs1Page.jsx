@@ -182,6 +182,8 @@ export function LiveJobs1Page() {
 
   const loadInitialData = async () => {
     setIsLoading(true);
+    setQuotaExhausted(false);
+    setApiErrors([]);
     try {
       // First fetch user profile to ensure we have latest data including primary_technology
       const userRes = await authAPI.getMe();
@@ -196,12 +198,21 @@ export function LiveJobs1Page() {
       setRecommendations(recsRes.data.recommendations || []);
       setResumes(resumesRes.data || []);
       
-      // Handle API messages
+      // Handle API messages and quota status
       if (recsRes.data.message) {
         setApiMessage(recsRes.data.message);
       }
       if (recsRes.data.requires_profile_update) {
         setRequiresProfileUpdate(true);
+      }
+      if (recsRes.data.quota_exhausted) {
+        setQuotaExhausted(true);
+        toast.error('API quota exhausted. Please check your RapidAPI subscription.');
+      } else if (recsRes.data.quota_warning) {
+        toast.warning(recsRes.data.message || 'Some APIs hit rate limits.');
+      }
+      if (recsRes.data.api_errors) {
+        setApiErrors(recsRes.data.api_errors);
       }
     } catch (error) {
       console.error('Error loading data:', error);
