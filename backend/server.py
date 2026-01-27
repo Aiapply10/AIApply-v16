@@ -3254,87 +3254,156 @@ async def get_live_jobs_1_recommendations(request: Request):
     primary_tech = user.get("primary_technology", "")
     sub_techs = user.get("sub_technologies", [])
     
-    try:
-        # Search using user's primary technology
-        jobs = []
-        api_used = []
-        
-        # Try JSearch API
-        rapidapi_key = os.environ.get('RAPIDAPI_KEY')
-        if rapidapi_key:
-            try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.get(
-                        "https://jsearch.p.rapidapi.com/search",
-                        params={
-                            "query": f"{primary_tech} jobs",
-                            "page": "1",
-                            "num_pages": "2",
-                            "date_posted": "week"
-                        },
-                        headers={
-                            "X-RapidAPI-Key": rapidapi_key,
-                            "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
-                        }
-                    )
-                    if response.status_code == 200:
-                        data = response.json()
-                        for job in data.get("data", [])[:15]:
-                            jobs.append({
-                                "id": job.get("job_id", str(uuid.uuid4())),
-                                "title": job.get("job_title", ""),
-                                "company": job.get("employer_name", ""),
-                                "location": job.get("job_city", "") or job.get("job_state", "") or "Remote",
-                                "description": job.get("job_description", "")[:500],
-                                "apply_link": job.get("job_apply_link", ""),
-                                "posted_at": job.get("job_posted_at_datetime_utc", ""),
-                                "employment_type": job.get("job_employment_type", ""),
-                                "source": "JSearch",
-                                "salary_info": job.get("job_min_salary") or job.get("job_max_salary") or ""
-                            })
-                        api_used.append("JSearch")
-            except Exception as e:
-                logger.warning(f"JSearch API error: {e}")
-        
-        # If not enough jobs, add from enhanced scraper
-        if len(jobs) < 10:
-            try:
-                more_jobs = await enhanced_job_scraper.scrape_all_sources(
-                    query=primary_tech,
-                    remote_only=False,
-                    limit_per_source=8
+    jobs = []
+    api_used = []
+    api_errors = []
+    quota_exhausted = False
+    
+    # Try JSearch API
+    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
+    if rapidapi_key:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://jsearch.p.rapidapi.com/search",
+                    params={
+                        "query": f"{primary_tech} jobs",
+                        "page": "1",
+                        "num_pages": "2",
+                        "date_posted": "week"
+                    },
+                    headers={
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
+                    }
                 )
-                jobs.extend(more_jobs)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    for job in data.get("data", [])[:15]:
+                        jobs.append({
+                            "id": job.get("job_id", str(uuid.uuid4())),
+                            "title": job.get("job_title", ""),
+                            "company": job.get("employer_name", ""),
+                            "location": job.get("job_city", "") or job.get("job_state", "") or "Remote",
+                            "description": job.get("job_description", "")[:500],
+                            "apply_link": job.get("job_apply_link", ""),
+                            "posted_at": job.get("job_posted_at_datetime_utc", ""),
+                            "employment_type": job.get("job_employment_type", ""),
+                            "source": "JSearch",
+                            "salary_info": job.get("job_min_salary") or job.get("job_max_salary") or ""
+                        })
+                    api_used.append("JSearch")
+                elif response.status_code == 429:
+                    api_errors.append("JSearch: Rate limit exceeded")
+                    quota_exhausted = True
+                    logger.warning("JSearch API quota exhausted (429)")
+                elif response.status_code == 403:
+                    api_errors.append("JSearch: API quota exhausted or invalid key")
+                    quota_exhausted = True
+                    logger.warning("JSearch API quota exhausted (403)")
+                else:
+                    api_errors.append(f"JSearch: Error {response.status_code}")
+                    logger.warning(f"JSearch API error: {response.status_code}")
+        except httpx.TimeoutException:
+            api_errors.append("JSearch: Request timeout")
+            logger.warning("JSearch API timeout")
+        except Exception as e:
+            api_errors.append(f"JSearch: {str(e)[:50]}")
+            logger.warning(f"JSearch API error: {e}")
+    else:
+        api_errors.append("JSearch: API key not configured")
+    
+    # Try LinkedIn Jobs Search API if JSearch failed or returned few results
+    if len(jobs) < 5 and rapidapi_key:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://linkedin-jobs-search.p.rapidapi.com/search",
+                    params={
+                        "keywords": primary_tech,
+                        "locationId": "103644278",  # United States
+                        "datePosted": "past-week",
+                        "sort": "recent"
+                    },
+                    headers={
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "linkedin-jobs-search.p.rapidapi.com"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    for job in data[:10]:
+                        jobs.append({
+                            "id": job.get("id", str(uuid.uuid4())),
+                            "title": job.get("title", ""),
+                            "company": job.get("company", {}).get("name", "") if isinstance(job.get("company"), dict) else job.get("company", ""),
+                            "location": job.get("location", "Remote"),
+                            "description": job.get("description", "")[:500] if job.get("description") else "",
+                            "apply_link": job.get("url", ""),
+                            "posted_at": job.get("postedDate", ""),
+                            "employment_type": job.get("employmentType", ""),
+                            "source": "LinkedIn",
+                            "salary_info": job.get("salary", "") or ""
+                        })
+                    api_used.append("LinkedIn")
+                elif response.status_code in [429, 403]:
+                    api_errors.append("LinkedIn: API quota exhausted")
+                    quota_exhausted = True
+        except Exception as e:
+            api_errors.append(f"LinkedIn: {str(e)[:50]}")
+            logger.warning(f"LinkedIn Jobs API error: {e}")
+    
+    # Fallback to free APIs if premium APIs failed
+    if len(jobs) < 10:
+        try:
+            more_jobs = await enhanced_job_scraper.scrape_all_sources(
+                query=primary_tech,
+                remote_only=False,
+                limit_per_source=8
+            )
+            jobs.extend(more_jobs)
+            if more_jobs:
                 api_used.append("Free APIs")
-            except Exception as e:
-                logger.warning(f"Enhanced scraper error: {e}")
-        
-        # Remove duplicates
-        seen = set()
-        unique_jobs = []
-        for job in jobs:
-            key = (job.get('title', '').lower(), job.get('company', '').lower())
-            if key not in seen:
-                seen.add(key)
-                unique_jobs.append(job)
-        
-        return {
-            "recommendations": unique_jobs[:25],
-            "total": len(unique_jobs),
-            "api_used": " + ".join(api_used) if api_used else "Premium APIs",
-            "based_on": {
-                "primary_technology": primary_tech,
-                "sub_technologies": sub_techs
-            }
+        except Exception as e:
+            api_errors.append(f"Free APIs: {str(e)[:50]}")
+            logger.warning(f"Enhanced scraper error: {e}")
+    
+    # Remove duplicates
+    seen = set()
+    unique_jobs = []
+    for job in jobs:
+        key = (job.get('title', '').lower(), job.get('company', '').lower())
+        if key not in seen:
+            seen.add(key)
+            unique_jobs.append(job)
+    
+    # Build response
+    response_data = {
+        "recommendations": unique_jobs[:25],
+        "total": len(unique_jobs),
+        "api_used": " + ".join(api_used) if api_used else "None",
+        "based_on": {
+            "primary_technology": primary_tech,
+            "sub_technologies": sub_techs
         }
-        
-    except Exception as e:
-        logger.error(f"Error getting Live Jobs 1 recommendations: {e}")
-        return {
-            "recommendations": [],
-            "error": str(e),
-            "message": "Failed to fetch job recommendations"
-        }
+    }
+    
+    # Add quota exhaustion info if applicable
+    if quota_exhausted and len(unique_jobs) == 0:
+        response_data["quota_exhausted"] = True
+        response_data["message"] = "API quota exhausted. Please try again later or check your RapidAPI subscription."
+        response_data["api_errors"] = api_errors
+    elif quota_exhausted and len(unique_jobs) > 0:
+        response_data["quota_warning"] = True
+        response_data["message"] = "Some APIs hit rate limits. Showing results from available sources."
+        response_data["api_errors"] = api_errors
+    elif len(unique_jobs) == 0:
+        response_data["message"] = "No jobs found matching your criteria. Try updating your profile or search manually."
+        response_data["api_errors"] = api_errors
+    
+    return response_data
 
 @api_router.get("/live-jobs-1/search")
 async def search_live_jobs_1(
