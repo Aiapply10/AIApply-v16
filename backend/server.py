@@ -4728,6 +4728,20 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
     auto_submit_enabled = settings.get("auto_submit_enabled", True)  # Default to enabled
     
     if auto_submit_enabled and applications:
+        # Check if Playwright is available for browser automation
+        from utils.job_application_bot import is_playwright_available
+        
+        if not is_playwright_available():
+            logger.warning("Playwright not available - skipping auto-submission. Applications are ready for manual review.")
+            # Still return success but note that auto-submit was skipped
+            return {
+                "message": f"Created {len(applications)} applications. Auto-submit unavailable in production - please apply manually.",
+                "applied_count": len(applications),
+                "applications": applications,
+                "auto_submit_skipped": True,
+                "reason": "Browser automation requires Playwright which is not available in production environment"
+            }
+        
         logger.info(f"Auto-submitting {len(applications)} applications...")
         
         from utils.job_application_bot import apply_to_job_automated
