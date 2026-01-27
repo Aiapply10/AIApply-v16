@@ -2760,14 +2760,95 @@ async def get_candidate_report(request: Request):
     # Email count
     email_count = await db.emails.count_documents({"user_id": user_id})
     
+    # Applications by date (last 30 days)
+    from datetime import timedelta
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    date_pipeline = [
+        {"$match": {"user_id": user_id, "applied_at": {"$gte": thirty_days_ago.isoformat()}}},
+        {"$group": {
+            "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": {"$dateFromString": {"dateString": "$applied_at"}}}},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    try:
+        applications_by_date = await db.applications.aggregate(date_pipeline).to_list(100)
+    except:
+        applications_by_date = []
+    
+    # Applications by source
+    source_pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": "$source", "count": {"$sum": 1}}}
+    ]
+    applications_by_source = await db.applications.aggregate(source_pipeline).to_list(100)
+    
+    # ATS score distribution
+    ats_pipeline = [
+        {"$match": {"user_id": user_id, "ats_score": {"$exists": True, "$ne": None}}},
+        {"$bucket": {
+            "groupBy": "$ats_score",
+            "boundaries": [0, 60, 70, 80, 90, 101],
+            "default": "Other",
+            "output": {"count": {"$sum": 1}}
+        }}
+    ]
+    try:
+        ats_distribution = await db.applications.aggregate(ats_pipeline).to_list(100)
+    except:
+        ats_distribution = []
+    
+    # Average ATS score
+    avg_ats_pipeline = [
+        {"$match": {"user_id": user_id, "ats_score": {"$exists": True, "$ne": None, "$type": "number"}}},
+        {"$group": {"_id": None, "avg_score": {"$avg": "$ats_score"}}}
+    ]
+    avg_ats_result = await db.applications.aggregate(avg_ats_pipeline).to_list(1)
+    avg_ats_score = round(avg_ats_result[0]["avg_score"], 1) if avg_ats_result else 0
+    
+    # Job applications this week
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+    weekly_applications = await db.applications.count_documents({
+        "user_id": user_id,
+        "applied_at": {"$gte": week_ago.isoformat()}
+    })
+    
+    # Auto-applied count
+    auto_applied_count = await db.applications.count_documents({
+        "user_id": user_id,
+        "auto_applied": True
+    })
+    
+    # Failed submissions count
+    failed_count = await db.applications.count_documents({
+        "user_id": user_id,
+        "status": "submission_failed"
+    })
+    
+    # Success rate calculation
+    successful_statuses = ["applied", "interview", "offer", "accepted"]
+    successful_count = await db.applications.count_documents({
+        "user_id": user_id,
+        "status": {"$in": successful_statuses}
+    })
+    success_rate = round((successful_count / total_applications * 100), 1) if total_applications > 0 else 0
+    
     return {
         "total_applications": total_applications,
         "status_breakdown": {item["_id"]: item["count"] for item in status_breakdown},
         "recent_applications": recent,
         "resume_count": resume_count,
         "email_count": email_count,
-        "interviews_scheduled": sum(1 for item in status_breakdown if item["_id"] in ["interview_scheduled", "interviewed"]),
-        "offers_received": sum(1 for item in status_breakdown if item["_id"] == "offer")
+        "interviews_scheduled": sum(item["count"] for item in status_breakdown if item["_id"] in ["interview", "interview_scheduled", "interviewed"]),
+        "offers_received": sum(item["count"] for item in status_breakdown if item["_id"] in ["offer", "accepted"]),
+        "applications_by_date": [{"date": item["_id"], "count": item["count"]} for item in applications_by_date],
+        "applications_by_source": {item["_id"] or "Direct": item["count"] for item in applications_by_source},
+        "ats_distribution": ats_distribution,
+        "avg_ats_score": avg_ats_score,
+        "weekly_applications": weekly_applications,
+        "auto_applied_count": auto_applied_count,
+        "failed_count": failed_count,
+        "success_rate": success_rate
     }
 
 @api_router.get("/reports/admin")
