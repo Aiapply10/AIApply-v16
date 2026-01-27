@@ -2605,4 +2605,4 @@ ${job?.description || job?.full_description || 'N/A'}
   );
 }
 
-export default LiveJobsPage;
+export default LiveJobs1Page;
