@@ -10,13 +10,29 @@ import logging
 import re
 from datetime import datetime, timezone
 from typing import Dict, Optional, List, Tuple
-from playwright.async_api import async_playwright, Page, Browser, TimeoutError as PlaywrightTimeout
+
+# Playwright is optional - may not be available in production
+PLAYWRIGHT_AVAILABLE = False
+try:
+    from playwright.async_api import async_playwright, Page, Browser, TimeoutError as PlaywrightTimeout
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    async_playwright = None
+    Page = None
+    Browser = None
+    PlaywrightTimeout = TimeoutError
+    logging.warning("Playwright not available - browser automation disabled")
 
 logger = logging.getLogger(__name__)
 
 # Directory to store screenshots
 SCREENSHOTS_DIR = "/app/backend/screenshots"
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+
+
+def is_playwright_available() -> bool:
+    """Check if Playwright is available for browser automation"""
+    return PLAYWRIGHT_AVAILABLE
 
 
 class JobApplicationBot:
