@@ -188,7 +188,7 @@ export function LiveJobs1Page() {
       }
       
       const [recsRes, resumesRes] = await Promise.all([
-        liveJobsAPI.getRecommendations(),
+        liveJobs1API.getRecommendations(),
         resumeAPI.getAll()
       ]);
       setRecommendations(recsRes.data.recommendations || []);
@@ -366,7 +366,7 @@ export function LiveJobs1Page() {
     setIsSearching(true);
     try {
       // Use the new API format with better parameters
-      const response = await liveJobsAPI.search({
+      const response = await liveJobs1API.search({
         query: searchForm.query || null,
         location: searchForm.location || 'United States',
         remoteOnly: searchForm.remote_only,
