@@ -62,6 +62,8 @@ export function ApplicationsPage() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
   const [submittingId, setSubmittingId] = useState(null);
+  const [retryingAll, setRetryingAll] = useState(false);
+  const [retryingId, setRetryingId] = useState(null);
   
   // Filters - initialize from URL params
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
@@ -76,7 +78,8 @@ export function ApplicationsPage() {
     pending: 0,
     interview: 0,
     rejected: 0,
-    accepted: 0
+    accepted: 0,
+    failed: 0
   });
 
   // Update URL when status filter changes
