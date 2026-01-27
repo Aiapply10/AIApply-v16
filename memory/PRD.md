@@ -43,12 +43,12 @@ Build a website where a job seeker can:
 - AI drafts replies to recruiters
 
 ### 6. Reporting Portals
-- Company-level dashboard (TODO)
-- Candidate-level dashboard (TODO)
+- **Company-level dashboard** (TODO)
+- **Candidate-level dashboard** (DONE - Jan 27, 2026)
 
 ---
 
-## Completed Features (as of January 26, 2026)
+## Completed Features (as of January 27, 2026)
 
 ### Authentication & User Management
 - [x] JWT-based authentication
@@ -74,23 +74,35 @@ Build a website where a job seeker can:
 - [x] 3-Step Apply Wizard (Tailor prompt -> Generate resume -> Preview & Apply)
 - [x] Auto-Apply AI Agent panel with daily scheduler
 
-### Auto-Apply Browser Automation (NEW - Jan 26, 2026)
+### Auto-Apply Browser Automation (Jan 26, 2026)
 - [x] **Playwright Integration** for browser automation
-- [x] **Multi-Platform Support**: Greenhouse, Lever, Workday, SmartRecruiters, Ashby, Breezy
+- [x] **Multi-Platform Support**: Greenhouse, Lever, Workday, SmartRecruiters, Ashby, Breezy, iCIMS
 - [x] **Remote Job Board Handling**: Remotive, RemoteOK with redirect to company portals
 - [x] **DOM-Based Link Detection**: Finds external apply links even when hidden
-- [x] **Form Field Filling**: First name, last name, email, phone, LinkedIn, location
-- [x] **Screenshot Capture**: Initial, form_filled, submitted states
+- [x] **Form Field Filling**: First name, last name, email, phone, LinkedIn, location, address, state, zip, country, website, github, years experience
+- [x] **Dropdown Handling**: Work authorization, sponsorship, gender, veteran status, disability, race/ethnicity
+- [x] **Screenshot Capture**: Initial, form_filled, submitted, confirmation states
 - [x] **Application Status Tracking**: ready_to_apply, applied, submission_failed, validation_error, requires_login
 - [x] **Submission Logs**: Detailed debug logs stored in MongoDB
+- [x] **Enhanced Success Detection**: 40+ success patterns including URL-based detection
 
-### Applications Tracking Page
-- [x] Stats cards: Total, Ready, Applied, Pending, Interview, Rejected, Accepted
+### Applications Tracking Page (Jan 26-27, 2026)
+- [x] Stats cards: Total, Ready, Applied, Pending, Interview, Rejected, Accepted, Failed
+- [x] **Clickable stat cards** - filter by status
 - [x] Search and filter by status/date
 - [x] View Resume dialog with tailored content
 - [x] Cover Letter tab
 - [x] Submit button triggers Playwright automation
 - [x] Download resume per application
+- [x] **Retry Failed Applications** - Individual and bulk retry
+
+### Analytics Dashboard (Jan 27, 2026) - NEW
+- [x] **Quick Stats**: Total Applications, Auto-Applied, Interviews, Offers, Avg ATS Score, Failed
+- [x] **Key Metrics**: Success Rate percentage, This Week applications, Resources (resumes/emails)
+- [x] **Status Distribution**: Pie chart and progress bars
+- [x] **Timeline Chart**: Application activity over last 30 days (Area chart)
+- [x] **Sources Breakdown**: Pie chart and bar chart by job source
+- [x] **Recent Activity**: Last 5 applications with status badges
 
 ### Email Center
 - [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
@@ -127,14 +139,14 @@ Build a website where a job seeker can:
 ## In Progress / Pending
 
 ### P1 - High Priority  
-- [ ] Reporting dashboards (company & candidate views)
-- [ ] Backend refactoring - break down monolithic server.py (5500+ lines)
+- [ ] Company-level reporting dashboard (admin view)
+- [ ] Backend refactoring - break down monolithic server.py (6000+ lines)
 
 ### P2 - Future
 - [ ] LinkedIn SSO (needs user credentials)
 - [ ] System-generated mailbox (e.g., user@careerquest-mail.com)
 - [ ] Email Center App Password connection fix
-- [ ] Improve field selector coverage for more company portals
+- [ ] Add more platform-specific handlers for ATS systems
 
 ---
 
@@ -153,6 +165,7 @@ Build a website where a job seeker can:
 - Styling: Tailwind CSS
 - State: Zustand
 - UI Components: Shadcn/UI
+- Charts: Recharts
 
 ### Integrations
 - OpenAI (via emergentintegrations) - Resume tailoring, Email composition
@@ -162,10 +175,11 @@ Build a website where a job seeker can:
 
 ### Key Files
 - `/app/backend/server.py` - Main backend (needs refactoring)
-- `/app/backend/utils/job_application_bot.py` - **NEW** Playwright browser automation
+- `/app/backend/utils/job_application_bot.py` - Playwright browser automation
 - `/app/backend/utils/enhanced_job_scraper.py` - Free job API scraper
 - `/app/frontend/src/pages/ApplicationsPage.jsx` - Applications tracking
 - `/app/frontend/src/pages/LiveJobsPage.jsx` - Job listings and auto-apply
+- `/app/frontend/src/pages/ReportsPage.jsx` - Analytics dashboard
 
 ---
 
@@ -177,18 +191,19 @@ Build a website where a job seeker can:
 | POST | /api/auto-apply/submit-batch | Trigger batch submission for multiple applications |
 | GET | /api/auto-apply/submission-logs | Get submission attempt logs |
 | GET | /api/auto-apply/screenshots/{application_id} | Get screenshot paths for application |
+| GET | /api/reports/candidate | Get candidate analytics dashboard data |
+| GET | /api/reports/admin | Get admin dashboard data |
 
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_9.json` - Frontend testing (21/21 passed) - Jan 27, 2026
 - `/app/test_reports/iteration_8.json` - Browser automation tests (14/14 passed)
-- `/app/test_reports/iteration_7.json` - Job search tests (14/14 passed)
 
 ## Test Credentials
 - Test User: `test_autoapply@example.com` / `testpass123`
 - Test Resume ID: `resume_8c4696bc3a38`
-- Test Application IDs: `test_app_a011c536` (Remotive->BNSF), `test_app_4d521969` (RemoteOK)
 
 ---
 
-*Last updated: January 26, 2026*
+*Last updated: January 27, 2026*
