@@ -647,25 +647,15 @@ export function ApplicationsPage() {
                             </Button>
                           )}
                           
-                          {/* Submit Button (for ready_to_apply) */}
-                          {app.status === 'ready_to_apply' && (
+                          {/* Apply Now Button (for ready_to_apply) */}
+                          {app.status === 'ready_to_apply' && app.apply_link && (
                             <Button
                               size="sm"
-                              onClick={() => handleSubmitApplication(app.application_id)}
-                              disabled={submittingId === app.application_id}
+                              onClick={() => handleApplyManually(app.apply_link)}
                               className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white"
                             >
-                              {submittingId === app.application_id ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  Submitting...
-                                </>
-                              ) : (
-                                <>
-                                  <Send className="w-4 h-4" />
-                                  Submit
-                                </>
-                              )}
+                              <Send className="w-4 h-4" />
+                              Apply Now
                             </Button>
                           )}
                           
