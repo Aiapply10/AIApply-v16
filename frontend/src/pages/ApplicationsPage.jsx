@@ -587,9 +587,9 @@ export function ApplicationsPage() {
                                   </Badge>
                                 )}
                                 {app.status === 'ready_to_apply' && (
-                                  <Badge className="text-xs bg-amber-100 text-amber-700 border-amber-200">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    Pending Auto-Submit
+                                  <Badge className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                                    <FileText className="w-3 h-3 mr-1" />
+                                    Resume Ready - Click Apply Now
                                   </Badge>
                                 )}
                                 
