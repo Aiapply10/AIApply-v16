@@ -230,6 +230,8 @@ class JobApplicationBot:
                 result = await self._apply_ashby(user_data, resume_path, cover_letter, result)
             elif platform == 'breezy':
                 result = await self._apply_breezy(user_data, resume_path, cover_letter, result)
+            elif platform == 'icims':
+                result = await self._apply_icims(user_data, resume_path, cover_letter, result)
             elif platform in ['linkedin', 'indeed', 'glassdoor']:
                 result = await self._apply_job_board(platform, user_data, resume_path, cover_letter, result)
             elif platform == 'remote_board':
