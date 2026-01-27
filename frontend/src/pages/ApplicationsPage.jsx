@@ -268,13 +268,36 @@ export function ApplicationsPage() {
       <PageTransition>
         <div className="p-6 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">My Applications</h1>
-            <p className="text-slate-600">Track and manage all your job applications</p>
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">My Applications</h1>
+              <p className="text-slate-600">Track and manage all your job applications</p>
+            </div>
+            
+            {/* Retry All Failed Button */}
+            {stats.failed > 0 && (
+              <Button
+                onClick={handleRetryAllFailed}
+                disabled={retryingAll}
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              >
+                {retryingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry {stats.failed} Failed
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Stats Cards - Clickable with Hover Effects */}
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
             <StaggerItem>
               <motion.div
                 whileHover={{ y: -4, scale: 1.02 }}
