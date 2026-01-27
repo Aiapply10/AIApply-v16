@@ -1201,6 +1201,113 @@ class JobApplicationBot:
             
         return result
 
+    async def _apply_icims(self, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
+        """Apply to jobs on iCIMS ATS - popular enterprise ATS"""
+        try:
+            result["status"] = "filling_form"
+            self.log("Starting iCIMS application")
+            
+            # iCIMS often has multi-step forms
+            await asyncio.sleep(2)
+            
+            # Click Apply if on listing page
+            apply_buttons = [
+                'button:has-text("Apply")',
+                'a:has-text("Apply Now")',
+                'a:has-text("Apply for this job")',
+                '#icims_apply',
+            ]
+            await self.wait_and_click(apply_buttons, timeout=5000)
+            await asyncio.sleep(2)
+            
+            # iCIMS field selectors
+            icims_fields = [
+                (['input[name*="firstName" i]', '#firstName', 'input[id*="first" i]'], user_data.get('first_name', '')),
+                (['input[name*="lastName" i]', '#lastName', 'input[id*="last" i]'], user_data.get('last_name', '')),
+                (['input[name*="email" i]', '#email', 'input[type="email"]'], user_data.get('email', '')),
+                (['input[name*="phone" i]', '#phone', 'input[type="tel"]'], user_data.get('phone', '')),
+                (['input[name*="address" i]', '#address'], user_data.get('address', user_data.get('location', ''))),
+                (['input[name*="city" i]', '#city'], user_data.get('city', '')),
+                (['input[name*="zip" i]', '#zipCode', '#postalCode'], user_data.get('zip_code', '')),
+            ]
+            
+            filled_count = 0
+            for selectors, value in icims_fields:
+                if value and await self.wait_and_fill(selectors, value, timeout=2000):
+                    filled_count += 1
+            
+            # Handle dropdowns
+            await self._fill_common_dropdowns(user_data)
+            
+            result["form_filled"] = filled_count > 0
+            self.log(f"Filled {filled_count} iCIMS fields")
+            
+            # iCIMS resume upload
+            if resume_path:
+                icims_upload = [
+                    'input[type="file"][name*="resume" i]',
+                    'input[type="file"][id*="resume" i]',
+                    'input[type="file"][accept*=".pdf"]',
+                    'input[type="file"]'
+                ]
+                for selector in icims_upload:
+                    try:
+                        file_input = self.page.locator(selector).first
+                        if await file_input.count() > 0:
+                            await file_input.set_input_files(resume_path)
+                            self.log(f"iCIMS resume uploaded via: {selector}")
+                            await asyncio.sleep(2)
+                            break
+                    except:
+                        continue
+            
+            if cover_letter:
+                await self._fill_cover_letter(cover_letter)
+                
+            form_screenshot = await self.take_screenshot("icims_form_filled")
+            result["screenshots"].append(form_screenshot)
+            
+            # iCIMS often has "Continue" or "Next" buttons
+            next_buttons = ['button:has-text("Continue")', 'button:has-text("Next")', 'input[type="submit"]']
+            for _ in range(3):  # Try up to 3 pages
+                clicked = await self.wait_and_click(next_buttons, timeout=3000)
+                if not clicked:
+                    break
+                await asyncio.sleep(2)
+                # Check if we reached submit
+                submit_check = self.page.locator('button:has-text("Submit")')
+                if await submit_check.count() > 0:
+                    break
+            
+            # Final submit
+            icims_submit = [
+                'button:has-text("Submit Application")',
+                'button:has-text("Submit")',
+                'input[type="submit"][value*="Submit" i]',
+                'button[type="submit"]',
+            ]
+            
+            submitted = await self.wait_and_click(icims_submit, timeout=5000)
+            
+            if submitted:
+                await asyncio.sleep(3)
+                is_success, _ = await self._detect_success()
+                confirmation_screenshot = await self.take_screenshot("icims_submitted")
+                result["screenshots"].append(confirmation_screenshot)
+                
+                result["success"] = is_success
+                result["status"] = "submitted" if is_success else "submitted_unconfirmed"
+                result["submitted_at"] = datetime.now(timezone.utc).isoformat()
+            else:
+                result["status"] = "submit_button_not_found"
+                
+        except Exception as e:
+            self.log(f"iCIMS error: {str(e)}")
+            result["error"] = str(e)
+            result["status"] = "error"
+            
+        return result
+
     async def _apply_job_board(self, platform: str, user_data: Dict, resume_path: str, cover_letter: str, result: Dict) -> Dict:
         """Handle major job boards that require authentication"""
         result["status"] = "requires_login"
