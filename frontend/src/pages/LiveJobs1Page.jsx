@@ -79,7 +79,7 @@ import {
   PulseBadge
 } from '../components/ui/animations';
 
-export function LiveJobsPage() {
+export function LiveJobs1Page() {
   const { user, updateUser } = useAuthStore();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
