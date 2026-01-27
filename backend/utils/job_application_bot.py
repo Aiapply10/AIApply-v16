@@ -57,6 +57,9 @@ class JobApplicationBot:
         
     async def start(self):
         """Initialize the browser"""
+        if not PLAYWRIGHT_AVAILABLE:
+            raise RuntimeError("Playwright is not available. Browser automation requires Playwright to be installed.")
+        
         if os.path.exists('/pw-browsers'):
             os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/pw-browsers'
         
