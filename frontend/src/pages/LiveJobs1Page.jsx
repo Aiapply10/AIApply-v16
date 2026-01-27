@@ -100,6 +100,8 @@ export function LiveJobs1Page() {
   const [activeTab, setActiveTab] = useState('recommendations');
   const [apiMessage, setApiMessage] = useState('');
   const [requiresProfileUpdate, setRequiresProfileUpdate] = useState(false);
+  const [quotaExhausted, setQuotaExhausted] = useState(false);
+  const [apiErrors, setApiErrors] = useState([]);
   
   // Step-by-step apply wizard state
   const [applyStep, setApplyStep] = useState(1);
