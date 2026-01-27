@@ -153,6 +153,7 @@ export const liveJobs1API = {
         per_page: params.perPage || 20
       }
     }),
+  getRecommendations: () => api.get('/live-jobs-1/recommendations'),
   getDetails: (jobId) => api.get(`/live-jobs-1/job-details/${jobId}`),
   getStatus: () => api.get('/live-jobs-1/status'),
 };
