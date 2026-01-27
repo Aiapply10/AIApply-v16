@@ -1431,6 +1431,45 @@ ${job?.description || job?.full_description || 'N/A'}
                   <JobCard key={job.job_id} job={job} showMatchedTech />
                 ))}
               </div>
+            ) : quotaExhausted ? (
+              <Card className="border-2 border-red-200 bg-red-50">
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-500" />
+                  </div>
+                  <h3 className="font-heading text-xl font-semibold mb-2 text-red-800">API Quota Exhausted</h3>
+                  <p className="text-red-600 text-center max-w-md mb-4">
+                    {apiMessage || "The job search API quota has been exhausted. Please try again later or upgrade your RapidAPI subscription."}
+                  </p>
+                  {apiErrors.length > 0 && (
+                    <div className="bg-red-100 rounded-lg p-3 mb-4 w-full max-w-md">
+                      <p className="text-sm font-medium text-red-700 mb-1">API Status:</p>
+                      <ul className="text-sm text-red-600 list-disc list-inside">
+                        {apiErrors.map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={() => window.open('https://rapidapi.com/dashboard', '_blank')}
+                      className="bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Check RapidAPI Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setActiveTab('search')}
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Try Manual Search
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center py-16">
