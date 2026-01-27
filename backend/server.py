@@ -4964,6 +4964,15 @@ async def submit_application_automated(
     Actually submit a prepared application using browser automation.
     This will navigate to the job site, fill the form, and submit.
     """
+    # Check if Playwright is available
+    from utils.job_application_bot import is_playwright_available
+    
+    if not is_playwright_available():
+        raise HTTPException(
+            status_code=503, 
+            detail="Browser automation is not available in production. Please apply manually using the 'View Job' link."
+        )
+    
     from utils.job_application_bot import apply_to_job_automated
     
     user = await get_current_user(request)
