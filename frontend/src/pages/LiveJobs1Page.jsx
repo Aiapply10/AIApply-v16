@@ -259,7 +259,10 @@ export function LiveJobs1Page() {
     
     try {
       const response = await autoApplyAPI.run();
-      if (response.data.applied_count > 0) {
+      if (response.data.auto_submit_skipped) {
+        // Browser automation not available in production
+        toast.warning(`${response.data.applied_count} jobs prepared! Auto-submit unavailable - please apply manually.`, { duration: 8000 });
+      } else if (response.data.applied_count > 0) {
         toast.success(`Successfully applied to ${response.data.applied_count} jobs!`);
       } else {
         toast.info(response.data.message || 'Auto-apply completed');
@@ -269,6 +272,10 @@ export function LiveJobs1Page() {
     } catch (error) {
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         toast.warning('Auto-apply is still running in the background. Check history for updates.');
+        loadAutoApplyStatus();
+        loadAutoApplyHistory();
+      } else if (error.response?.status === 503) {
+        toast.warning('Browser automation not available. Jobs prepared for manual application.');
         loadAutoApplyStatus();
         loadAutoApplyHistory();
       } else {
