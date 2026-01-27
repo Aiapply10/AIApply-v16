@@ -645,28 +645,70 @@ class JobApplicationBot:
         
     async def _detect_success(self) -> Tuple[bool, str]:
         """Detect if submission was successful by looking for confirmation indicators"""
+        # Wait a moment for any animations/transitions
+        await asyncio.sleep(1)
+        
         success_patterns = [
+            # Thank you messages
             ('text="Thank you"', 'thank_you'),
+            ('text="Thanks for applying"', 'thanks_applying'),
+            ('text="Thank you for applying"', 'thank_applying'),
+            ('text="Thank you for your application"', 'thank_application'),
+            ('text="Thank you for your interest"', 'thank_interest'),
+            # Submission confirmations
             ('text="Application submitted"', 'submitted'),
             ('text="Successfully submitted"', 'success'),
+            ('text="Your application has been submitted"', 'app_submitted'),
+            ('text="Application Submitted Successfully"', 'success_submitted'),
+            # Received confirmations
             ('text="received your application"', 'received'),
             ('text="application has been received"', 'received'),
+            ("text=\"We've received your application\"", 'we_received'),
+            ('text="We have received your application"', 'have_received'),
+            # Applied confirmations
             ('text="You have applied"', 'applied'),
+            ('text="You have successfully applied"', 'success_applied'),
             ('text="Application complete"', 'complete'),
+            ('text="Your application is complete"', 'app_complete'),
+            # Next steps
+            ('text="What happens next"', 'next_steps'),
+            ("text=\"We'll be in touch\"", 'in_touch'),
+            ('text="We will review"', 'will_review'),
+            # CSS class indicators
             ('.confirmation', 'confirmation_class'),
             ('.success-message', 'success_class'),
+            ('.confirmation-message', 'confirmation_msg'),
+            ('.application-confirmation', 'app_confirmation'),
+            ('.thank-you', 'thank_you_class'),
+            # Data attribute indicators
             ('[data-qa="confirmation"]', 'confirmation_qa'),
+            ('[data-testid="confirmation"]', 'confirmation_testid'),
+            ('[data-automation-id="confirmation"]', 'confirmation_automation'),
+            # Heading indicators
             ('h1:has-text("Thank")', 'thank_heading'),
-            ('h2:has-text("Thank")', 'thank_heading'),
+            ('h2:has-text("Thank")', 'thank_heading_h2'),
+            ('h1:has-text("Application")', 'application_heading'),
+            ('h1:has-text("Submitted")', 'submitted_heading'),
+            ('h1:has-text("Success")', 'success_heading'),
         ]
         
         for selector, indicator in success_patterns:
             try:
                 if await self.page.locator(selector).count() > 0:
                     self.log(f"Success detected via: {indicator}")
+                    # Take confirmation screenshot
+                    await self.take_screenshot(f"confirmation_{indicator}")
                     return True, indicator
             except:
                 continue
+        
+        # Also check URL for common success indicators
+        current_url = self.page.url.lower()
+        url_success_indicators = ['thank', 'success', 'confirm', 'complete', 'submitted']
+        for indicator in url_success_indicators:
+            if indicator in current_url:
+                self.log(f"Success detected via URL containing: {indicator}")
+                return True, f"url_{indicator}"
                 
         return False, "none"
         
