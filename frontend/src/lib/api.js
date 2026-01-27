@@ -168,7 +168,7 @@ export const autoApplyAPI = {
   updateSettings: (data) => api.post('/auto-apply/settings', data),
   toggle: () => api.post('/auto-apply/toggle'),
   getHistory: (limit = 50) => api.get('/auto-apply/history', { params: { limit } }),
-  run: () => api.post('/auto-apply/run'),
+  run: () => api.post('/auto-apply/run', {}, { timeout: 300000 }), // 5 min timeout for long-running process
   autoFillSettings: () => api.post('/auto-apply/auto-fill-settings'),
   getStatus: () => api.get('/auto-apply/status'),
   getActivityLog: (limit = 20) => api.get('/auto-apply/activity-log', { params: { limit } }),
