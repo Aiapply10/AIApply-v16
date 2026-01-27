@@ -260,13 +260,25 @@ export function LiveJobsPage() {
     }
 
     setIsRunningAutoApply(true);
+    toast.info('Auto-apply started! This may take a few minutes...', { duration: 5000 });
+    
     try {
       const response = await autoApplyAPI.run();
-      toast.success(response.data.message);
+      if (response.data.applied_count > 0) {
+        toast.success(`Successfully applied to ${response.data.applied_count} jobs!`);
+      } else {
+        toast.info(response.data.message || 'Auto-apply completed');
+      }
       loadAutoApplyStatus();
       loadAutoApplyHistory();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to run auto-apply');
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        toast.warning('Auto-apply is still running in the background. Check history for updates.');
+        loadAutoApplyStatus();
+        loadAutoApplyHistory();
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to run auto-apply. Please try again.');
+      }
     } finally {
       setIsRunningAutoApply(false);
     }
