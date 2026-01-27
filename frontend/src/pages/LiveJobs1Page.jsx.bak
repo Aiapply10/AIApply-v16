@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { liveJobsAPI, resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI, authAPI } from '../lib/api';
+import { liveJobs1API, resumeAPI, applicationAPI, coverLetterAPI, autoApplyAPI, authAPI } from '../lib/api';
 import { useAuthStore } from '../store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -79,7 +79,7 @@ import {
   PulseBadge
 } from '../components/ui/animations';
 
-export function LiveJobsPage() {
+export function LiveJobs1Page() {
   const { user, updateUser } = useAuthStore();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
@@ -120,37 +120,30 @@ export function LiveJobsPage() {
     job_keywords: [],
     locations: ['United States'],
     max_applications_per_day: 10,
-    auto_tailor_resume: true,
-    generate_cover_letter: true,
-    source_filters: [],
-    schedule_time: '12:00',
-    schedule_enabled: true
+    auto_tailor_resume: true
   });
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
+  const [viewingResumeApp, setViewingResumeApp] = useState(null); // For viewing tailored resume in history
   const [newKeyword, setNewKeyword] = useState('');
   const [newLocation, setNewLocation] = useState('');
-  const [viewingResumeApp, setViewingResumeApp] = useState(null); // For viewing tailored resume in history
-  
-  // Submission state
-  const [submittingAppId, setSubmittingAppId] = useState(null);
-  const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
 
   // Job Source Platforms - Enhanced Free APIs
   const JOB_SOURCES = [
-    { value: 'all', label: 'All Platforms', icon: '🌐' },
-    { value: 'arbeitnow', label: 'Arbeitnow', icon: '💼' },
-    { value: 'remotive', label: 'Remotive', icon: '🏠' },
-    { value: 'remoteok', label: 'RemoteOK', icon: '🌍' },
-    { value: 'jobicy', label: 'Jobicy', icon: '🎯' },
-    { value: 'hackernews', label: 'HackerNews', icon: '🔶' },
+    { value: 'all', label: 'All Premium Platforms', icon: '🌐' },
+    { value: 'indeed', label: 'Indeed', icon: '💼' },
+    { value: 'linkedin', label: 'LinkedIn', icon: '🔗' },
+    { value: 'glassdoor', label: 'Glassdoor', icon: '🏢' },
+    { value: 'ziprecruiter', label: 'ZipRecruiter', icon: '⚡' },
+    { value: 'activejobsdb', label: 'Active Jobs DB', icon: '📊' },
   ];
 
   const [searchForm, setSearchForm] = useState({
     query: '',
     location: 'United States',
-    employment_types: [],  // Changed to array for multi-select
-    remote_only: true,  // Default to remote jobs
-    source: 'all',  // Platform filter
+    employment_types: [],
+    remote_only: false,  // Default to all jobs
+    source: 'all',
+    date_posted: 'week',
   });
 
   // Employment type options
@@ -187,23 +180,25 @@ export function LiveJobsPage() {
         updateUser(userRes.data);
       }
       
+      // For Live Jobs 1, search with user's primary technology
+      const searchQuery = userRes.data?.primary_technology || 'software developer';
+      
       const [recsRes, resumesRes] = await Promise.all([
-        liveJobsAPI.getRecommendations(),
+        liveJobs1API.search({ query: searchQuery, location: 'United States' }),
         resumeAPI.getAll()
       ]);
-      setRecommendations(recsRes.data.recommendations || []);
+      
+      // Live Jobs 1 returns { jobs: [], total: N, api_used: string }
+      setRecommendations(recsRes.data.jobs || []);
       setResumes(resumesRes.data || []);
       
       // Handle API messages
-      if (recsRes.data.message) {
-        setApiMessage(recsRes.data.message);
-      }
-      if (recsRes.data.requires_profile_update) {
-        setRequiresProfileUpdate(true);
+      if (recsRes.data.errors && recsRes.data.errors.length > 0) {
+        setApiMessage(`Sources: ${recsRes.data.api_used || 'Multiple APIs'}`);
       }
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load job recommendations');
+      toast.error('Failed to load jobs');
     } finally {
       setIsLoading(false);
     }
@@ -365,16 +360,17 @@ export function LiveJobsPage() {
     e?.preventDefault();
     setIsSearching(true);
     try {
-      // Use the new API format with better parameters
-      const response = await liveJobsAPI.search({
-        query: searchForm.query || null,
+      // Use Live Jobs 1 API with parameters
+      const response = await liveJobs1API.search({
+        query: searchForm.query || user?.primary_technology || 'software developer',
         location: searchForm.location || 'United States',
         remoteOnly: searchForm.remote_only,
-        employmentTypes: searchForm.employment_types.length > 0 
-          ? searchForm.employment_types.join(',') 
+        employmentType: searchForm.employment_types.length > 0 
+          ? searchForm.employment_types[0] 
           : null,
+        datePosted: 'week',
         page: 1,
-        source: searchForm.source !== 'all' ? searchForm.source : null
+        perPage: 20
       });
       
       const jobs = response.data.jobs || [];
@@ -382,9 +378,9 @@ export function LiveJobsPage() {
       setJobs(jobs);
       setActiveTab('search');
       
-      const sourceMsg = searchForm.source !== 'all' ? ` from ${searchForm.source}` : '';
+      const apiUsed = response.data.api_used ? ` (${response.data.api_used})` : '';
       const remoteMsg = searchForm.remote_only ? ' (Remote only)' : '';
-      toast.success(`Found ${jobs.length} jobs${sourceMsg}${remoteMsg}`);
+      toast.success(`Found ${jobs.length} jobs from Indeed, LinkedIn, Glassdoor & more${remoteMsg}`);
     } catch (error) {
       console.error('Error searching jobs:', error);
       toast.error('Failed to search jobs');
@@ -635,61 +631,6 @@ ${job?.description || job?.full_description || 'N/A'}
     }
   };
 
-  // Handle single application submission
-  const handleSubmitApplication = async (applicationId) => {
-    setSubmittingAppId(applicationId);
-    try {
-      const response = await autoApplyAPI.submitApplication(applicationId);
-      
-      if (response.data.success) {
-        toast.success(`Application submitted successfully to ${response.data.platform}!`);
-        // Refresh the history to show updated status
-        loadAutoApplyHistory();
-      } else {
-        toast.error(response.data.message || 'Submission failed');
-      }
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      toast.error(error.response?.data?.detail || 'Failed to submit application');
-    } finally {
-      setSubmittingAppId(null);
-    }
-  };
-
-  // Handle batch submission
-  const handleBatchSubmit = async () => {
-    const pendingCount = autoApplyHistory.filter(i => i.status === 'ready_to_apply').length;
-    if (pendingCount === 0) {
-      toast.info('No pending applications to submit');
-      return;
-    }
-    
-    setIsBatchSubmitting(true);
-    try {
-      const response = await autoApplyAPI.submitBatch(Math.min(pendingCount, 5));
-      
-      toast.success(`Submitted ${response.data.submitted} of ${response.data.total_processed} applications`);
-      
-      // Show detailed results
-      if (response.data.results) {
-        const successful = response.data.results.filter(r => r.success).length;
-        const failed = response.data.results.filter(r => !r.success).length;
-        
-        if (failed > 0) {
-          toast.warning(`${failed} application(s) failed. Check the history for details.`);
-        }
-      }
-      
-      // Refresh history
-      loadAutoApplyHistory();
-    } catch (error) {
-      console.error('Error in batch submission:', error);
-      toast.error('Batch submission failed');
-    } finally {
-      setIsBatchSubmitting(false);
-    }
-  };
-
   const handleDownloadTailoredResume = async (format, versionName = 'default') => {
     if (!tailorForm.resume_id) return;
     
@@ -716,13 +657,6 @@ ${job?.description || job?.full_description || 'N/A'}
     }
   };
 
-  // Helper to strip HTML tags from job descriptions
-  const stripHtml = (html) => {
-    if (!html) return '';
-    const stripped = html.replace(/<[^>]*>/g, ' ');
-    return stripped.replace(/\s+/g, ' ').trim();
-  };
-
   const formatSalary = (min, max, currency, period) => {
     if (!min && !max) return null;
     const formatter = new Intl.NumberFormat('en-US', {
@@ -740,6 +674,13 @@ ${job?.description || job?.full_description || 'N/A'}
       salary += `/${period.toLowerCase()}`;
     }
     return salary;
+  };
+
+  // Helper to strip HTML tags from job descriptions
+  const stripHtml = (html) => {
+    if (!html) return '';
+    const stripped = html.replace(/<[^>]*>/g, ' ');
+    return stripped.replace(/\s+/g, ' ').trim();
   };
 
   const formatDateRelative = (dateString) => {
@@ -1023,9 +964,9 @@ ${job?.description || job?.full_description || 'N/A'}
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold">Live Job Listings</h1>
+            <h1 className="font-heading text-3xl font-bold">Live Jobs 1 (Premium)</h1>
             <p className="text-muted-foreground mt-1">
-              Real-time opportunities from Indeed, Dice, RemoteOK & more
+              Real-time opportunities from Indeed, LinkedIn, Glassdoor, ZipRecruiter & more
             </p>
           </div>
           <Button 
@@ -1121,40 +1062,7 @@ ${job?.description || job?.full_description || 'N/A'}
               </motion.div>
             </div>
             
-            {/* Next Scheduled Run Info */}
-            {autoApplyStatus?.enabled && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border border-violet-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-violet-100 rounded-lg">
-                      <Clock className="w-5 h-5 text-violet-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-violet-800">
-                        Daily Auto-Apply {autoApplyStatus?.schedule_enabled !== false ? 'Active' : 'Paused'}
-                      </p>
-                      <p className="text-xs text-violet-600">
-                        {autoApplyStatus?.schedule_enabled !== false ? (
-                          <>Runs at <strong>{autoApplyStatus?.schedule_time || '12:00'} UTC</strong> • Applies to up to <strong>{autoApplyStatus?.max_daily || 10}</strong> jobs/day</>
-                        ) : (
-                          'Enable in Settings to auto-apply daily'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge className={autoApplyStatus?.schedule_enabled !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}>
-                    {autoApplyStatus?.schedule_enabled !== false ? 'Scheduled' : 'Paused'}
-                  </Badge>
-                </div>
-                {autoApplyStatus?.last_scheduled_run && (
-                  <p className="text-xs text-violet-500 mt-2 pl-12">
-                    Last scheduled run: {formatDate(autoApplyStatus.last_scheduled_run)}
-                  </p>
-                )}
-              </div>
-            )}
-            
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="flex flex-wrap gap-2">
               <Button
                 onClick={handleRunAutoApply}
                 disabled={isRunningAutoApply || (profileCompleteness && profileCompleteness.percentage < 80)}
@@ -2191,112 +2099,6 @@ ${job?.description || job?.full_description || 'N/A'}
                 />
               </div>
 
-              {/* Generate Cover Letter */}
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <Label className="font-semibold">Generate Cover Letter</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Auto-generate a personalized cover letter for each application
-                  </p>
-                </div>
-                <Switch
-                  checked={autoApplySettings.generate_cover_letter}
-                  onCheckedChange={(checked) => setAutoApplySettings({ ...autoApplySettings, generate_cover_letter: checked })}
-                />
-              </div>
-
-              {/* Schedule Time */}
-              <div className="space-y-3 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border border-violet-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-semibold flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-violet-600" />
-                      Daily Auto-Apply Schedule
-                    </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Automatically find and apply to matching jobs every day
-                    </p>
-                  </div>
-                  <Switch
-                    checked={autoApplySettings.schedule_enabled !== false}
-                    onCheckedChange={(checked) => setAutoApplySettings({ ...autoApplySettings, schedule_enabled: checked })}
-                  />
-                </div>
-                
-                {autoApplySettings.schedule_enabled !== false && (
-                  <div className="mt-3 pt-3 border-t border-violet-200 space-y-3">
-                    <div>
-                      <Label className="text-sm text-violet-700">Run Time (UTC)</Label>
-                      <Select
-                        value={autoApplySettings.schedule_time}
-                        onValueChange={(value) => setAutoApplySettings({ ...autoApplySettings, schedule_time: value })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[
-                            { value: '06:00', label: '6:00 AM UTC (Early morning)' },
-                            { value: '09:00', label: '9:00 AM UTC (Morning)' },
-                            { value: '12:00', label: '12:00 PM UTC (Noon)' },
-                            { value: '15:00', label: '3:00 PM UTC (Afternoon)' },
-                            { value: '18:00', label: '6:00 PM UTC (Evening)' },
-                            { value: '21:00', label: '9:00 PM UTC (Night)' }
-                          ].map((time) => (
-                            <SelectItem key={time.value} value={time.value}>
-                              {time.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 p-2 bg-white rounded-md border border-violet-100">
-                      <Bot className="w-5 h-5 text-violet-600" />
-                      <div className="text-xs">
-                        <p className="font-medium text-violet-800">AI Agent will:</p>
-                        <p className="text-violet-600">
-                          Search jobs → Tailor resume → Generate cover letter → Auto-submit to up to {autoApplySettings.max_applications_per_day || 10} positions
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Source Filters */}
-              <div className="space-y-2">
-                <Label className="font-semibold">Preferred Job Sources (Optional)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {['RemoteOK', 'Remotive', 'Arbeitnow', 'Jobicy', 'HackerNews'].map((source) => (
-                    <Badge
-                      key={source}
-                      variant={autoApplySettings.source_filters?.includes(source) ? 'default' : 'outline'}
-                      className="cursor-pointer hover:bg-violet-100"
-                      onClick={() => {
-                        const current = autoApplySettings.source_filters || [];
-                        if (current.includes(source)) {
-                          setAutoApplySettings({
-                            ...autoApplySettings,
-                            source_filters: current.filter(s => s !== source)
-                          });
-                        } else {
-                          setAutoApplySettings({
-                            ...autoApplySettings,
-                            source_filters: [...current, source]
-                          });
-                        }
-                      }}
-                    >
-                      {source}
-                    </Badge>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Leave empty to search all sources
-                </p>
-              </div>
-
               <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setShowAutoApplyDialog(false)} className="flex-1">
                   Cancel
@@ -2347,24 +2149,13 @@ ${job?.description || job?.full_description || 'N/A'}
                           <Clock className="w-3 h-3" />
                           {formatDate(item.applied_at || item.created_at)}
                         </span>
-                        {/* ATS Score */}
-                        {(item.ats_score || item.ats_grade) && (
-                          <span className={`flex items-center gap-1 font-medium ${
-                            (item.ats_score || 0) >= 90 ? 'text-green-600' :
-                            (item.ats_score || 0) >= 80 ? 'text-blue-600' :
-                            'text-amber-600'
-                          }`}>
-                            <Target className="w-3 h-3" />
-                            ATS: {item.ats_score || 'N/A'}
-                          </span>
-                        )}
-                        {(item.resume_saved || item.tailored_resume_content || item.tailored_content) && (
+                        {(item.tailored_resume_content || item.tailored_content) && (
                           <span className="flex items-center gap-1 text-green-600">
                             <CheckCircle2 className="w-3 h-3" />
                             Resume Tailored
                           </span>
                         )}
-                        {(item.cover_letter_generated || item.cover_letter) && (
+                        {item.cover_letter && (
                           <span className="flex items-center gap-1 text-violet-600">
                             <FileText className="w-3 h-3" />
                             Cover Letter
@@ -2398,45 +2189,12 @@ ${job?.description || job?.full_description || 'N/A'}
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            // Download tailored resume
                             window.open(`${process.env.REACT_APP_BACKEND_URL}/api/applications/${item.application_id}/saved-resume`, '_blank');
                           }}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           Download
                         </Button>
-                        {item.status === 'ready_to_apply' && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleSubmitApplication(item.application_id)}
-                            disabled={submittingAppId === item.application_id}
-                            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
-                          >
-                            {submittingAppId === item.application_id ? (
-                              <>
-                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                Submitting...
-                              </>
-                            ) : (
-                              <>
-                                <Send className="w-3 h-3 mr-1" />
-                                Submit Now
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        {item.status === 'applied' && (
-                          <Badge className="bg-green-100 text-green-700">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Submitted
-                          </Badge>
-                        )}
-                        {item.status === 'submission_failed' && (
-                          <Badge className="bg-red-100 text-red-700">
-                            <AlertCircle className="w-3 h-3 mr-1" />
-                            Failed
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -2448,64 +2206,6 @@ ${job?.description || job?.full_description || 'N/A'}
                 </div>
               )}
             </ScrollArea>
-            
-            {/* Batch Submit Button */}
-            {autoApplyHistory.some(item => item.status === 'ready_to_apply') && (
-              <div className="pt-4 border-t">
-                <Button
-                  onClick={handleBatchSubmit}
-                  disabled={isBatchSubmitting}
-                  className="w-full bg-gradient-to-r from-violet-600 to-purple-600"
-                >
-                  {isBatchSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Submitting Applications...
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="w-4 h-4 mr-2" />
-                      Submit All Pending Applications ({autoApplyHistory.filter(i => i.status === 'ready_to_apply').length})
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Profile Warning Dialog */}
-        <Dialog open={showProfileWarning} onOpenChange={setShowProfileWarning}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-amber-600">
-                <AlertTriangle className="w-5 h-5" />
-                Profile Incomplete
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              <p className="mb-4">
-                Your profile is less than 80% complete. Please update your profile before using the auto-apply feature.
-              </p>
-              {profileCompleteness?.missing_fields && (
-                <div className="bg-amber-50 p-4 rounded-lg mb-4">
-                  <p className="font-medium text-amber-800 mb-2">Missing fields:</p>
-                  <ul className="list-disc list-inside text-sm text-amber-700">
-                    {profileCompleteness.missing_fields.map((field, i) => (
-                      <li key={i}>{field}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setShowProfileWarning(false)} className="flex-1">
-                  Later
-                </Button>
-                <Button onClick={() => navigate('/profile')} className="flex-1">
-                  Update Profile
-                </Button>
-              </div>
-            </div>
           </DialogContent>
         </Dialog>
 
@@ -2601,8 +2301,43 @@ ${job?.description || job?.full_description || 'N/A'}
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Profile Warning Dialog */}
+        <Dialog open={showProfileWarning} onOpenChange={setShowProfileWarning}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-600">
+                <AlertTriangle className="w-5 h-5" />
+                Profile Incomplete
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="mb-4">
+                Your profile is less than 80% complete. Please update your profile before using the auto-apply feature.
+              </p>
+              {profileCompleteness?.missing_fields && (
+                <div className="bg-amber-50 p-4 rounded-lg mb-4">
+                  <p className="font-medium text-amber-800 mb-2">Missing fields:</p>
+                  <ul className="list-disc list-inside text-sm text-amber-700">
+                    {profileCompleteness.missing_fields.map((field, i) => (
+                      <li key={i}>{field}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setShowProfileWarning(false)} className="flex-1">
+                  Later
+                </Button>
+                <Button onClick={() => navigate('/profile')} className="flex-1">
+                  Update Profile
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
     </DashboardLayout>
   );
 }
 
-export default LiveJobsPage;
+export default LiveJobs1Page;
