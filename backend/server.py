@@ -3234,6 +3234,108 @@ LIVE_JOBS_1_APIS = [
     }
 ]
 
+@api_router.get("/live-jobs-1/recommendations")
+async def get_live_jobs_1_recommendations(request: Request):
+    """
+    Get personalized job recommendations using premium APIs (JSearch, LinkedIn Jobs).
+    Based on user's primary technology and sub technologies.
+    """
+    user = await get_current_user(request)
+    
+    # Check if user has required profile fields
+    if not user.get('primary_technology'):
+        return {
+            "recommendations": [],
+            "message": "Please update your profile with Primary Technology to get personalized job recommendations.",
+            "requires_profile_update": True,
+            "missing_fields": ["primary_technology"]
+        }
+    
+    primary_tech = user.get("primary_technology", "")
+    sub_techs = user.get("sub_technologies", [])
+    
+    try:
+        # Search using user's primary technology
+        jobs = []
+        api_used = []
+        
+        # Try JSearch API
+        rapidapi_key = os.environ.get('RAPIDAPI_KEY')
+        if rapidapi_key:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(
+                        "https://jsearch.p.rapidapi.com/search",
+                        params={
+                            "query": f"{primary_tech} jobs",
+                            "page": "1",
+                            "num_pages": "2",
+                            "date_posted": "week"
+                        },
+                        headers={
+                            "X-RapidAPI-Key": rapidapi_key,
+                            "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
+                        }
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        for job in data.get("data", [])[:15]:
+                            jobs.append({
+                                "id": job.get("job_id", str(uuid.uuid4())),
+                                "title": job.get("job_title", ""),
+                                "company": job.get("employer_name", ""),
+                                "location": job.get("job_city", "") or job.get("job_state", "") or "Remote",
+                                "description": job.get("job_description", "")[:500],
+                                "apply_link": job.get("job_apply_link", ""),
+                                "posted_at": job.get("job_posted_at_datetime_utc", ""),
+                                "employment_type": job.get("job_employment_type", ""),
+                                "source": "JSearch",
+                                "salary_info": job.get("job_min_salary") or job.get("job_max_salary") or ""
+                            })
+                        api_used.append("JSearch")
+            except Exception as e:
+                logger.warning(f"JSearch API error: {e}")
+        
+        # If not enough jobs, add from enhanced scraper
+        if len(jobs) < 10:
+            try:
+                more_jobs = await enhanced_job_scraper.scrape_all_sources(
+                    query=primary_tech,
+                    remote_only=False,
+                    limit_per_source=8
+                )
+                jobs.extend(more_jobs)
+                api_used.append("Free APIs")
+            except Exception as e:
+                logger.warning(f"Enhanced scraper error: {e}")
+        
+        # Remove duplicates
+        seen = set()
+        unique_jobs = []
+        for job in jobs:
+            key = (job.get('title', '').lower(), job.get('company', '').lower())
+            if key not in seen:
+                seen.add(key)
+                unique_jobs.append(job)
+        
+        return {
+            "recommendations": unique_jobs[:25],
+            "total": len(unique_jobs),
+            "api_used": " + ".join(api_used) if api_used else "Premium APIs",
+            "based_on": {
+                "primary_technology": primary_tech,
+                "sub_technologies": sub_techs
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting Live Jobs 1 recommendations: {e}")
+        return {
+            "recommendations": [],
+            "error": str(e),
+            "message": "Failed to fetch job recommendations"
+        }
+
 @api_router.get("/live-jobs-1/search")
 async def search_live_jobs_1(
     request: Request,
