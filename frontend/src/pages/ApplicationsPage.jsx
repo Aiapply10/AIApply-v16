@@ -445,7 +445,7 @@ export function ApplicationsPage() {
                               </div>
                               
                               {/* Features */}
-                              <div className="flex items-center gap-2 mt-3">
+                              <div className="flex items-center gap-2 mt-3 flex-wrap">
                                 {/* ATS Score Badge */}
                                 {(app.ats_score || app.ats_grade) && (
                                   <Badge className={`text-xs ${
@@ -457,22 +457,37 @@ export function ApplicationsPage() {
                                     ATS: {app.ats_score || 'N/A'} ({app.ats_grade || 'B'})
                                   </Badge>
                                 )}
-                                {app.resume_saved && (
+                                
+                                {/* Submission Status Badge */}
+                                {app.status === 'applied' && app.auto_applied && (
+                                  <Badge className="text-xs bg-green-100 text-green-700 border-green-200">
+                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                    Auto-Applied by AI
+                                  </Badge>
+                                )}
+                                {app.status === 'submission_failed' && (
+                                  <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
+                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                    Failed - Manual Apply Needed
+                                  </Badge>
+                                )}
+                                {app.status === 'ready_to_apply' && (
+                                  <Badge className="text-xs bg-amber-100 text-amber-700 border-amber-200">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    Pending Auto-Submit
+                                  </Badge>
+                                )}
+                                
+                                {(app.resume_saved || app.tailored_content || app.tailored_resume_content) && (
                                   <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                                     <FileText className="w-3 h-3 mr-1" />
                                     Resume Tailored
                                   </Badge>
                                 )}
-                                {app.cover_letter_generated && (
+                                {(app.cover_letter_generated || app.cover_letter) && (
                                   <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
                                     <Sparkles className="w-3 h-3 mr-1" />
                                     Cover Letter
-                                  </Badge>
-                                )}
-                                {app.ats_optimized && !app.ats_score && (
-                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                                    <Target className="w-3 h-3 mr-1" />
-                                    ATS Optimized
                                   </Badge>
                                 )}
                               </div>
