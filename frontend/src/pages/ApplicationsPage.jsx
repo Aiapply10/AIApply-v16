@@ -219,63 +219,105 @@ export function ApplicationsPage() {
             <p className="text-slate-600">Track and manage all your job applications</p>
           </div>
 
-          {/* Stats Cards */}
+          {/* Stats Cards - Clickable with Hover Effects */}
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-slate-50 to-slate-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                  <p className="text-sm text-slate-600">Total</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('all')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'all' ? 'ring-2 ring-slate-400' : ''} bg-gradient-to-br from-slate-50 to-slate-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                    <p className="text-sm text-slate-600">Total</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-700">{stats.ready_to_apply}</p>
-                  <p className="text-sm text-blue-600">Ready</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('ready_to_apply')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'ready_to_apply' ? 'ring-2 ring-blue-400' : ''} bg-gradient-to-br from-blue-50 to-blue-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-700">{stats.ready_to_apply}</p>
+                    <p className="text-sm text-blue-600">Ready</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-green-50 to-green-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-green-700">{stats.applied}</p>
-                  <p className="text-sm text-green-600">Applied</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('applied')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'applied' ? 'ring-2 ring-green-400' : ''} bg-gradient-to-br from-green-50 to-green-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-green-700">{stats.applied}</p>
+                    <p className="text-sm text-green-600">Applied</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
-                  <p className="text-sm text-yellow-600">Pending</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('pending')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'pending' ? 'ring-2 ring-yellow-400' : ''} bg-gradient-to-br from-yellow-50 to-yellow-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
+                    <p className="text-sm text-yellow-600">Pending</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-purple-700">{stats.interview}</p>
-                  <p className="text-sm text-purple-600">Interview</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('interview')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'interview' ? 'ring-2 ring-purple-400' : ''} bg-gradient-to-br from-purple-50 to-purple-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-purple-700">{stats.interview}</p>
+                    <p className="text-sm text-purple-600">Interview</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-red-50 to-red-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
-                  <p className="text-sm text-red-600">Rejected</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('rejected')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'rejected' ? 'ring-2 ring-red-400' : ''} bg-gradient-to-br from-red-50 to-red-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
+                    <p className="text-sm text-red-600">Rejected</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
             <StaggerItem>
-              <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-700">{stats.accepted}</p>
-                  <p className="text-sm text-emerald-600">Accepted</p>
-                </CardContent>
-              </Card>
+              <motion.div
+                whileHover={{ y: -4, scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+                onClick={() => setStatusFilter('accepted')}
+              >
+                <Card className={`cursor-pointer transition-all hover:shadow-lg ${statusFilter === 'accepted' ? 'ring-2 ring-emerald-400' : ''} bg-gradient-to-br from-emerald-50 to-emerald-100`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-2xl font-bold text-emerald-700">{stats.accepted}</p>
+                    <p className="text-sm text-emerald-600">Accepted</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </StaggerItem>
           </StaggerContainer>
 
