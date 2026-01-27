@@ -106,7 +106,7 @@ export function ApplicationsPage() {
       const apps = response.data.applications || [];
       setApplications(apps);
       
-      // Calculate stats
+      // Calculate stats including failed
       const newStats = {
         total: apps.length,
         ready_to_apply: apps.filter(a => a.status === 'ready_to_apply').length,
@@ -114,7 +114,8 @@ export function ApplicationsPage() {
         pending: apps.filter(a => a.status === 'pending').length,
         interview: apps.filter(a => a.status === 'interview').length,
         rejected: apps.filter(a => a.status === 'rejected').length,
-        accepted: apps.filter(a => a.status === 'accepted').length
+        accepted: apps.filter(a => a.status === 'accepted').length,
+        failed: apps.filter(a => a.status === 'submission_failed').length
       };
       setStats(newStats);
     } catch (error) {
@@ -123,6 +124,56 @@ export function ApplicationsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Retry a single failed application
+  const handleRetryApplication = async (applicationId) => {
+    setRetryingId(applicationId);
+    try {
+      const response = await autoApplyAPI.submitApplication(applicationId);
+      if (response.data.success) {
+        toast.success('Application submitted successfully!');
+      } else {
+        toast.error(`Retry failed: ${response.data.message || 'Unknown error'}`);
+      }
+      // Reload applications to get updated status
+      await loadApplications();
+    } catch (error) {
+      console.error('Retry error:', error);
+      toast.error('Failed to retry application');
+    } finally {
+      setRetryingId(null);
+    }
+  };
+
+  // Retry all failed applications
+  const handleRetryAllFailed = async () => {
+    const failedApps = applications.filter(a => a.status === 'submission_failed');
+    if (failedApps.length === 0) {
+      toast.info('No failed applications to retry');
+      return;
+    }
+    
+    setRetryingAll(true);
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const app of failedApps) {
+      try {
+        const response = await autoApplyAPI.submitApplication(app.application_id);
+        if (response.data.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        failCount++;
+      }
+    }
+    
+    toast.success(`Retry complete: ${successCount} succeeded, ${failCount} failed`);
+    await loadApplications();
+    setRetryingAll(false);
   };
 
   const filterApplications = () => {
