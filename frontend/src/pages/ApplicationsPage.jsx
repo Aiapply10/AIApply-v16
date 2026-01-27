@@ -646,6 +646,28 @@ export function ApplicationsPage() {
                               )}
                             </Button>
                           )}
+                          
+                          {/* Retry Button (for failed submissions) */}
+                          {app.status === 'submission_failed' && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleRetryApplication(app.application_id)}
+                              disabled={retryingId === app.application_id}
+                              className="gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
+                            >
+                              {retryingId === app.application_id ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Retrying...
+                                </>
+                              ) : (
+                                <>
+                                  <RefreshCw className="w-4 h-4" />
+                                  Retry
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
