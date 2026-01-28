@@ -184,39 +184,62 @@ export function LiveJobs1Page() {
     setIsLoading(true);
     setQuotaExhausted(false);
     setApiErrors([]);
+    
     try {
-      // First fetch user profile to ensure we have latest data including primary_technology
-      const userRes = await authAPI.getMe();
-      if (userRes.data) {
-        updateUser(userRes.data);
+      // First fetch user profile
+      try {
+        const userRes = await authAPI.getMe();
+        if (userRes.data) {
+          updateUser(userRes.data);
+        }
+      } catch (userError) {
+        console.error('Error loading user profile:', userError);
+        // Continue anyway - we can still load recommendations
       }
       
-      const [recsRes, resumesRes] = await Promise.all([
-        liveJobs1API.getRecommendations(),
-        resumeAPI.getAll()
-      ]);
-      setRecommendations(recsRes.data.recommendations || []);
-      setResumes(resumesRes.data || []);
+      // Load recommendations - this is the main data
+      try {
+        const recsRes = await liveJobs1API.getRecommendations();
+        setRecommendations(recsRes.data.recommendations || []);
+        
+        // Handle API messages and quota status
+        if (recsRes.data.message) {
+          setApiMessage(recsRes.data.message);
+        }
+        if (recsRes.data.requires_profile_update) {
+          setRequiresProfileUpdate(true);
+        }
+        if (recsRes.data.quota_exhausted) {
+          setQuotaExhausted(true);
+          toast.error('API quota exhausted. Please check your RapidAPI subscription.');
+        } else if (recsRes.data.quota_warning) {
+          toast.warning(recsRes.data.message || 'Some APIs hit rate limits.');
+        }
+        if (recsRes.data.api_errors) {
+          setApiErrors(recsRes.data.api_errors);
+        }
+      } catch (recsError) {
+        console.error('Error loading recommendations:', recsError);
+        if (recsError.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        } else {
+          toast.error('Failed to load job recommendations');
+        }
+        setRecommendations([]);
+      }
       
-      // Handle API messages and quota status
-      if (recsRes.data.message) {
-        setApiMessage(recsRes.data.message);
+      // Load resumes separately
+      try {
+        const resumesRes = await resumeAPI.getAll();
+        setResumes(resumesRes.data || []);
+      } catch (resumeError) {
+        console.error('Error loading resumes:', resumeError);
+        setResumes([]);
       }
-      if (recsRes.data.requires_profile_update) {
-        setRequiresProfileUpdate(true);
-      }
-      if (recsRes.data.quota_exhausted) {
-        setQuotaExhausted(true);
-        toast.error('API quota exhausted. Please check your RapidAPI subscription.');
-      } else if (recsRes.data.quota_warning) {
-        toast.warning(recsRes.data.message || 'Some APIs hit rate limits.');
-      }
-      if (recsRes.data.api_errors) {
-        setApiErrors(recsRes.data.api_errors);
-      }
+      
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Failed to load job recommendations');
+      console.error('Unexpected error:', error);
+      toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
