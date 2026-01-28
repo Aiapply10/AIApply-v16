@@ -643,7 +643,16 @@ async def register(user_data: UserCreate):
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin, response: Response):
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["password"]):
+    
+    # Check if user exists and has a password (Google SSO users don't have passwords)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # If user doesn't have password (Google SSO user), they must use Google login
+    if not user.get("password"):
+        raise HTTPException(status_code=401, detail="Please use Google Sign-In for this account")
+    
+    if not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_access_token({"user_id": user["user_id"], "email": user["email"]})
