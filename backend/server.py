@@ -3237,8 +3237,8 @@ LIVE_JOBS_1_APIS = [
 @api_router.get("/live-jobs-1/recommendations")
 async def get_live_jobs_1_recommendations(request: Request):
     """
-    Get personalized job recommendations using premium APIs (JSearch, LinkedIn Jobs).
-    Based on user's primary technology and sub technologies.
+    Get personalized job recommendations using multiple RapidAPI sources with cascading fallback.
+    APIs tried in order: JSearch -> Jobs Search API -> Indeed Scraper -> Remote Jobs -> Indeed46 -> LinkedIn -> Free APIs
     """
     user = await get_current_user(request)
     
@@ -3257,11 +3257,27 @@ async def get_live_jobs_1_recommendations(request: Request):
     jobs = []
     api_used = []
     api_errors = []
-    quota_exhausted = False
+    apis_exhausted = 0
+    total_apis = 7  # Total number of APIs we'll try
     
-    # Try JSearch API
-    rapidapi_key = os.environ.get('RAPIDAPI_KEY')
-    if rapidapi_key:
+    rapidapi_key = os.environ.get('RAPIDAPI_KEY', '35705721d3mshce000ad293f1003p10c77ejsne47fed17c932')
+    
+    async def try_api(name, coro):
+        """Helper to try an API and track errors"""
+        nonlocal apis_exhausted
+        try:
+            result = await coro
+            return result
+        except Exception as e:
+            error_msg = str(e)[:100]
+            if "429" in error_msg or "403" in error_msg or "quota" in error_msg.lower():
+                apis_exhausted += 1
+            api_errors.append(f"{name}: {error_msg}")
+            logger.warning(f"{name} API error: {e}")
+            return None
+    
+    # ========== API 1: JSearch ==========
+    if len(jobs) < 10:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
@@ -3286,43 +3302,235 @@ async def get_live_jobs_1_recommendations(request: Request):
                             "title": job.get("job_title", ""),
                             "company": job.get("employer_name", ""),
                             "location": job.get("job_city", "") or job.get("job_state", "") or "Remote",
-                            "description": job.get("job_description", "")[:500],
+                            "description": job.get("job_description", "")[:500] if job.get("job_description") else "",
                             "apply_link": job.get("job_apply_link", ""),
                             "posted_at": job.get("job_posted_at_datetime_utc", ""),
                             "employment_type": job.get("job_employment_type", ""),
                             "source": "JSearch",
-                            "salary_info": job.get("job_min_salary") or job.get("job_max_salary") or ""
+                            "salary_info": str(job.get("job_min_salary") or job.get("job_max_salary") or "")
                         })
-                    api_used.append("JSearch")
-                elif response.status_code == 429:
-                    api_errors.append("JSearch: Rate limit exceeded")
-                    quota_exhausted = True
-                    logger.warning("JSearch API quota exhausted (429)")
-                elif response.status_code == 403:
-                    api_errors.append("JSearch: API quota exhausted or invalid key")
-                    quota_exhausted = True
-                    logger.warning("JSearch API quota exhausted (403)")
+                    if data.get("data"):
+                        api_used.append("JSearch")
+                        logger.info(f"JSearch returned {len(data.get('data', []))} jobs")
+                elif response.status_code in [429, 403]:
+                    apis_exhausted += 1
+                    api_errors.append(f"JSearch: Quota exhausted ({response.status_code})")
+                    logger.warning(f"JSearch quota exhausted: {response.status_code}")
                 else:
                     api_errors.append(f"JSearch: Error {response.status_code}")
-                    logger.warning(f"JSearch API error: {response.status_code}")
-        except httpx.TimeoutException:
-            api_errors.append("JSearch: Request timeout")
-            logger.warning("JSearch API timeout")
         except Exception as e:
             api_errors.append(f"JSearch: {str(e)[:50]}")
-            logger.warning(f"JSearch API error: {e}")
-    else:
-        api_errors.append("JSearch: API key not configured")
+            logger.warning(f"JSearch error: {e}")
     
-    # Try LinkedIn Jobs Search API if JSearch failed or returned few results
-    if len(jobs) < 5 and rapidapi_key:
+    # ========== API 2: Jobs Search API ==========
+    if len(jobs) < 10:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://jobs-search-api.p.rapidapi.com/",
+                    params={
+                        "query": primary_tech,
+                        "page": "1",
+                        "num_pages": "1",
+                        "country": "us"
+                    },
+                    headers={
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "jobs-search-api.p.rapidapi.com"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    job_list = data.get("jobs", data) if isinstance(data, dict) else data
+                    if isinstance(job_list, list):
+                        for job in job_list[:15]:
+                            jobs.append({
+                                "id": job.get("id", str(uuid.uuid4())),
+                                "title": job.get("title", job.get("job_title", "")),
+                                "company": job.get("company", job.get("company_name", "")),
+                                "location": job.get("location", job.get("job_location", "Remote")),
+                                "description": (job.get("description", job.get("snippet", "")) or "")[:500],
+                                "apply_link": job.get("url", job.get("link", job.get("apply_link", ""))),
+                                "posted_at": job.get("posted_at", job.get("date_posted", "")),
+                                "employment_type": job.get("employment_type", "Full-time"),
+                                "source": "Jobs Search API",
+                                "salary_info": str(job.get("salary", ""))
+                            })
+                        if job_list:
+                            api_used.append("Jobs Search API")
+                            logger.info(f"Jobs Search API returned {len(job_list)} jobs")
+                elif response.status_code in [429, 403]:
+                    apis_exhausted += 1
+                    api_errors.append(f"Jobs Search API: Quota exhausted ({response.status_code})")
+                else:
+                    api_errors.append(f"Jobs Search API: Error {response.status_code}")
+        except Exception as e:
+            api_errors.append(f"Jobs Search API: {str(e)[:50]}")
+            logger.warning(f"Jobs Search API error: {e}")
+    
+    # ========== API 3: Indeed Scraper API ==========
+    if len(jobs) < 10:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://indeed-scraper-api.p.rapidapi.com/api/job",
+                    json={
+                        "scraper": {
+                            "maxRows": 15,
+                            "query": primary_tech,
+                            "location": "United States",
+                            "jobType": "fulltime",
+                            "radius": "50",
+                            "sort": "relevance",
+                            "fromDays": "7",
+                            "country": "us"
+                        }
+                    },
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "indeed-scraper-api.p.rapidapi.com"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    job_list = data.get("jobs", data.get("results", data)) if isinstance(data, dict) else data
+                    if isinstance(job_list, list):
+                        for job in job_list[:15]:
+                            jobs.append({
+                                "id": job.get("id", job.get("jobKey", str(uuid.uuid4()))),
+                                "title": job.get("title", job.get("jobTitle", "")),
+                                "company": job.get("company", job.get("companyName", "")),
+                                "location": job.get("location", job.get("jobLocation", "Remote")),
+                                "description": (job.get("description", job.get("snippet", "")) or "")[:500],
+                                "apply_link": job.get("url", job.get("link", job.get("jobUrl", ""))),
+                                "posted_at": job.get("posted_at", job.get("datePosted", "")),
+                                "employment_type": job.get("employment_type", job.get("jobType", "Full-time")),
+                                "source": "Indeed Scraper",
+                                "salary_info": str(job.get("salary", job.get("salaryText", "")))
+                            })
+                        if job_list:
+                            api_used.append("Indeed Scraper")
+                            logger.info(f"Indeed Scraper returned {len(job_list)} jobs")
+                elif response.status_code in [429, 403]:
+                    apis_exhausted += 1
+                    api_errors.append(f"Indeed Scraper: Quota exhausted ({response.status_code})")
+                else:
+                    api_errors.append(f"Indeed Scraper: Error {response.status_code}")
+        except Exception as e:
+            api_errors.append(f"Indeed Scraper: {str(e)[:50]}")
+            logger.warning(f"Indeed Scraper error: {e}")
+    
+    # ========== API 4: Remote Jobs API ==========
+    if len(jobs) < 10:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://remote-jobs1.p.rapidapi.com/jobs",
+                    params={
+                        "country": "us",
+                        "employment_type": "fulltime",
+                        "limit": "50",
+                        "include_company": "false",
+                        "include_total_count": "false"
+                    },
+                    headers={
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "remote-jobs1.p.rapidapi.com"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    job_list = data.get("jobs", data) if isinstance(data, dict) else data
+                    if isinstance(job_list, list):
+                        # Filter by primary tech if possible
+                        filtered_jobs = [j for j in job_list if primary_tech.lower() in str(j).lower()][:15]
+                        if not filtered_jobs:
+                            filtered_jobs = job_list[:15]
+                        for job in filtered_jobs:
+                            jobs.append({
+                                "id": job.get("id", str(uuid.uuid4())),
+                                "title": job.get("title", job.get("job_title", "")),
+                                "company": job.get("company", job.get("company_name", "")),
+                                "location": job.get("location", "Remote"),
+                                "description": (job.get("description", "") or "")[:500],
+                                "apply_link": job.get("url", job.get("apply_url", job.get("link", ""))),
+                                "posted_at": job.get("posted_at", job.get("publication_date", "")),
+                                "employment_type": job.get("employment_type", "Full-time"),
+                                "source": "Remote Jobs",
+                                "salary_info": str(job.get("salary", ""))
+                            })
+                        if filtered_jobs:
+                            api_used.append("Remote Jobs")
+                            logger.info(f"Remote Jobs returned {len(filtered_jobs)} jobs")
+                elif response.status_code in [429, 403]:
+                    apis_exhausted += 1
+                    api_errors.append(f"Remote Jobs: Quota exhausted ({response.status_code})")
+                else:
+                    api_errors.append(f"Remote Jobs: Error {response.status_code}")
+        except Exception as e:
+            api_errors.append(f"Remote Jobs: {str(e)[:50]}")
+            logger.warning(f"Remote Jobs error: {e}")
+    
+    # ========== API 5: Indeed46 API ==========
+    if len(jobs) < 10:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    "https://indeed46.p.rapidapi.com/job",
+                    params={
+                        "country": "US",
+                        "sort": "-1",
+                        "page_size": "20",
+                        "query": primary_tech
+                    },
+                    headers={
+                        "X-RapidAPI-Key": rapidapi_key,
+                        "X-RapidAPI-Host": "indeed46.p.rapidapi.com"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    job_list = data.get("jobs", data.get("results", data)) if isinstance(data, dict) else data
+                    if isinstance(job_list, list):
+                        for job in job_list[:15]:
+                            jobs.append({
+                                "id": job.get("id", job.get("job_id", str(uuid.uuid4()))),
+                                "title": job.get("title", job.get("job_title", "")),
+                                "company": job.get("company", job.get("company_name", "")),
+                                "location": job.get("location", job.get("job_location", "Remote")),
+                                "description": (job.get("description", job.get("snippet", "")) or "")[:500],
+                                "apply_link": job.get("url", job.get("link", "")),
+                                "posted_at": job.get("posted_at", job.get("date", "")),
+                                "employment_type": job.get("employment_type", "Full-time"),
+                                "source": "Indeed46",
+                                "salary_info": str(job.get("salary", ""))
+                            })
+                        if job_list:
+                            api_used.append("Indeed46")
+                            logger.info(f"Indeed46 returned {len(job_list)} jobs")
+                elif response.status_code in [429, 403]:
+                    apis_exhausted += 1
+                    api_errors.append(f"Indeed46: Quota exhausted ({response.status_code})")
+                else:
+                    api_errors.append(f"Indeed46: Error {response.status_code}")
+        except Exception as e:
+            api_errors.append(f"Indeed46: {str(e)[:50]}")
+            logger.warning(f"Indeed46 error: {e}")
+    
+    # ========== API 6: LinkedIn Jobs Search ==========
+    if len(jobs) < 10:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
                     "https://linkedin-jobs-search.p.rapidapi.com/search",
                     params={
                         "keywords": primary_tech,
-                        "locationId": "103644278",  # United States
+                        "locationId": "103644278",
                         "datePosted": "past-week",
                         "sort": "recent"
                     },
@@ -3334,28 +3542,36 @@ async def get_live_jobs_1_recommendations(request: Request):
                 
                 if response.status_code == 200:
                     data = response.json()
-                    for job in data[:10]:
+                    job_list = data if isinstance(data, list) else data.get("jobs", [])
+                    for job in job_list[:10]:
+                        company_name = job.get("company", "")
+                        if isinstance(company_name, dict):
+                            company_name = company_name.get("name", "")
                         jobs.append({
                             "id": job.get("id", str(uuid.uuid4())),
                             "title": job.get("title", ""),
-                            "company": job.get("company", {}).get("name", "") if isinstance(job.get("company"), dict) else job.get("company", ""),
+                            "company": company_name,
                             "location": job.get("location", "Remote"),
-                            "description": job.get("description", "")[:500] if job.get("description") else "",
+                            "description": (job.get("description", "") or "")[:500],
                             "apply_link": job.get("url", ""),
                             "posted_at": job.get("postedDate", ""),
-                            "employment_type": job.get("employmentType", ""),
+                            "employment_type": job.get("employmentType", "Full-time"),
                             "source": "LinkedIn",
-                            "salary_info": job.get("salary", "") or ""
+                            "salary_info": str(job.get("salary", ""))
                         })
-                    api_used.append("LinkedIn")
+                    if job_list:
+                        api_used.append("LinkedIn")
+                        logger.info(f"LinkedIn returned {len(job_list)} jobs")
                 elif response.status_code in [429, 403]:
-                    api_errors.append("LinkedIn: API quota exhausted")
-                    quota_exhausted = True
+                    apis_exhausted += 1
+                    api_errors.append(f"LinkedIn: Quota exhausted ({response.status_code})")
+                else:
+                    api_errors.append(f"LinkedIn: Error {response.status_code}")
         except Exception as e:
             api_errors.append(f"LinkedIn: {str(e)[:50]}")
-            logger.warning(f"LinkedIn Jobs API error: {e}")
+            logger.warning(f"LinkedIn error: {e}")
     
-    # Fallback to free APIs if premium APIs failed
+    # ========== API 7: Free APIs (Fallback) ==========
     if len(jobs) < 10:
         try:
             more_jobs = await enhanced_job_scraper.scrape_all_sources(
@@ -3366,22 +3582,26 @@ async def get_live_jobs_1_recommendations(request: Request):
             jobs.extend(more_jobs)
             if more_jobs:
                 api_used.append("Free APIs")
+                logger.info(f"Free APIs returned {len(more_jobs)} jobs")
         except Exception as e:
             api_errors.append(f"Free APIs: {str(e)[:50]}")
-            logger.warning(f"Enhanced scraper error: {e}")
+            logger.warning(f"Free APIs error: {e}")
     
-    # Remove duplicates
+    # Remove duplicates based on title + company
     seen = set()
     unique_jobs = []
     for job in jobs:
-        key = (job.get('title', '').lower(), job.get('company', '').lower())
-        if key not in seen:
-            seen.add(key)
+        title = (job.get('title') or '').lower().strip()
+        company = (job.get('company') or '').lower().strip()
+        if title and (title, company) not in seen:
+            seen.add((title, company))
             unique_jobs.append(job)
     
     # Build response
+    all_apis_exhausted = apis_exhausted >= total_apis - 1  # Allow free APIs as fallback
+    
     response_data = {
-        "recommendations": unique_jobs[:25],
+        "recommendations": unique_jobs[:30],
         "total": len(unique_jobs),
         "api_used": " + ".join(api_used) if api_used else "None",
         "based_on": {
@@ -3390,18 +3610,20 @@ async def get_live_jobs_1_recommendations(request: Request):
         }
     }
     
-    # Add quota exhaustion info if applicable
-    if quota_exhausted and len(unique_jobs) == 0:
-        response_data["quota_exhausted"] = True
-        response_data["message"] = "API quota exhausted. Please try again later or check your RapidAPI subscription."
+    # Add status info
+    if len(unique_jobs) == 0:
+        if all_apis_exhausted or apis_exhausted >= 5:
+            response_data["quota_exhausted"] = True
+            response_data["message"] = f"All API quotas exhausted ({apis_exhausted}/{total_apis} APIs failed). Please try again later or check your RapidAPI subscription limits."
+        else:
+            response_data["message"] = "No jobs found matching your criteria. Try different search terms or check back later."
         response_data["api_errors"] = api_errors
-    elif quota_exhausted and len(unique_jobs) > 0:
+    elif apis_exhausted > 0:
         response_data["quota_warning"] = True
-        response_data["message"] = "Some APIs hit rate limits. Showing results from available sources."
+        response_data["message"] = f"Some APIs hit rate limits ({apis_exhausted} exhausted). Showing results from available sources."
         response_data["api_errors"] = api_errors
-    elif len(unique_jobs) == 0:
-        response_data["message"] = "No jobs found matching your criteria. Try updating your profile or search manually."
-        response_data["api_errors"] = api_errors
+    
+    logger.info(f"Live Jobs 1 Recommendations: {len(unique_jobs)} jobs, APIs: {api_used}, Exhausted: {apis_exhausted}/{total_apis}")
     
     return response_data
 
