@@ -181,29 +181,47 @@ export function LiveJobsPage() {
   const loadInitialData = async () => {
     setIsLoading(true);
     try {
-      // First fetch user profile to ensure we have latest data including primary_technology
-      const userRes = await authAPI.getMe();
-      if (userRes.data) {
-        updateUser(userRes.data);
+      // First fetch user profile
+      try {
+        const userRes = await authAPI.getMe();
+        if (userRes.data) {
+          updateUser(userRes.data);
+        }
+      } catch (userError) {
+        console.error('Error loading user profile:', userError);
       }
       
-      const [recsRes, resumesRes] = await Promise.all([
-        liveJobsAPI.getRecommendations(),
-        resumeAPI.getAll()
-      ]);
-      setRecommendations(recsRes.data.recommendations || []);
-      setResumes(resumesRes.data || []);
-      
-      // Handle API messages
-      if (recsRes.data.message) {
-        setApiMessage(recsRes.data.message);
+      // Load recommendations
+      try {
+        const recsRes = await liveJobsAPI.getRecommendations();
+        setRecommendations(recsRes.data.recommendations || []);
+        
+        if (recsRes.data.message) {
+          setApiMessage(recsRes.data.message);
+        }
+        if (recsRes.data.requires_profile_update) {
+          setRequiresProfileUpdate(true);
+        }
+      } catch (recsError) {
+        console.error('Error loading recommendations:', recsError);
+        if (recsError.response?.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        } else {
+          toast.error('Failed to load job recommendations');
+        }
+        setRecommendations([]);
       }
-      if (recsRes.data.requires_profile_update) {
-        setRequiresProfileUpdate(true);
+      
+      // Load resumes
+      try {
+        const resumesRes = await resumeAPI.getAll();
+        setResumes(resumesRes.data || []);
+      } catch (resumeError) {
+        console.error('Error loading resumes:', resumeError);
+        setResumes([]);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Failed to load job recommendations');
+      console.error('Unexpected error:', error);
     } finally {
       setIsLoading(false);
     }
