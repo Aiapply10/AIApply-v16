@@ -160,7 +160,7 @@ export function DashboardLayout({ children }) {
                   key={item.href}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                  data-testid={`nav-${item.label.toLowerCase().replaceAll(' ', '-')}`}
                   className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
                       ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/30'
