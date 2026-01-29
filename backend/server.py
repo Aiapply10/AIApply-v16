@@ -6168,11 +6168,12 @@ else:
         "http://www.hireignitor.com",
     ]
 
-# Use wildcard approach for maximum compatibility
+# Use regex pattern to allow all emergentagent/emergent domains and custom domains
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=["*"],  # Allow all origins for now
+    allow_origins=origins_list,
+    allow_origin_regex=r"https?://.*\.(emergentagent\.com|emergent\.host|emergent\.sh)$|https?://(www\.)?hireignitor\.com$",
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
