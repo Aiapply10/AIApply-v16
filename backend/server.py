@@ -3249,10 +3249,16 @@ async def get_live_jobs_1_recommendations(request: Request):
     Get personalized job recommendations using multiple RapidAPI sources with cascading fallback.
     APIs tried in order: JSearch -> Jobs Search API -> Indeed Scraper -> Remote Jobs -> Indeed46 -> LinkedIn -> Free APIs
     """
+    # Log the request origin for debugging
+    origin = request.headers.get("origin", "unknown")
+    logger.info(f"Live Jobs 1 Recommendations request from origin: {origin}")
+    
     user = await get_current_user(request)
+    logger.info(f"User authenticated: {user.get('email', 'unknown')}")
     
     # Check if user has required profile fields
     if not user.get('primary_technology'):
+        logger.info(f"User {user.get('email')} missing primary_technology")
         return {
             "recommendations": [],
             "message": "Please update your profile with Primary Technology to get personalized job recommendations.",
@@ -3262,6 +3268,7 @@ async def get_live_jobs_1_recommendations(request: Request):
     
     primary_tech = user.get("primary_technology", "")
     sub_techs = user.get("sub_technologies", [])
+    logger.info(f"Searching jobs for: {primary_tech}")
     
     jobs = []
     api_used = []
