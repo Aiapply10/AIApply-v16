@@ -14,115 +14,98 @@
 **User's preferred language**: English
 
 **what currently exists?**
-The CareerQuest platform is a full-stack application (React/FastAPI/MongoDB). The core AI-powered job application feature is substantially built and has been the focus of this session.
+The CareerQuest platform is a full-stack application (React/FastAPI/MongoDB). The core AI-powered job application feature is substantially built.
 
 Key functionalities include:
-1.  **Automated Application Workflow:** The system automatically finds jobs, tailors the user's resume for each one, generates a cover letter, and then uses a Playwright browser bot to submit the application on the company's career portal.
-2.  **Advanced Browser Bot:** The bot can handle redirects from job boards (e.g., Remotive) to external company Application Tracking Systems (ATS), detect the platform type (Greenhouse, Lever, etc.), and attempt to fill out and submit the application form. It successfully reaches the submission stage but can fail on non-standard forms.
+1.  **Automated Application Workflow:** The system can find jobs, tailor resumes, and use a Playwright bot for submissions. The bot's availability is now handled gracefully; if not present (as in production), users are prompted to apply manually.
+2.  **Robust Job Sourcing:** The Live Jobs and Live Jobs 1 pages are now functionally identical, sourcing jobs from numerous free and premium (RapidAPI) sources with a cascading fallback mechanism to handle API quota exhaustion.
 3.  **Comprehensive UI:**
-    *   **Dashboard:** Features clickable stat cards that navigate to filtered views of applications (e.g., Interviews, Offers).
-    *   **Applications Page:** A central hub to track all applications. It displays status badges (Auto-Applied by AI, Pending Auto-Submit, Failed), tailored ATS scores, submission timestamps, and provides options to view the job, view/download the specific resume used, and retry failed submissions.
-    *   **Resumes Page:** Clearly displays and compares ATS scores for the user's original resume, the AI-enhanced Master Resume, and 4 job-title-specific Variants.
-    *   **Live Jobs Page:** Features a configurable Auto-Apply AI Agent panel where users can enable/disable a daily application schedule, set the time, and define the maximum number of applications per day.
-4.  **Scheduled Auto-Apply:** A scheduler is in place that allows the system to run the entire auto-apply workflow automatically at a user-defined time each day.
+    *   **Dashboard & Applications Page:** Features clickable stat cards and a Retry Failed Applications feature. The submission flow has been updated to open job links directly when automation is unavailable.
+    *   **Resumes Page:** Displays and compares ATS scores for original, master, and variant resumes.
+    *   **Live Jobs & Live Jobs 1 Pages:** Both pages now have a consistent UI, including the Auto-Apply AI Agent panel for scheduling, search filters, and job recommendations.
+    *   **Analytics Dashboard:** A new, detailed reporting page () has been built with charts and key metrics on application status, success rates, and sources.
 
 **Last working item**:
--   **Last item agent was working:** The user requested a way to handle failed job submissions. The agent implemented a Retry Failed Applications feature. This included adding a Retry All Failed button, individual Retry buttons on failed application cards, and a new Failed stat card on the Applications page.
--   **Status:** USER VERIFICATION PENDING
+-   **Last item agent was working:** Diagnosing why the user's custom domain () shows an Emergent login page instead of the deployed application. The agent concluded this is a **deployment configuration issue**, not a code bug. The deployed frontend build is using an old, incorrect backend URL.
+-   **Status:** BLOCKED
 -   **Agent Testing Done:** Y
--   **Which testing method agent to use?** Frontend testing agent
+-   **Which testing method agent to use?** NA
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** Browser automation for job submission needs more robust form filling. (P0)
--   **Issue 2:** The View Original link on the Live Jobs page sometimes leads to a generic search page. (P1)
--   **Issue 3:** Email Center may still fail to connect accounts via App Password. (P2)
--   **Issue 4:** Capture a screenshot of the application submission confirmation page. (P2)
--   **Issue 5:** Flaky frontend login during automated testing. (P2)
+-   Issue 1: Custom domain pointing to the wrong deployment (P0)
+-   Issue 2: Browser automation for job submission needs more robust form filling (P1)
+-   Issue 3: Email Center may still fail to connect accounts via App Password (P2)
+-   Issue 4: Flaky frontend login during automated testing (P2)
 
 **Issues Detail:**
--   **Issue 1:** Browser automation for job submission needs more robust form filling
-    -   **Attempted fixes:** The agent significantly improved the Playwright bot in . It now handles redirects from job boards to the actual company ATS and attempts form submission. It successfully submitted an application on a Workday-like portal but failed due to form validation errors (missing fields). The core bot logic works, but the generic field selectors are not universal enough for all custom ATS forms.
-    -   **Next debug checklist:**
-        1.  Analyze screenshots of failed submissions to identify common missing fields or non-standard selectors.
-        2.  Expand the  in  with more selector patterns for common fields (e.g., address, phone number, custom questions).
-        3.  Consider adding more platform-specific handlers (, , etc.) for other major ATS platforms beyond Greenhouse and Lever.
-    -   **Why fix this issue and what will be achieved with the fix?** This is the final step to making the core auto-apply feature reliable and fully autonomous, which is the user's primary goal.
+-   **Issue 1:**
+    -   **Attempted fixes:** The agent confirmed via  that the deployed frontend is using an outdated  from a previous deployment. The agent also verified the current CORS policy is correct and includes the custom domain.
+    -   **Next debug checklist:** This issue cannot be fixed with code changes. The user must **redeploy the application**. This will create a new frontend build that correctly uses the  specified in . After redeployment, the user should clear their browser cache and test the custom domain again.
+    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the user from accessing the application on their custom domain.
+    -   **Status:** BLOCKED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both
+-   **Issue 2:**
+    -   **Attempted fixes:** The agent improved the Playwright bot in  by adding more generic field selectors and a specific handler for the iCIMS platform.
+    -   **Next debug checklist:** Analyze screenshots of new failed submissions to identify more non-standard fields. Add handlers for other major ATS platforms (Workday, etc.) as they are identified.
+    -   **Why fix this issue and what will be achieved with the fix?** This will improve the success rate of the core auto-apply feature, a primary user goal.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both
--   **Issue 2:** The View Original link on the Live Jobs page sometimes leads to a generic search page
+-   **Issue 3:**
     -   **Attempted fixes:** None in this session.
-    -   **Next debug checklist:**
-        1.  Investigate the scraper logic in .
-        2.  Ensure that for each job source, the scraper is extracting the direct permalink to the job posting, not a link to a search results page.
-    -   **Why fix this issue and what will be achieved with the fix?** Improves user experience by taking the user directly to the job they want to see.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend
--   **Issue 3:** Email Center may still fail to connect accounts via App Password
-    -   **Attempted fixes:** The agent made the UI tabs functional but did not investigate the underlying connection logic. It was noted the test user has no accounts connected.
-    -   **Next debug checklist:**
-        1.  Attempt to connect a Gmail/Outlook account using an App Password to reproduce the failure.
-        2.  Examine the IMAP/SMTP connection logic in .
-        3.  Research if modern authentication methods like OAuth2 are now required by providers like Gmail/Outlook instead of App Passwords and plan for that integration.
-    -   **Why fix this issue and what will be achieved with the fix?** Enables the AI-powered email communication features for post-application follow-ups.
+    -   **Next debug checklist:** Attempt to connect a Gmail/Outlook account with an App Password to reproduce. Examine IMAP/SMTP logic in . Research if OAuth2 is now required.
+    -   **Why fix this issue and what will be achieved with the fix?** Enables AI-powered email communication features.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Backend
--   **Issue 4:** Capture a screenshot of the application submission confirmation page
-    -   **Attempted fixes:** The bot currently takes screenshots during the process but lacks logic to identify the final confirmation page.
-    -   **Next debug checklist:**
-        1.  In , after a successful submission attempt, add logic () to look for common confirmation text or elements (e.g., Application submitted, Thank you for applying).
-        2.  Take a final screenshot and save its path to the  document in the database.
-    -   **Why fix this issue and what will be achieved with the fix?** This provides the user with definitive proof of a successful application.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend
-    -   **Blocked on other issue:** Issue 1: Browser automation for job submission needs more robust form filling.
--   **Issue 5:** Flaky frontend login during automated testing
-    -   **Attempted fixes:** None in this session. This issue was noted in the previous fork and persists.
-    -   **Next debug checklist:**
-        1.  Examine  (Zustand store) for token persistence logic.
-        2.  Review  for  interceptor implementation, ensuring the auth token is always attached correctly.
-    -   **Why fix this issue and what will be achieved with the fix?** Critical for reliable automated testing and development velocity.
+-   **Issue 4:**
+    -   **Attempted fixes:** Agent fixed a related  for Google SSO users, but the underlying flakiness in automated tests was not addressed.
+    -   **Next debug checklist:** Examine token persistence in  and the axios interceptor in .
+    -   **Why fix this issue and what will be achieved with the fix?** Crucial for reliable automated testing and development velocity.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Frontend
 
 **In progress Task List**:
 -   **Task 1:** Complete Browser Automation for Job Submission
-    -   **Where to resume:** Refine the logic in  to handle a wider variety of form field selectors on different company ATS platforms.
-    -   **What will be achieved with this?** The auto-apply workflow will have a much higher success rate across different job sites.
+    -   **Where to resume:** Refine selectors and add new platform handlers in .
+    -   **What will be achieved with this?** A higher success rate for the auto-apply feature.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1:** Build the reporting dashboards for both company and candidate views.
+    -   **P1:** Refactor  and  into a single reusable component to eliminate duplicate code.
+    -   **P1:** Address the flaky frontend login issue to stabilize automated testing.
 -   **Future Tasks:**
-    -   **P2:** Implement the full AI agent for handling email communications with recruiters.
+    -   **P2:** Implement the full AI agent for handling email communications with recruiters (Email Center).
+    -   **P2:** Refactor the monolithic  file into modular services and routes.
 
 **Completed work in this session**
--   **P0 Browser Automation Majorly Improved:** The bot now handles job board redirects, detects platforms, and successfully reaches the form submission stage on external company sites.
--   **P0 Automatic Submission:** The system now automatically triggers the submission bot after preparing an application, making the process fully autonomous as requested by the user.
--   **P1 ATS Score Enhancements:**
-    -   The backend now calculates ATS scores for the AI-enhanced Master Resume and all 4 job-title Variants upon resume upload.
-    -   The UI on the My Resume page and Applications page now clearly displays these ATS scores, ensuring they are above 85.
--   **P1 Application History Enhancements:** Added a View Resume button to the application history, allowing users to see the exact tailored resume used for each job.
--   **P1 Retry Failed Applications Feature:** Implemented a feature to allow users to retry submitting failed applications, both individually and in bulk.
--   **P2 UI/UX Fixes:**
-    -   Made stat cards on the Dashboard and Applications pages clickable, navigating to filtered views.
-    -   Added clear status badges (Auto-Applied by AI, Pending Auto-Submit, Failed) to application cards.
-    -   Removed the Job Portals tab from the sidebar as requested.
+-   **P0 Deployment & Timeout Fixes:**
+    -   Resolved a  for  in production by making imports conditional for graceful degradation.
+    -   Fixed frontend timeouts on the long-running auto-apply process by increasing the axios timeout and improving UI feedback.
+-   **P0 Live Jobs UI/UX Sync & API Enhancement:**
+    -   Made the  UI and functionality identical to .
+    -   Integrated 7 different job APIs into the  endpoint with a cascading fallback mechanism to handle quota exhaustion.
+-   **P0 Application Submission Flow Rework:**
+    -   Changed the Submit button on the Applications page to Apply Now, which opens the job URL directly, accommodating environments where browser automation is unavailable.
+-   **P1 Enhanced Analytics Dashboard:**
+    -   Built a comprehensive  with a new backend endpoint to display detailed application analytics, including charts and key metrics.
+-   **P2 Bug Fixes:**
+    -   Fixed a  crash on login for Google SSO users.
+    -   Improved frontend error handling on the Live Jobs pages to prevent the entire page from failing if one API call fails.
 
 **Earlier issues found/mentioned but not fixed**
--   None other than those listed in the All Pending/In progress Issue list.
+-   **Issue 1:** Email Center may still fail to connect accounts via App Password.
+-   **Issue 2:** Flaky frontend login during automated testing persists.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Flaky frontend login during automated testing.
--   **Recurrence count:** 5+
+-   **Recurrence count:** 6+
 -   **Status:** NOT STARTED
 
 **Code Architecture**
@@ -130,90 +113,88 @@ Key functionalities include:
 
 **Key Technical Concepts**
 -   **Backend:** FastAPI, Python, MongoDB (motor), APScheduler
--   **Frontend:** React, Tailwind CSS, , , 
--   **Automation:** Playwright for browser automation.
+-   **Frontend:** React, Tailwind CSS, , , Recharts
+-   **Automation:** Playwright (now optional/conditional)
 -   **Authentication:** JWT, Emergent-managed Google Auth
--   **Integrations:** Web Scraping (BeautifulSoup), OpenAI, Multiple REST APIs
+-   **Integrations:** Multiple RapidAPI job sources (JSearch, Indeed, etc.), OpenAI
 
 **key DB schema**
--   ** (collection):** Added  (dict: , ). The  field is now more dynamic (, , ).
--   ** (collection):** The  field and  within  are now correctly populated with ATS scores upon creation.
--   ** (model):** Added  (bool) to control the daily scheduled job.
+-   No changes made to the database schema in this session.
 
 **changes in tech stack**
--   No new technologies were added, but  usage was significantly matured.
+-   No new technologies were added, but several new RapidAPI integrations for job sourcing were implemented.
 
 **All files of reference**
--   : **Heavily modified.** Contains the core Playwright logic with platform detection, multi-step navigation, and improved form filling.
--   : **Modified.** Updated to automatically trigger submissions, calculate ATS scores for master/variant resumes, and enhance the scheduler logic.
--   : **Heavily modified.** Redesigned to include clickable stat cards, status badges, ATS scores, and the new Retry Failed functionality.
--   : **Heavily modified.** Redesigned to clearly display and compare ATS scores for Original, Master, and Variant resumes.
--   : **Heavily modified.** Added a View Resume dialog to the history, ATS score display, and improved scheduler controls.
--   : **Modified** to make stat cards clickable and navigate to other pages.
--   : **Modified** to remove the Job Portals navigation item.
--   : **Updated** with completed features.
+-   : Heavily modified to add new job APIs with fallback logic, a new reporting endpoint, and graceful degradation for Playwright.
+-   : Completely rewritten to match , use new APIs, and handle quota errors. **(Needs refactoring)**.
+-   : Modified to change the manual submission flow and update UI/UX.
+-   : Completely rewritten to implement the new analytics dashboard.
+-   : Modified to add more form-filling selectors and a handler for the iCIMS platform.
+-   : Modified to add a longer timeout for the auto-apply endpoint.
 
 **Areas that need refactoring**:
--   ****: **Highest Priority.** This file remains extremely large and complex. It needs to be broken down into separate files for routes, services, and scheduler logic.
--   ****: This component is also very large (>2400 lines). The various dialogs (Auto-Apply Settings, History, Resume Viewer) should be extracted into their own components.
+-   ** &  (Highest Priority):** These two files contain over 2000 lines of nearly identical code. They must be consolidated into a single reusable component to reduce technical debt and improve maintainability.
+-   ** (High Priority):** This file has grown to over 6,000 lines and contains logic for routing, services, scheduling, and more. It urgently needs to be broken down into a proper project structure (e.g., , , ).
 
 **key api endpoints**
+-   **Rewritten:**
+    -   : Now uses a cascading fallback mechanism to query 7 different RapidAPI job sources.
 -   **Modified:**
-    -   : Now automatically triggers the submission process after preparing applications.
-    -   : Now calculates and stores ATS scores for the master resume and all generated variants.
-    -   : Now handles the  flag to control the daily job scheduler.
-    -   : This is the endpoint now called by the Retry buttons.
+    -   : Heavily expanded to return comprehensive data for the new analytics dashboard.
+-   **Frontend Behavior Change:**
+    -   : The frontend now handles 503 errors from this endpoint (when Playwright is unavailable) by opening the job URL for manual application.
 
 **Critical Info for New Agent**
--   The user is highly focused on the success rate and autonomy of the auto-apply feature. The top priority is to improve the bot's ability to fill out diverse application forms in .
--   The user frequently provides feedback via screenshots. Pay close attention to UI/UX details they point out.
--   The large, monolithic  file is a significant technical debt risk. Be cautious when editing it and prioritize refactoring when possible.
--   The agent has established a good feedback loop with the user, implementing features and fixing issues quickly. Continue this pattern of confirming the plan, implementing, verifying with screenshots, and summarizing.
+-   **The user's top priority is fixing their custom domain.** The root cause is a deployment configuration mismatch, not a code issue. The deployed frontend build is using an old backend URL. **The user must be instructed to redeploy the application**, which will create a new frontend build with the correct .
+-   **The  and  files are duplicates.** The first task after addressing the deployment issue should be to refactor them into a single reusable component.
+-   Browser automation via Playwright is now conditionally imported in the backend. This allows the app to run in production environments without Playwright installed, but auto-submission features will be disabled, failing gracefully.
 
 **documents and test reports created in this job**
 -   
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Request:** Add a Retry Failed Applications button. (IMPLEMENTED)
-9.  **Request:** Stat cards on the dashboard should be clickable and navigate to other pages. (IMPLEMENTED)
-8.  **Request:** The My Resume page should show 1 master resume and 4 variants with their respective ATS scores clearly. (IMPLEMENTED)
-7.  **Request:** Application history should show the specific resume used for each job. (IMPLEMENTED)
-6.  **Request:** Why isn't the tool auto-submitting? It should be automatic. Also, show the ATS score for the submitted resume. (IMPLEMENTED - auto-submit is now the default, and ATS scores are displayed).
-5.  **Confirmation:** User agreed to add a Schedule Auto-Apply feature. (IMPLEMENTED)
-4.  **Request:** User reported multiple issues: remove Job Portals tab, make application stat cards functional, fix failing manual submit, ensure ATS scores > 85, and clarify application status (auto-applied vs manual). (ALL IMPLEMENTED/FIXED)
-3.  **Feedback:** User pointed out that tabs in the Email Center were not working/syncing and history was not showing in Live Jobs. (IMPLEMENTED - UI fixes were made).
-2.  **Clarification Request:** User asked for an explanation of how the auto-apply feature works. (EXPLAINED - Bot, not email).
-1.  **Request:** Initial plan confirmation. (CONFIRMED)
+10. **Request (UNRESOLVED):** User reports custom domain shows an Emergent login page, not the app, after trying hard refresh and incognito.
+9.  **Request (Done):** Call deployer agent for health check.
+8.  **Request (Done):** User states Live Jobs 1 isn't working on the custom domain.
+7.  **Request (Done):** Call deployer agent for health check.
+6.  **Question (Answered):** User asked for a list of the technology stack.
+5.  **Request (Fixed):** User reported that  had a different UI than  and that manual submission was failing.
+4.  **Request (Done):** Call deployer agent and run health check.
+3.  **Request (Investigated):** User stated their linked domain was not working.
+2.  **Request (Fixed):** User reported deployment build errors related to Playwright.
+1.  **Request (Fixed):** User reported auto-apply was failing with a generic error message.
 
 **Project Health Check:**
--   **Broken:**
-    -   The browser bot's generic form-filling logic is not robust enough for all websites, causing submissions to fail on non-standard ATS forms.
--   **Mocked:**
-    -   None.
+-   **Broken:** The deployment on the user's custom domain is non-functional because the frontend build is pointing to an incorrect backend URL.
+-   **Mocked:** None.
 
 **3rd Party Integrations**
--   **OpenAI (via ):** Used for AI resume/cover letter generation and ATS scoring. (Uses Emergent LLM Key).
--   **Playwright:** Used for browser automation to submit jobs.
--   **Emergent-managed Google Auth:** Functional.
--   **Free Public APIs (for Live Jobs):** Jobicy, Remotive, Arbeitnow, Findwork, HackerNews.
--   **RapidAPI (for Live Jobs 1):** JSearch, Active Jobs DB, LinkedIn Jobs Search (Requires User API Keys).
--   **framer-motion:** Used for UI animations.
+-   **OpenAI (via ):** AI resume/cover letter generation (Uses Emergent LLM Key).
+-   **Playwright:** Optional browser automation for job submission.
+-   **Emergent-managed Google Auth:** For user login.
+-   **Free Public APIs:** Jobicy, Remotive, Arbeitnow, etc., for .
+-   **RapidAPI (User Key Required):** For .
+    -   JSearch API
+    -   LinkedIn Jobs Search
+    -   Active Jobs DB
+    -   Jobs Search API
+    -   Indeed Scraper API
+    -   Remote Jobs API
+    -   Indeed46 API
+-   **framer-motion:** UI animations.
 
 **Testing status**
 -   **Testing agent used after significant changes:** YES ()
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None
--   **Known regressions:** The flaky frontend login during automated tests persists.
+-   **Known regressions:** Flaky frontend login during automated testing persists.
 
 **Credentials to test flow:**
 -   User registration can be tested with any email/password.
--   The RapidAPI keys are in .
--   Email Center testing requires the user to connect a real email account.
+-   RapidAPI keys are in .
 
 **What agent forgot to execute**
--   Did not fix the View Original link on the Live Jobs page, which can lead to a generic search page instead of the specific job.
--   Did not refactor the oversized  and  files.
--   Did not investigate the root cause of the recurring flaky frontend login issue.
--   Did not address the core Email Center connection issue for App Passwords.
--   Did not implement the logic to capture a final confirmation/thank you screenshot after a successful submission.</analysis>
+-   The agent did not refactor the  and  components, instead opting to copy-paste code, which created significant technical debt.
+-   The agent did not address the root cause of the flaky frontend login issue.
+-   The agent did not investigate the Email Center connection issue.</analysis>
