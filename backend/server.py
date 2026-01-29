@@ -6149,12 +6149,16 @@ else:
     # Default origins for development and production
     origins_list = [
         "http://localhost:3000",
+        "http://localhost:8001",
+        "https://localhost:3000",
         "https://applyai-1.preview.emergentagent.com",
         "https://job-tailor-7.emergentagent.com",
         "https://job-tailor-7.emergent.host",
-        # Custom domain
+        # Custom domain - all variations
         "https://hireignitor.com",
         "https://www.hireignitor.com",
+        "http://hireignitor.com",
+        "http://www.hireignitor.com",
     ]
 
 # Use regex pattern to allow all emergentagent domains and custom domains
@@ -6163,7 +6167,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=origins_list,
-    allow_origin_regex=r"https://.*\.(emergentagent\.com|emergent\.host)$|https://(www\.)?hireignitor\.com$",
+    allow_origin_regex=r"https?://.*\.(emergentagent\.com|emergent\.host)$|https?://(www\.)?hireignitor\.com$",
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
