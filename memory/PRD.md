@@ -178,7 +178,9 @@ Build a website where a job seeker can:
 - `/app/backend/utils/job_application_bot.py` - Playwright browser automation
 - `/app/backend/utils/enhanced_job_scraper.py` - Free job API scraper
 - `/app/frontend/src/pages/ApplicationsPage.jsx` - Applications tracking
-- `/app/frontend/src/pages/LiveJobsPage.jsx` - Job listings and auto-apply
+- `/app/frontend/src/components/LiveJobsCore.jsx` - **REFACTORED** Shared component for Live Jobs pages
+- `/app/frontend/src/pages/LiveJobsPage.jsx` - Job listings (free sources) - uses LiveJobsCore
+- `/app/frontend/src/pages/LiveJobs1Page.jsx` - Job listings (RapidAPI premium) - uses LiveJobsCore
 - `/app/frontend/src/pages/ReportsPage.jsx` - Analytics dashboard
 
 ---
@@ -196,7 +198,18 @@ Build a website where a job seeker can:
 
 ---
 
+## Code Refactoring History
+
+### January 29, 2026 - Live Jobs Pages Refactoring
+- **Before**: `LiveJobsPage.jsx` (2,626 lines) + `LiveJobs1Page.jsx` (2,683 lines) = 5,309 lines total
+- **After**: `LiveJobsCore.jsx` (1,538 lines) + 2 page wrappers (16 lines each) = 1,570 lines total
+- **Reduction**: 70% code reduction (3,739 lines removed)
+- **Benefits**: Single source of truth, easier maintenance, consistent behavior across both pages
+
+---
+
 ## Test Reports
+- `/app/test_reports/iteration_10.json` - LiveJobsCore refactoring (28/28 passed) - Jan 29, 2026
 - `/app/test_reports/iteration_9.json` - Frontend testing (21/21 passed) - Jan 27, 2026
 - `/app/test_reports/iteration_8.json` - Browser automation tests (14/14 passed)
 
@@ -206,4 +219,4 @@ Build a website where a job seeker can:
 
 ---
 
-*Last updated: January 27, 2026*
+*Last updated: January 29, 2026*
