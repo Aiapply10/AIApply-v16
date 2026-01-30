@@ -231,4 +231,4 @@ Build a website where a job seeker can:
 
 ---
 
-*Last updated: January 29, 2026*
+*Last updated: January 30, 2026*
