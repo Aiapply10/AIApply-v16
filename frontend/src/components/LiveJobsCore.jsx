@@ -1311,7 +1311,7 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                 <Input
                   type="range"
                   min={1}
-                  max={50}
+                  max={25}
                   value={autoApplySettings.max_applications_per_day}
                   onChange={(e) => setAutoApplySettings(prev => ({
                     ...prev,
@@ -1319,6 +1319,10 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                   }))}
                   className="mt-2"
                 />
+                <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  <span>1</span>
+                  <span>25</span>
+                </div>
               </div>
 
               <div className="space-y-3">
