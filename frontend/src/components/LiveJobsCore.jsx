@@ -1465,6 +1465,28 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               </DialogDescription>
             </DialogHeader>
 
+            {/* Summary Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="text-center p-2 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-lg font-bold text-green-600">
+                  {autoApplyHistory.filter(a => a.status === 'submitted' || a.status === 'applied').length}
+                </div>
+                <div className="text-xs text-green-600">Submitted</div>
+              </div>
+              <div className="text-center p-2 bg-red-50 rounded-lg border border-red-200">
+                <div className="text-lg font-bold text-red-600">
+                  {autoApplyHistory.filter(a => a.status === 'failed' || a.status === 'submission_failed').length}
+                </div>
+                <div className="text-xs text-red-600">Failed</div>
+              </div>
+              <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-lg font-bold text-blue-600">
+                  {autoApplyHistory.filter(a => a.status === 'ready_to_apply' || a.status === 'pending').length}
+                </div>
+                <div className="text-xs text-blue-600">Pending</div>
+              </div>
+            </div>
+
             <ScrollArea className="h-[400px]">
               {autoApplyHistory.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
@@ -1473,35 +1495,80 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               ) : (
                 <div className="space-y-3">
                   {autoApplyHistory.map((app, i) => (
-                    <Card key={i} className="border-slate-200">
+                    <Card key={i} className={`border-slate-200 ${
+                      app.status === 'failed' || app.status === 'submission_failed' ? 'border-red-200 bg-red-50/30' : ''
+                    }`}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="flex-1">
                             <div className="font-medium">{app.job_title}</div>
                             <div className="text-sm text-slate-500">{app.company}</div>
-                            <div className="text-xs text-slate-400 mt-1">
-                              {formatDate(app.created_at)}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-slate-400">
+                                {formatDate(app.created_at)}
+                              </span>
+                              {/* Submission Method Badge */}
+                              {app.submitted_by && (
+                                <Badge variant="outline" className="text-xs">
+                                  {app.submitted_by === 'system' || app.submitted_by === 'auto' ? (
+                                    <><Bot className="w-3 h-3 mr-1" />Auto</>
+                                  ) : (
+                                    <><User className="w-3 h-3 mr-1" />Manual</>
+                                  )}
+                                </Badge>
+                              )}
+                              {app.source && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {app.source}
+                                </Badge>
+                              )}
                             </div>
                           </div>
-                          <Badge className={
-                            app.status === 'submitted' ? 'bg-green-100 text-green-700' :
-                            app.status === 'ready_to_apply' ? 'bg-blue-100 text-blue-700' :
-                            app.status === 'failed' ? 'bg-red-100 text-red-700' :
-                            'bg-slate-100 text-slate-700'
-                          }>
-                            {app.status}
-                          </Badge>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge className={
+                              app.status === 'submitted' || app.status === 'applied' ? 'bg-green-100 text-green-700' :
+                              app.status === 'ready_to_apply' || app.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                              app.status === 'failed' || app.status === 'submission_failed' ? 'bg-red-100 text-red-700' :
+                              app.status === 'interview' ? 'bg-purple-100 text-purple-700' :
+                              'bg-slate-100 text-slate-700'
+                            }>
+                              {app.status === 'submission_failed' ? 'Failed' : app.status}
+                            </Badge>
+                          </div>
                         </div>
-                        {app.tailored_resume && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="mt-2"
-                            onClick={() => setViewingResumeApp(app)}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View Resume
-                          </Button>
+                        
+                        {/* Action buttons */}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {app.tailored_resume && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setViewingResumeApp(app)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View Resume
+                            </Button>
+                          )}
+                          
+                          {/* Manual Submit button for failed/pending applications */}
+                          {(app.status === 'failed' || app.status === 'submission_failed' || app.status === 'ready_to_apply' || app.status === 'pending') && app.job_url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-violet-600 border-violet-200 hover:bg-violet-50"
+                              onClick={() => window.open(app.job_url, '_blank')}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Apply Manually
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Error message for failed applications */}
+                        {(app.status === 'failed' || app.status === 'submission_failed') && app.error_message && (
+                          <div className="mt-2 p-2 bg-red-100 rounded text-xs text-red-600">
+                            {app.error_message}
+                          </div>
                         )}
                       </CardContent>
                     </Card>
