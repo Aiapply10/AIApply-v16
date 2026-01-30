@@ -229,6 +229,7 @@ Build a website where a job seeker can:
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_12.json` - Auto-Apply source variant & badges (all passed) - Jan 30, 2026
 - `/app/test_reports/iteration_11.json` - Auto-Apply enhancements (17/17 passed) - Jan 30, 2026
 - `/app/test_reports/iteration_10.json` - LiveJobsCore refactoring (28/28 passed) - Jan 29, 2026
 - `/app/test_reports/iteration_9.json` - Frontend testing (21/21 passed) - Jan 27, 2026
