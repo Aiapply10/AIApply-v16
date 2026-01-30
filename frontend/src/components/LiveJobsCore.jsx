@@ -820,14 +820,33 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
             )}
             
             {/* Show completion status */}
-            {!isRunningAutoApply && autoApplyProgress.status === 'completed' && autoApplyProgress.results.length > 0 && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700 mb-2">
+            {!isRunningAutoApply && autoApplyProgress.status === 'completed' && (
+              <div className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700 mb-3">
                   <CheckCircle2 className="w-5 h-5" />
                   <span className="font-medium">Auto-Apply Completed!</span>
                 </div>
-                <p className="text-sm text-green-600 mb-2">
-                  Created {autoApplyProgress.results.length} applications. Go to Applications page to review and submit.
+                
+                {/* Submission Stats */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center p-2 bg-white rounded border">
+                    <div className="text-lg font-bold text-violet-600">{autoApplyProgress.jobsProcessed}</div>
+                    <div className="text-xs text-slate-500">Processed</div>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded border">
+                    <div className="text-lg font-bold text-green-600">{autoApplyProgress.submittedCount}</div>
+                    <div className="text-xs text-slate-500">Submitted</div>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded border">
+                    <div className="text-lg font-bold text-amber-600">{autoApplyProgress.failedCount}</div>
+                    <div className="text-xs text-slate-500">Need Manual</div>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-slate-600 mb-2">
+                  {autoApplyProgress.submittedCount > 0 
+                    ? `Successfully submitted ${autoApplyProgress.submittedCount} applications. ${autoApplyProgress.failedCount > 0 ? `${autoApplyProgress.failedCount} applications need manual submission.` : ''}`
+                    : 'Applications are ready. Go to Applications page to review and submit.'}
                 </p>
                 <Button
                   size="sm"
@@ -835,7 +854,7 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                   className="bg-green-600 hover:bg-green-700 text-white"
                 >
                   <ExternalLink className="w-4 h-4 mr-1" />
-                  Go to Applications
+                  View Applications
                 </Button>
               </div>
             )}
