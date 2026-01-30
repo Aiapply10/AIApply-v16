@@ -558,11 +558,23 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
       await autoApplyAPI.updateSettings(autoApplySettings);
       toast.success('Settings saved!');
       setShowAutoApplyDialog(false);
+      // Refresh status after saving settings
+      loadAutoApplyStatus();
     } catch (error) {
       console.error('Settings error:', error);
       toast.error('Failed to save settings');
     }
   };
+
+  // Auto-apply progress state
+  const [autoApplyProgress, setAutoApplyProgress] = useState({
+    isRunning: false,
+    currentJob: '',
+    jobsProcessed: 0,
+    totalJobs: 0,
+    status: '',
+    results: []
+  });
 
   const handleRunAutoApply = async () => {
     if (profileCompleteness?.percentage < 80) {
@@ -571,19 +583,55 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
     }
 
     setIsRunningAutoApply(true);
+    setAutoApplyProgress({
+      isRunning: true,
+      currentJob: 'Finding matching jobs...',
+      jobsProcessed: 0,
+      totalJobs: 0,
+      status: 'searching',
+      results: []
+    });
+    
     try {
-      toast.info('Starting auto-apply process... This may take a few minutes.');
-      const response = await autoApplyAPI.run();
+      // Pass the source variant to the backend
+      const response = await autoApplyAPI.run({ source_variant: variant === 'premium' ? 'live_jobs_1' : 'live_jobs' });
       
-      if (response.data.applications_created > 0) {
-        toast.success(`Created ${response.data.applications_created} applications!`);
+      const data = response.data;
+      
+      if (data.applied_count > 0 || data.applications_created > 0) {
+        const count = data.applied_count || data.applications_created;
+        setAutoApplyProgress(prev => ({
+          ...prev,
+          isRunning: false,
+          status: 'completed',
+          jobsProcessed: count,
+          totalJobs: count,
+          currentJob: 'Completed!',
+          results: data.applications || []
+        }));
+        
+        toast.success(`Created ${count} applications! Check "View Applications" to submit them.`);
       } else {
-        toast.info(response.data.message || 'No new applications created');
+        setAutoApplyProgress(prev => ({
+          ...prev,
+          isRunning: false,
+          status: 'no_jobs',
+          currentJob: data.message || 'No matching jobs found'
+        }));
+        toast.info(data.message || 'No new applications created');
       }
       
+      // Refresh data after auto-apply completes
       loadAutoApplyHistory();
+      loadAutoApplyStatus();
     } catch (error) {
       console.error('Auto-apply error:', error);
+      setAutoApplyProgress(prev => ({
+        ...prev,
+        isRunning: false,
+        status: 'error',
+        currentJob: error.response?.data?.detail || 'Auto-apply failed'
+      }));
       toast.error(error.response?.data?.detail || 'Auto-apply failed');
     } finally {
       setIsRunningAutoApply(false);
@@ -596,6 +644,8 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
       if (response.data.settings) {
         setAutoApplySettings(prev => ({ ...prev, ...response.data.settings }));
         toast.success('Settings auto-filled from your profile!');
+        // Refresh status
+        loadAutoApplyStatus();
       }
     } catch (error) {
       console.error('Auto-fill error:', error);
