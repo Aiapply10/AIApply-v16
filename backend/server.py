@@ -5103,8 +5103,10 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                 "user_id": user_id,
                 "job_portal_id": job.get("source", "auto_apply"),
                 "job_title": job_title,
+                "company": company,
                 "company_name": company,
                 "job_description": description[:500],
+                "job_url": apply_link,
                 "resume_id": settings["resume_id"],
                 "cover_letter": cover_letter_content,
                 "tailored_resume": tailored_content,
@@ -5114,8 +5116,10 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
                 "auto_applied": True,
+                "submitted_by": "auto",
                 "apply_link": apply_link,
-                "source": job.get("source", "system_scraper"),
+                "source": source_variant,  # 'live_jobs' or 'live_jobs_1'
+                "job_source": job.get("source", "system_scraper"),  # Original job source
                 "ats_score": application_record.get("ats_score"),
                 "ats_grade": application_record.get("ats_grade")
             })
