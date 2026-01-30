@@ -4799,6 +4799,14 @@ async def run_auto_apply(request: Request):
     user = await get_current_user(request)
     user_id = user["user_id"]
     
+    # Get request body for source_variant
+    try:
+        body = await request.json()
+    except:
+        body = {}
+    
+    source_variant = body.get("source_variant", "live_jobs")  # 'live_jobs' or 'live_jobs_1'
+    
     # Get user's auto-apply settings
     settings = await db.auto_apply_settings.find_one({"user_id": user_id})
     
