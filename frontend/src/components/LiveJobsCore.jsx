@@ -1052,7 +1052,7 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                         <span className="font-medium">No resumes found</span>
                       </div>
                       <p className="text-sm text-amber-600 mt-1">
-                        Please upload a resume first from the "My Resumes" page.
+                        Please upload a resume first from the &quot;My Resumes&quot; page.
                       </p>
                       <Button
                         size="sm"
