@@ -5257,11 +5257,14 @@ async def get_auto_apply_status(request: Request):
         return {
             "enabled": False,
             "configured": False,
-            "today_applications": 0,
+            "applications_today": 0,
             "max_daily": 10,
             "remaining": 10,
             "last_run": None,
-            "total_applications": 0
+            "total_applications": 0,
+            "total_submitted": 0,
+            "total_failed": 0,
+            "success_rate": 0
         }
     
     # Count today's applications
@@ -5271,16 +5274,40 @@ async def get_auto_apply_status(request: Request):
         "applied_at": {"$gte": today_start.isoformat()}
     })
     
+    # Count total submitted (successful)
+    total_submitted = await db.applications.count_documents({
+        "user_id": user_id,
+        "status": {"$in": ["submitted", "applied", "interview", "accepted"]}
+    })
+    
+    # Count total failed
+    total_failed = await db.applications.count_documents({
+        "user_id": user_id,
+        "status": {"$in": ["failed", "submission_failed", "error"]}
+    })
+    
+    # Total applications
+    total_applications = await db.applications.count_documents({
+        "user_id": user_id
+    })
+    
+    # Calculate success rate
+    total_attempted = total_submitted + total_failed
+    success_rate = round((total_submitted / total_attempted * 100) if total_attempted > 0 else 0)
+    
     max_daily = settings.get("max_applications_per_day", 10)
     
     return {
         "enabled": settings.get("enabled", False),
         "configured": bool(settings.get("resume_id")),
-        "today_applications": today_applications,
+        "applications_today": today_applications,
         "max_daily": max_daily,
         "remaining": max(0, max_daily - today_applications),
         "last_run": settings.get("last_run"),
-        "total_applications": settings.get("total_applications", 0),
+        "total_applications": total_applications,
+        "total_submitted": total_submitted,
+        "total_failed": total_failed,
+        "success_rate": success_rate,
         "resume_id": settings.get("resume_id", ""),
         "job_keywords": settings.get("job_keywords", []),
         "locations": settings.get("locations", []),
