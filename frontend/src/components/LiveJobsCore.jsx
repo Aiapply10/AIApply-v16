@@ -769,14 +769,52 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               </div>
             )}
 
-            {/* Running status indicator */}
+            {/* Running status indicator with progress */}
             {isRunningAutoApply && (
-              <div className="flex items-center gap-3 p-3 bg-violet-100 border border-violet-200 rounded-lg">
-                <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-violet-800">Auto-Apply is running...</p>
-                  <p className="text-xs text-violet-600">Finding jobs and submitting applications automatically</p>
+              <div className="p-4 bg-violet-100 border border-violet-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-violet-800">Auto-Apply is running...</p>
+                    <p className="text-xs text-violet-600">{autoApplyProgress.currentJob || 'Processing applications...'}</p>
+                  </div>
                 </div>
+                
+                {autoApplyProgress.totalJobs > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-violet-700">
+                      <span>Progress</span>
+                      <span>{autoApplyProgress.jobsProcessed} / {autoApplyProgress.totalJobs} jobs</span>
+                    </div>
+                    <div className="w-full bg-violet-200 rounded-full h-2">
+                      <div 
+                        className="bg-violet-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(autoApplyProgress.jobsProcessed / autoApplyProgress.totalJobs) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Show completion status */}
+            {!isRunningAutoApply && autoApplyProgress.status === 'completed' && autoApplyProgress.results.length > 0 && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 text-green-700 mb-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="font-medium">Auto-Apply Completed!</span>
+                </div>
+                <p className="text-sm text-green-600 mb-2">
+                  Created {autoApplyProgress.results.length} applications. Go to Applications page to review and submit.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => navigate('/applications')}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <ExternalLink className="w-4 h-4 mr-1" />
+                  Go to Applications
+                </Button>
               </div>
             )}
 
