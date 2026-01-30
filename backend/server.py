@@ -5034,6 +5034,7 @@ Return ONLY the cover letter text."""
                 "salary_info": salary_info,
                 "job_description": description[:500],
                 "apply_link": apply_link,
+                "job_url": apply_link,  # Duplicate for compatibility
                 "resume_id": settings["resume_id"],
                 "tailored_content": tailored_content,
                 "tailored_resume_content": tailored_content,  # Duplicate for compatibility
@@ -5043,8 +5044,10 @@ Return ONLY the cover letter text."""
                 "applied_at": datetime.now(timezone.utc).isoformat(),
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "applied_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                "source": job.get("source", "system_scraper"),
+                "source": source_variant,  # 'live_jobs' or 'live_jobs_1'
+                "job_source": job.get("source", "system_scraper"),  # Original job source (remotive, jobicy, etc)
                 "auto_applied": True,
+                "submitted_by": "auto",  # Track that this was auto-generated
                 "ats_optimized": True if tailored_content != resume_content else False,
                 "resume_version_saved": True,
                 "submission_screenshot": None,
