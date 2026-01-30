@@ -108,12 +108,21 @@ Build a website where a job seeker can:
 - [x] **Enhanced Stats Panel**: Shows 4 metrics - Today, Submitted, Failed, Success Rate
 - [x] **Max Daily Limit**: Reduced from 50 to 25 applications per day
 - [x] **View Applications Button**: Quick access to applications page from Auto-Apply panel
+- [x] **Progress Indicator**: Shows progress bar when auto-apply is running
+- [x] **Source Tracking**: Applications track which page triggered them (Live Jobs vs Live Jobs 1)
+- [x] **Source Badges on Applications Page**: 
+  - "Live Jobs" badge (cyan) for free job sources
+  - "Live Jobs 1" badge (amber) for premium RapidAPI sources
+- [x] **Submitted By Tracking**: Applications track if submitted by system or manually
+  - "Auto" badge (violet) for system-generated applications
+  - "Manual" badge (slate) for manually created applications
 - [x] **History Dialog Improvements**:
   - Shows Auto/Manual badges indicating submission method
   - Summary stats (Submitted, Failed, Pending counts)
   - "Apply Manually" button for failed applications with job URLs
   - Error messages displayed for failed submissions
 - [x] **Resume Selection UX**: Shows helpful message when no resumes uploaded
+- [x] **Real-time completion status**: Shows success message with link to Applications page after auto-apply completes
 
 ### Email Center
 - [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
