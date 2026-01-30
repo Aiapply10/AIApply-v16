@@ -605,6 +605,34 @@ export function ApplicationsPage() {
                                     Cover Letter
                                   </Badge>
                                 )}
+                                
+                                {/* Source Badge - Live Jobs vs Live Jobs 1 */}
+                                {app.source === 'live_jobs' && (
+                                  <Badge variant="outline" className="text-xs bg-cyan-50 text-cyan-700 border-cyan-200">
+                                    <Globe className="w-3 h-3 mr-1" />
+                                    Live Jobs
+                                  </Badge>
+                                )}
+                                {app.source === 'live_jobs_1' && (
+                                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                    <Zap className="w-3 h-3 mr-1" />
+                                    Live Jobs 1
+                                  </Badge>
+                                )}
+                                
+                                {/* Submitted By Badge */}
+                                {app.submitted_by === 'auto' && (
+                                  <Badge variant="outline" className="text-xs bg-violet-50 text-violet-700 border-violet-200">
+                                    <Bot className="w-3 h-3 mr-1" />
+                                    Auto
+                                  </Badge>
+                                )}
+                                {app.submitted_by === 'manual' && (
+                                  <Badge variant="outline" className="text-xs bg-slate-50 text-slate-700 border-slate-200">
+                                    <User className="w-3 h-3 mr-1" />
+                                    Manual
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </div>
