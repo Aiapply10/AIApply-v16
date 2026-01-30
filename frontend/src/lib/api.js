@@ -169,13 +169,13 @@ export const autoApplyAPI = {
   updateSettings: (data) => api.post('/auto-apply/settings', data),
   toggle: () => api.post('/auto-apply/toggle'),
   getHistory: (limit = 50) => api.get('/auto-apply/history', { params: { limit } }),
-  run: () => api.post('/auto-apply/run', {}, { timeout: 300000 }), // 5 min timeout for long-running process
+  run: (data = {}) => api.post('/auto-apply/run', data, { timeout: 300000 }), // 5 min timeout for long-running process
   autoFillSettings: () => api.post('/auto-apply/auto-fill-settings'),
   getStatus: () => api.get('/auto-apply/status'),
   getActivityLog: (limit = 20) => api.get('/auto-apply/activity-log', { params: { limit } }),
   // Automated submission
-  submitApplication: (applicationId) => api.post(`/auto-apply/submit/${applicationId}`),
-  submitBatch: (limit = 5) => api.post('/auto-apply/submit-batch', null, { params: { limit } }),
+  submitApplication: (applicationId) => api.post(`/auto-apply/submit/${applicationId}`, {}, { timeout: 120000 }),
+  submitBatch: (limit = 5) => api.post('/auto-apply/submit-batch', null, { params: { limit }, timeout: 600000 }),
   getSubmissionLogs: (limit = 20) => api.get('/auto-apply/submission-logs', { params: { limit } }),
   getScreenshots: (applicationId) => api.get(`/auto-apply/screenshots/${applicationId}`),
 };
