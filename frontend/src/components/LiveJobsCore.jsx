@@ -572,6 +572,8 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
     currentJob: '',
     jobsProcessed: 0,
     totalJobs: 0,
+    submittedCount: 0,
+    failedCount: 0,
     status: '',
     results: []
   });
@@ -585,9 +587,11 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
     setIsRunningAutoApply(true);
     setAutoApplyProgress({
       isRunning: true,
-      currentJob: 'Finding matching jobs...',
+      currentJob: 'Finding matching jobs and submitting applications...',
       jobsProcessed: 0,
       totalJobs: 0,
+      submittedCount: 0,
+      failedCount: 0,
       status: 'searching',
       results: []
     });
@@ -597,20 +601,38 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
       const response = await autoApplyAPI.run({ source_variant: variant === 'premium' ? 'live_jobs_1' : 'live_jobs' });
       
       const data = response.data;
+      const appliedCount = data.applied_count || data.applications_created || 0;
+      const submittedCount = data.submitted_count || 0;
+      const submittedApps = data.submitted_applications || [];
+      const successCount = submittedApps.filter(a => a.success).length;
+      const failedCount = submittedApps.filter(a => !a.success).length;
       
-      if (data.applied_count > 0 || data.applications_created > 0) {
-        const count = data.applied_count || data.applications_created;
+      if (appliedCount > 0) {
         setAutoApplyProgress(prev => ({
           ...prev,
           isRunning: false,
           status: 'completed',
-          jobsProcessed: count,
-          totalJobs: count,
+          jobsProcessed: appliedCount,
+          totalJobs: appliedCount,
+          submittedCount: successCount,
+          failedCount: failedCount,
           currentJob: 'Completed!',
           results: data.applications || []
         }));
         
-        toast.success(`Created ${count} applications! Check "View Applications" to submit them.`);
+        // Show detailed toast
+        if (data.auto_submit_skipped) {
+          toast.info(`Created ${appliedCount} applications. Browser automation unavailable - please apply manually from Applications page.`, {
+            duration: 8000
+          });
+        } else if (submittedCount > 0) {
+          toast.success(
+            `Processed ${appliedCount} jobs: ${successCount} submitted successfully, ${failedCount} need manual apply.`,
+            { duration: 8000 }
+          );
+        } else {
+          toast.success(`Created ${appliedCount} applications! Go to Applications page to submit.`);
+        }
       } else {
         setAutoApplyProgress(prev => ({
           ...prev,
