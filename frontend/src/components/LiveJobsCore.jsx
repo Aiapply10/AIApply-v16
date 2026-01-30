@@ -1018,22 +1018,45 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               <div className="space-y-4">
                 <div>
                   <Label>Select Resume</Label>
-                  <Select
-                    value={applicationForm.resume_id}
-                    onValueChange={(value) => setApplicationForm(prev => ({ ...prev, resume_id: value }))}
-                  >
-                    <SelectTrigger data-testid="select-resume">
-                      <SelectValue placeholder="Choose a resume" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {resumes.map((resume) => (
-                        <SelectItem key={resume.id} value={resume.id}>
-                          {resume.name || resume.filename} 
-                          {resume.is_master && <Badge className="ml-2 bg-violet-100 text-violet-700">Master</Badge>}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {resumes.length === 0 ? (
+                    <div className="p-4 border-2 border-dashed border-amber-200 rounded-lg bg-amber-50 mt-2">
+                      <div className="flex items-center gap-2 text-amber-700">
+                        <AlertTriangle className="w-5 h-5" />
+                        <span className="font-medium">No resumes found</span>
+                      </div>
+                      <p className="text-sm text-amber-600 mt-1">
+                        Please upload a resume first from the "My Resumes" page.
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 border-amber-300 text-amber-700"
+                        onClick={() => {
+                          setShowApplyDialog(false);
+                          navigate('/resumes');
+                        }}
+                      >
+                        Go to My Resumes
+                      </Button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={applicationForm.resume_id}
+                      onValueChange={(value) => setApplicationForm(prev => ({ ...prev, resume_id: value }))}
+                    >
+                      <SelectTrigger data-testid="select-resume" className="mt-2">
+                        <SelectValue placeholder="Choose a resume" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {resumes.map((resume) => (
+                          <SelectItem key={resume.id} value={resume.id}>
+                            {resume.name || resume.filename} 
+                            {resume.is_master && <Badge className="ml-2 bg-violet-100 text-violet-700">Master</Badge>}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 <div>
