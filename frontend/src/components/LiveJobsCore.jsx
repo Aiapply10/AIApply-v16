@@ -690,7 +690,7 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
           </CardHeader>
           <CardContent className="space-y-4">
             {autoApplyStatus && (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="text-center p-3 bg-white rounded-lg border">
                   <div className="text-2xl font-bold text-violet-600">
                     {autoApplyStatus.applications_today || 0}
@@ -699,15 +699,32 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                 </div>
                 <div className="text-center p-3 bg-white rounded-lg border">
                   <div className="text-2xl font-bold text-green-600">
-                    {autoApplyStatus.total_applications || 0}
+                    {autoApplyStatus.total_submitted || autoApplyStatus.total_applications || 0}
                   </div>
-                  <div className="text-xs text-slate-500">Total</div>
+                  <div className="text-xs text-slate-500">Submitted</div>
+                </div>
+                <div className="text-center p-3 bg-white rounded-lg border">
+                  <div className="text-2xl font-bold text-red-500">
+                    {autoApplyStatus.total_failed || 0}
+                  </div>
+                  <div className="text-xs text-slate-500">Failed</div>
                 </div>
                 <div className="text-center p-3 bg-white rounded-lg border">
                   <div className="text-2xl font-bold text-blue-600">
                     {autoApplyStatus.success_rate || 0}%
                   </div>
                   <div className="text-xs text-slate-500">Success Rate</div>
+                </div>
+              </div>
+            )}
+
+            {/* Running status indicator */}
+            {isRunningAutoApply && (
+              <div className="flex items-center gap-3 p-3 bg-violet-100 border border-violet-200 rounded-lg">
+                <Loader2 className="w-5 h-5 animate-spin text-violet-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-violet-800">Auto-Apply is running...</p>
+                  <p className="text-xs text-violet-600">Finding jobs and submitting applications automatically</p>
                 </div>
               </div>
             )}
@@ -752,6 +769,15 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               >
                 <History className="w-4 h-4 mr-1" />
                 History
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate('/applications')}
+                data-testid="view-applications-btn"
+              >
+                <Briefcase className="w-4 h-4 mr-1" />
+                View Applications
               </Button>
             </div>
 
