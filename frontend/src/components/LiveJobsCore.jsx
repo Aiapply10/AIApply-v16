@@ -56,6 +56,7 @@ import {
   X,
   Plus,
   Wand2,
+  User,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
