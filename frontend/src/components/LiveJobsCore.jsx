@@ -1505,6 +1505,21 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               </div>
 
               <div className="space-y-3">
+                {/* Auto-Submit Toggle - Most Important */}
+                <div className="flex items-center justify-between p-3 bg-violet-50 rounded-lg border border-violet-200">
+                  <div>
+                    <div className="font-medium text-violet-800">Auto-Submit to Job Portals</div>
+                    <div className="text-sm text-violet-600">Automatically fill forms and submit applications</div>
+                  </div>
+                  <Switch
+                    checked={autoApplySettings.auto_submit_enabled !== false}
+                    onCheckedChange={(checked) => setAutoApplySettings(prev => ({
+                      ...prev,
+                      auto_submit_enabled: checked
+                    }))}
+                  />
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium">Auto-Tailor Resume</div>
