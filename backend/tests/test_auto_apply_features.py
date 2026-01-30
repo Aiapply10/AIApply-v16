@@ -114,7 +114,7 @@ class TestAutoApplySettings:
     
     def test_update_max_applications_to_25(self, auth_headers):
         """Should be able to set max_applications_per_day to 25"""
-        response = requests.put(
+        response = requests.post(
             f"{BASE_URL}/api/auto-apply/settings",
             headers=auth_headers,
             json={"max_applications_per_day": 25}
