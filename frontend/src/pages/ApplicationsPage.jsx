@@ -47,7 +47,11 @@ import {
   RefreshCw,
   Building2,
   Target,
-  Sparkles
+  Sparkles,
+  Globe,
+  Zap,
+  Bot,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { autoApplyAPI } from '../lib/api';
