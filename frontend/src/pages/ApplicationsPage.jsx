@@ -107,7 +107,8 @@ export function ApplicationsPage() {
     setIsLoading(true);
     try {
       const response = await autoApplyAPI.getHistory(100);
-      const apps = response.data.applications || [];
+      // Handle both array response and object with applications property
+      const apps = Array.isArray(response.data) ? response.data : (response.data.applications || []);
       setApplications(apps);
       
       // Calculate stats including failed
