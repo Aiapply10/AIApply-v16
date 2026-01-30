@@ -4736,20 +4736,59 @@ async def toggle_auto_apply(request: Request):
 async def get_auto_apply_history(request: Request, limit: int = 50):
     """Get user's auto-apply history with full details including tailored resume and cover letter"""
     user = await get_current_user(request)
+    user_id = user["user_id"]
     
-    history = await db.auto_applications.find(
-        {"user_id": user["user_id"]},
+    # Fetch from both auto_applications and applications collections
+    auto_history = await db.auto_applications.find(
+        {"user_id": user_id},
         {"_id": 0}
     ).sort("applied_at", -1).limit(limit).to_list(limit)
     
-    # Enhance with readable status
-    for item in history:
-        # Add helpful flags
-        item["resume_saved"] = item.get("resume_version_saved", False)
-        item["cover_letter_generated"] = bool(item.get("cover_letter"))
-        item["ats_optimized"] = item.get("ats_optimized", False)
+    # Also get recent applications from main applications collection
+    applications = await db.applications.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
     
-    return {"applications": history, "total": len(history)}
+    # Merge and deduplicate by job_id
+    seen_jobs = set()
+    merged_history = []
+    
+    for item in auto_history:
+        job_id = item.get("job_id", "")
+        if job_id not in seen_jobs:
+            seen_jobs.add(job_id)
+            # Add helpful flags
+            item["resume_saved"] = item.get("resume_version_saved", False)
+            item["cover_letter_generated"] = bool(item.get("cover_letter"))
+            item["ats_optimized"] = item.get("ats_optimized", False)
+            item["submitted_by"] = item.get("submitted_by", "auto")
+            merged_history.append(item)
+    
+    for app in applications:
+        job_id = app.get("job_id", "")
+        if job_id not in seen_jobs:
+            seen_jobs.add(job_id)
+            # Convert to history format
+            merged_history.append({
+                "job_id": job_id,
+                "job_title": app.get("job_title", ""),
+                "company": app.get("company", ""),
+                "job_url": app.get("job_url", ""),
+                "status": app.get("status", "pending"),
+                "source": app.get("source", ""),
+                "tailored_resume": app.get("tailored_resume", ""),
+                "cover_letter": app.get("cover_letter", ""),
+                "created_at": app.get("created_at", ""),
+                "applied_at": app.get("applied_at") or app.get("created_at", ""),
+                "submitted_by": app.get("submitted_by", "manual"),
+                "error_message": app.get("error_message", ""),
+            })
+    
+    # Sort by applied_at/created_at descending
+    merged_history.sort(key=lambda x: x.get("applied_at") or x.get("created_at", ""), reverse=True)
+    
+    return merged_history[:limit]
 
 @api_router.post("/auto-apply/run")
 async def run_auto_apply(request: Request):
