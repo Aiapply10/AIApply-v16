@@ -104,6 +104,17 @@ Build a website where a job seeker can:
 - [x] **Sources Breakdown**: Pie chart and bar chart by job source
 - [x] **Recent Activity**: Last 5 applications with status badges
 
+### Auto-Apply Enhancements (Jan 30, 2026) - NEW
+- [x] **Enhanced Stats Panel**: Shows 4 metrics - Today, Submitted, Failed, Success Rate
+- [x] **Max Daily Limit**: Reduced from 50 to 25 applications per day
+- [x] **View Applications Button**: Quick access to applications page from Auto-Apply panel
+- [x] **History Dialog Improvements**:
+  - Shows Auto/Manual badges indicating submission method
+  - Summary stats (Submitted, Failed, Pending counts)
+  - "Apply Manually" button for failed applications with job URLs
+  - Error messages displayed for failed submissions
+- [x] **Resume Selection UX**: Shows helpful message when no resumes uploaded
+
 ### Email Center
 - [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
 - [x] View inbox messages
