@@ -903,10 +903,8 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                       resumeAPI.getAll(),
                       autoApplyAPI.getSettings()
                     ]);
-                    console.log('Resumes loaded for settings dialog:', resumesRes.data);
                     setResumes(resumesRes.data || []);
                     if (settingsRes.data) {
-                      console.log('Settings loaded:', settingsRes.data);
                       setAutoApplySettings(prev => ({ ...prev, ...settingsRes.data }));
                     }
                   } catch (error) {
@@ -1460,7 +1458,6 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
             <div className="space-y-6">
               <div>
                 <Label>Default Resume</Label>
-                {console.log('Rendering Default Resume dropdown, resumes:', resumes, 'length:', resumes.length)}
                 {resumes.length === 0 ? (
                   <div className="p-4 border border-dashed rounded-lg text-center bg-slate-50">
                     <div className="text-slate-500">
