@@ -198,14 +198,37 @@ export function AdminRoute({ children }) {
   const navigate = useNavigate();
   const { user, isAuthenticated, checkAuth, isLoading, token, _hasHydrated } = useAuthStore();
   const hasCheckedRef = useRef(false);
-  
-  // Compute initial state: if we have valid auth data, skip checking
-  const skipInitialCheck = isAuthenticated && token && user;
-  const [checking, setChecking] = useState(!skipInitialCheck);
+  const [checking, setChecking] = useState(true);
+  const [hydrationTimeout, setHydrationTimeout] = useState(false);
+
+  // Set a timeout for hydration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHydrationTimeout(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    // Wait for hydration before checking auth
-    if (!_hasHydrated) {
+    // Check localStorage directly first
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      try {
+        const { state } = JSON.parse(authStorage);
+        if (state?.token && state?.user && state?.isAuthenticated) {
+          if (state.user?.role !== 'admin') {
+            navigate('/dashboard', { replace: true });
+          }
+          setChecking(false);
+          return;
+        }
+      } catch (e) {
+        // Continue with normal flow
+      }
+    }
+
+    // Wait for hydration or timeout
+    if (!_hasHydrated && !hydrationTimeout) {
       return;
     }
 
@@ -214,9 +237,7 @@ export function AdminRoute({ children }) {
       if (user?.role !== 'admin') {
         navigate('/dashboard', { replace: true });
       }
-      if (checking) {
-        Promise.resolve().then(() => setChecking(false));
-      }
+      setChecking(false);
       return;
     }
 
@@ -237,10 +258,11 @@ export function AdminRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, user, _hasHydrated, isAuthenticated, token, checking]);
+  }, [checkAuth, navigate, user, _hasHydrated, isAuthenticated, token, hydrationTimeout]);
 
   // Show loading while hydrating or checking
-  if (!_hasHydrated || checking || isLoading) {
+  const isHydrating = !_hasHydrated && !hydrationTimeout;
+  if (isHydrating || checking || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
