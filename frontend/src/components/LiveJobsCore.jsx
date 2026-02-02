@@ -1484,42 +1484,44 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                       <SelectValue placeholder="Select a resume" />
                     </SelectTrigger>
                     <SelectContent>
-                      {resumes.map((resume) => {
-                        const resumeId = resume.resume_id || resume.id;
-                        const resumeName = resume.name || resume.file_name || resume.filename || 'Resume';
+                      {(() => {
+                        // Build all options as a flat array
+                        const allOptions = [];
                         
-                        // Create array of all options for this resume
-                        const options = [];
-                        
-                        // Primary/Original Resume Option
-                        options.push(
-                          <SelectItem key={resumeId} value={resumeId}>
-                            {resumeName} {resume.is_primary ? '(Primary)' : ''} {resume.analysis?.score ? `- ATS: ${resume.analysis.score}` : ''}
-                          </SelectItem>
-                        );
-                        
-                        // Master Resume Option (if exists)
-                        if (resume.master_resume) {
-                          options.push(
-                            <SelectItem key={`${resumeId}_master`} value={`${resumeId}_master`}>
-                              {resumeName} - Master (Enhanced)
+                        resumes.forEach((resume) => {
+                          const resumeId = resume.resume_id || resume.id;
+                          const resumeName = resume.name || resume.file_name || resume.filename || 'Resume';
+                          
+                          // Primary/Original Resume Option
+                          allOptions.push(
+                            <SelectItem key={resumeId} value={resumeId}>
+                              {resumeName} {resume.is_primary ? '(Primary)' : ''} {resume.analysis?.score ? `- ATS: ${resume.analysis.score}` : ''}
                             </SelectItem>
                           );
-                        }
-                        
-                        // Title Versions (if exist)
-                        if (resume.title_versions && resume.title_versions.length > 0) {
-                          resume.title_versions.forEach((version, idx) => {
-                            options.push(
-                              <SelectItem key={`${resumeId}_variant_${idx}`} value={`${resumeId}_variant_${idx}`}>
-                                {version.name || version.job_title} (Variant)
+                          
+                          // Master Resume Option (if exists)
+                          if (resume.master_resume) {
+                            allOptions.push(
+                              <SelectItem key={`${resumeId}_master`} value={`${resumeId}_master`}>
+                                {resumeName} - Master (Enhanced)
                               </SelectItem>
                             );
-                          });
-                        }
+                          }
+                          
+                          // Title Versions (if exist)
+                          if (resume.title_versions && resume.title_versions.length > 0) {
+                            resume.title_versions.forEach((version, idx) => {
+                              allOptions.push(
+                                <SelectItem key={`${resumeId}_variant_${idx}`} value={`${resumeId}_variant_${idx}`}>
+                                  {version.name || version.job_title} (Variant)
+                                </SelectItem>
+                              );
+                            });
+                          }
+                        });
                         
-                        return options;
-                      })}
+                        return allOptions;
+                      })()}
                     </SelectContent>
                   </Select>
                 )}
