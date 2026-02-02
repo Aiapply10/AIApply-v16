@@ -4580,6 +4580,11 @@ async def get_auto_apply_settings(request: Request):
             "min_salary": None,
             "max_applications_per_day": 10,
             "auto_tailor_resume": True,
+            "generate_cover_letter": True,
+            "schedule_time": "12:00",
+            "schedule_enabled": False,
+            "schedule_frequency": "daily",
+            "auto_submit_enabled": True,
             "last_run": None,
             "total_applications": 0
         }
