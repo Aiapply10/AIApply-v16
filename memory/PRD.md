@@ -127,6 +127,15 @@ Build a website where a job seeker can:
 - [x] **Resume Selection UX**: Shows helpful message when no resumes uploaded
 - [x] **Retry Failed Button**: Batch retry for failed applications
 
+### Default Resume Dropdown Fix (Feb 2, 2026) - BUG FIX
+- [x] **All Resume Versions in Dropdown**: Shows Original/Primary, Master, and all AI-generated title variants
+- [x] **Version Badges**: 
+  - Primary badge (blue) for original resume with ATS score
+  - Master badge (violet) for AI-enhanced master version
+  - Variant badge (amber) for title-specific versions (e.g., Python Developer, Backend Engineer)
+- [x] **Backend Resume ID Parsing**: Handles `_master` and `_variant_N` suffixes to use correct content
+- [x] **Scheduled Auto-Apply Support**: Both manual and scheduled auto-apply use the selected resume version
+
 ### Email Center
 - [x] Connect email accounts (Gmail, Outlook, IMAP/SMTP)
 - [x] View inbox messages
