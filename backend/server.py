@@ -6094,7 +6094,12 @@ async def get_scheduler_status():
         "scheduler_running": scheduler.running,
         "jobs": job_info,
         "timezone": "UTC",
-        "default_time": "12:00 PM UTC"
+        "available_frequencies": [
+            {"value": "1h", "label": "Every hour"},
+            {"value": "6h", "label": "Every 6 hours"},
+            {"value": "12h", "label": "Every 12 hours"},
+            {"value": "daily", "label": "Once daily (12:00 PM UTC)"}
+        ]
     }
 
 
