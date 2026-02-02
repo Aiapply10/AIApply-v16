@@ -1443,22 +1443,94 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
             <div className="space-y-6">
               <div>
                 <Label>Default Resume</Label>
-                <Select
-                  value={autoApplySettings.resume_id}
-                  onValueChange={(value) => setAutoApplySettings(prev => ({ ...prev, resume_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a resume" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {resumes.map((resume) => (
-                      <SelectItem key={resume.id} value={resume.id}>
-                        {resume.name || resume.filename}
-                        {resume.is_master && <Badge className="ml-2">Master</Badge>}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {resumes.length === 0 ? (
+                  <div className="p-4 border border-dashed rounded-lg text-center bg-slate-50">
+                    <div className="text-slate-500">
+                      <span className="font-medium">No resumes found</span>
+                      <p className="text-sm mt-1">
+                        Please upload a resume first from the "My Resumes" page.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => navigate('/resumes')}
+                    >
+                      Go to My Resumes
+                    </Button>
+                  </div>
+                ) : (
+                  <Select
+                    value={autoApplySettings.resume_id}
+                    onValueChange={(value) => setAutoApplySettings(prev => ({ ...prev, resume_id: value }))}
+                  >
+                    <SelectTrigger data-testid="default-resume-select">
+                      <SelectValue placeholder="Select a resume" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {resumes.flatMap((resume) => {
+                        const items = [];
+                        const resumeId = resume.resume_id || resume.id;
+                        const resumeName = resume.name || resume.file_name || resume.filename || 'Resume';
+                        
+                        // Primary/Original Resume Option
+                        items.push(
+                          <SelectItem key={resumeId} value={resumeId}>
+                            <div className="flex items-center gap-2">
+                              <span>{resumeName}</span>
+                              {resume.is_primary && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  Primary
+                                </Badge>
+                              )}
+                              {resume.analysis?.score && (
+                                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  ATS: {resume.analysis.score}
+                                </Badge>
+                              )}
+                            </div>
+                          </SelectItem>
+                        );
+                        
+                        // Master Resume Option (if exists)
+                        if (resume.master_resume) {
+                          items.push(
+                            <SelectItem key={`${resumeId}_master`} value={`${resumeId}_master`}>
+                              <div className="flex items-center gap-2">
+                                <span>{resumeName} - Master</span>
+                                <Badge className="text-xs bg-violet-100 text-violet-700">
+                                  Master
+                                </Badge>
+                                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  Enhanced
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          );
+                        }
+                        
+                        // Title Versions (if exist)
+                        if (resume.title_versions && resume.title_versions.length > 0) {
+                          resume.title_versions.forEach((version, idx) => {
+                            items.push(
+                              <SelectItem key={`${resumeId}_variant_${idx}`} value={`${resumeId}_variant_${idx}`}>
+                                <div className="flex items-center gap-2">
+                                  <span>{version.name || version.job_title}</span>
+                                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                    Variant
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            );
+                          });
+                        }
+                        
+                        return items;
+                      })}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div>
