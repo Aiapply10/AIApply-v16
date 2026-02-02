@@ -110,24 +110,23 @@ export function ProtectedRoute({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, checkAuth, isLoading, user, token, _hasHydrated } = useAuthStore();
-  const [checking, setChecking] = useState(true);
   const hasCheckedRef = useRef(false);
+  
+  // Compute initial state: if we have valid auth data, skip checking
+  const skipInitialCheck = location.state?.user || (isAuthenticated && token && user);
+  const [checking, setChecking] = useState(!skipInitialCheck);
 
   useEffect(() => {
-    // If user passed from AuthCallback, skip check
-    if (location.state?.user) {
-      setChecking(false);
+    // If user passed from AuthCallback or already have valid auth, no need to check
+    if (location.state?.user || (isAuthenticated && token && user)) {
+      if (checking) {
+        Promise.resolve().then(() => setChecking(false));
+      }
       return;
     }
 
     // Wait for hydration before checking auth
     if (!_hasHydrated) {
-      return;
-    }
-
-    // If already authenticated with token and user data, no need to check again
-    if (isAuthenticated && token && user) {
-      setChecking(false);
       return;
     }
 
@@ -146,7 +145,7 @@ export function ProtectedRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, location.state, _hasHydrated, isAuthenticated, token, user]);
+  }, [checkAuth, navigate, location.state, _hasHydrated, isAuthenticated, token, user, checking]);
 
   // Reset check flag when location changes to a different path
   useEffect(() => {
@@ -172,8 +171,11 @@ export function ProtectedRoute({ children }) {
 export function AdminRoute({ children }) {
   const navigate = useNavigate();
   const { user, isAuthenticated, checkAuth, isLoading, token, _hasHydrated } = useAuthStore();
-  const [checking, setChecking] = useState(true);
   const hasCheckedRef = useRef(false);
+  
+  // Compute initial state: if we have valid auth data, skip checking
+  const skipInitialCheck = isAuthenticated && token && user;
+  const [checking, setChecking] = useState(!skipInitialCheck);
 
   useEffect(() => {
     // Wait for hydration before checking auth
@@ -186,7 +188,9 @@ export function AdminRoute({ children }) {
       if (user?.role !== 'admin') {
         navigate('/dashboard', { replace: true });
       }
-      setChecking(false);
+      if (checking) {
+        Promise.resolve().then(() => setChecking(false));
+      }
       return;
     }
 
@@ -207,7 +211,7 @@ export function AdminRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, user, _hasHydrated, isAuthenticated, token]);
+  }, [checkAuth, navigate, user, _hasHydrated, isAuthenticated, token, checking]);
 
   // Show loading while hydrating or checking
   if (!_hasHydrated || checking || isLoading) {
