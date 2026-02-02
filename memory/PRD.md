@@ -248,6 +248,7 @@ Build a website where a job seeker can:
 | GET | /api/auto-apply/screenshots/{application_id} | Get screenshot paths for application |
 | GET | /api/reports/candidate | Get candidate analytics dashboard data |
 | GET | /api/reports/admin | Get admin dashboard data |
+| GET | /api/scheduler/status | Get scheduler status with all jobs and available frequencies |
 
 ---
 
@@ -262,6 +263,8 @@ Build a website where a job seeker can:
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_16.json` - Scheduler frequency feature (100% passed) - Feb 2, 2026
+- `/app/test_reports/iteration_15.json` - Auth stability improvements (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_14.json` - Resume dropdown & success rate fixes (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_13.json` - Auth persistence & Email fixes (100% passed) - Jan 30, 2026
 - `/app/test_reports/iteration_12.json` - Auto-Apply source variant & badges (all passed) - Jan 30, 2026
@@ -276,4 +279,4 @@ Build a website where a job seeker can:
 
 ---
 
-*Last updated: January 30, 2026*
+*Last updated: February 2, 2026*
