@@ -272,6 +272,7 @@ Build a website where a job seeker can:
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_17.json` - Default Resume dropdown fix (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_16.json` - Scheduler frequency feature (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_15.json` - Auth stability improvements (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_14.json` - Resume dropdown & success rate fixes (100% passed) - Feb 2, 2026
