@@ -896,6 +896,7 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                 size="sm"
                 variant="outline"
                 onClick={async () => {
+                  setShowAutoApplyDialog(true);
                   // Refresh resumes and settings when opening dialog
                   try {
                     const [resumesRes, settingsRes] = await Promise.all([
@@ -911,7 +912,6 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                   } catch (error) {
                     console.error('Error refreshing data for settings dialog:', error);
                   }
-                  setShowAutoApplyDialog(true);
                 }}
                 data-testid="auto-apply-settings-btn"
               >
