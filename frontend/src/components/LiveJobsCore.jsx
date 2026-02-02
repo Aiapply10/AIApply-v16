@@ -358,12 +358,23 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
         autoApplyAPI.getStatus(),
         autoApplyAPI.getSettings()
       ]);
+      
+      console.log('Auto-apply status loaded:', statusRes.data);
       setAutoApplyStatus(statusRes.data);
+      
       if (settingsRes.data) {
         setAutoApplySettings(prev => ({ ...prev, ...settingsRes.data }));
       }
     } catch (error) {
       console.error('Error loading auto-apply status:', error);
+      // Set default values on error
+      setAutoApplyStatus({
+        applications_today: 0,
+        total_submitted: 0,
+        total_failed: 0,
+        success_rate: 0,
+        enabled: false
+      });
     }
   }, []);
 
