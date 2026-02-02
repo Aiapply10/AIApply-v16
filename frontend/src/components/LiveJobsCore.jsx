@@ -1477,50 +1477,32 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                   </div>
                 ) : (
                   <Select
-                    value={autoApplySettings.resume_id}
+                    value={autoApplySettings.resume_id || ''}
                     onValueChange={(value) => setAutoApplySettings(prev => ({ ...prev, resume_id: value }))}
                   >
                     <SelectTrigger data-testid="default-resume-select">
                       <SelectValue placeholder="Select a resume" />
                     </SelectTrigger>
                     <SelectContent>
-                      {resumes.flatMap((resume) => {
-                        const items = [];
+                      {resumes.map((resume) => {
                         const resumeId = resume.resume_id || resume.id;
                         const resumeName = resume.name || resume.file_name || resume.filename || 'Resume';
                         
+                        // Create array of all options for this resume
+                        const options = [];
+                        
                         // Primary/Original Resume Option
-                        items.push(
+                        options.push(
                           <SelectItem key={resumeId} value={resumeId}>
-                            <div className="flex items-center gap-2">
-                              <span>{resumeName}</span>
-                              {resume.is_primary && (
-                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                  Primary
-                                </Badge>
-                              )}
-                              {resume.analysis?.score && (
-                                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                                  ATS: {resume.analysis.score}
-                                </Badge>
-                              )}
-                            </div>
+                            {resumeName} {resume.is_primary ? '(Primary)' : ''} {resume.analysis?.score ? `- ATS: ${resume.analysis.score}` : ''}
                           </SelectItem>
                         );
                         
                         // Master Resume Option (if exists)
                         if (resume.master_resume) {
-                          items.push(
+                          options.push(
                             <SelectItem key={`${resumeId}_master`} value={`${resumeId}_master`}>
-                              <div className="flex items-center gap-2">
-                                <span>{resumeName} - Master</span>
-                                <Badge className="text-xs bg-violet-100 text-violet-700">
-                                  Master
-                                </Badge>
-                                <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                                  Enhanced
-                                </Badge>
-                              </div>
+                              {resumeName} - Master (Enhanced)
                             </SelectItem>
                           );
                         }
@@ -1528,20 +1510,15 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                         // Title Versions (if exist)
                         if (resume.title_versions && resume.title_versions.length > 0) {
                           resume.title_versions.forEach((version, idx) => {
-                            items.push(
+                            options.push(
                               <SelectItem key={`${resumeId}_variant_${idx}`} value={`${resumeId}_variant_${idx}`}>
-                                <div className="flex items-center gap-2">
-                                  <span>{version.name || version.job_title}</span>
-                                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-                                    Variant
-                                  </Badge>
-                                </div>
+                                {version.name || version.job_title} (Variant)
                               </SelectItem>
                             );
                           });
                         }
                         
-                        return items;
+                        return options;
                       })}
                     </SelectContent>
                   </Select>
