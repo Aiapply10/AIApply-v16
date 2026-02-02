@@ -260,6 +260,8 @@ class AutoApplySettingsUpdate(BaseModel):
     source_filters: Optional[List[str]] = None
     schedule_time: Optional[str] = None
     schedule_enabled: Optional[bool] = None
+    schedule_frequency: Optional[str] = None  # Options: "1h", "6h", "12h", "daily", "custom"
+    auto_submit_enabled: Optional[bool] = None
 
 # ============ EMAIL CENTER MODELS ============
 
