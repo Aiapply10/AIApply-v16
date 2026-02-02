@@ -134,6 +134,22 @@ Build a website where a job seeker can:
 - [x] AI draft replies to recruiters
 - [x] Email history tracking
 - [x] Settings (auto-compose, approval required, signature)
+- [x] **Improved IMAP Error Messages (Jan 30, 2026)**:
+  - Gmail App Password guidance with step-by-step instructions
+  - Outlook App Password instructions
+  - Connection timeout handling
+  - Server resolution error handling
+
+### Bug Fixes (Jan 30, 2026) - SESSION PERSISTENCE
+- [x] **Fixed Flaky Login Issue**: Auth store now persists token, user data, AND lastAuthCheck timestamp
+- [x] **401 Response Handler**: API interceptor clears auth and redirects to login on token expiration
+- [x] **Session Survives Refresh**: User data persisted in localStorage prevents unnecessary re-fetches
+- [x] **5-Minute Auth Cache**: Skips auth check if validated within last 5 minutes
+
+### Backend Refactoring (Started)
+- [x] Created modular routes structure: `/app/backend/routes/`
+- [x] Auth helper functions extracted to `/app/backend/routes/auth.py`
+- [ ] TODO: Continue splitting server.py into modular services
 
 ### Infrastructure
 - [x] APScheduler for background jobs
