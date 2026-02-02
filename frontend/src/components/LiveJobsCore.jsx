@@ -902,8 +902,10 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                       resumeAPI.getAll(),
                       autoApplyAPI.getSettings()
                     ]);
+                    console.log('Resumes loaded for settings dialog:', resumesRes.data);
                     setResumes(resumesRes.data || []);
                     if (settingsRes.data) {
+                      console.log('Settings loaded:', settingsRes.data);
                       setAutoApplySettings(prev => ({ ...prev, ...settingsRes.data }));
                     }
                   } catch (error) {
