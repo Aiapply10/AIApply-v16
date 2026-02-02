@@ -1205,9 +1205,24 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
                       </SelectTrigger>
                       <SelectContent>
                         {resumes.map((resume) => (
-                          <SelectItem key={resume.id} value={resume.id}>
-                            {resume.name || resume.filename} 
-                            {resume.is_master && <Badge className="ml-2 bg-violet-100 text-violet-700">Master</Badge>}
+                          <SelectItem key={resume.resume_id || resume.id} value={resume.resume_id || resume.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{resume.name || resume.file_name || resume.filename || 'Resume'}</span>
+                              {resume.is_master && (
+                                <Badge className="bg-violet-100 text-violet-700 text-xs">Master</Badge>
+                              )}
+                              {resume.is_variant && (
+                                <Badge className="bg-blue-100 text-blue-700 text-xs">Variant</Badge>
+                              )}
+                              {resume.is_primary && !resume.is_master && !resume.is_variant && (
+                                <Badge className="bg-green-100 text-green-700 text-xs">Primary</Badge>
+                              )}
+                              {resume.analysis?.score && (
+                                <Badge variant="outline" className="text-xs">
+                                  ATS: {resume.analysis.score}
+                                </Badge>
+                              )}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
