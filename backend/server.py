@@ -6384,9 +6384,27 @@ async def process_auto_apply_for_user(user_id: str, settings: dict):
         logger.warning(f"User {user_id} has no resume selected. Skipping.")
         return
     
+    # Parse the resume_id to handle master/variant versions
+    selected_resume_id = settings["resume_id"]
+    base_resume_id = selected_resume_id
+    resume_version_type = "original"  # original, master, or variant
+    variant_index = None
+    
+    if "_master" in selected_resume_id:
+        base_resume_id = selected_resume_id.replace("_master", "")
+        resume_version_type = "master"
+    elif "_variant_" in selected_resume_id:
+        parts = selected_resume_id.split("_variant_")
+        base_resume_id = parts[0]
+        resume_version_type = "variant"
+        try:
+            variant_index = int(parts[1])
+        except:
+            variant_index = 0
+    
     # Get the user's resume
     resume = await db.resumes.find_one(
-        {"resume_id": settings["resume_id"], "user_id": user_id},
+        {"resume_id": base_resume_id, "user_id": user_id},
         {"_id": 0}
     )
     
