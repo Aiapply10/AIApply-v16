@@ -6239,7 +6239,7 @@ else:
         "http://localhost:3000",
         "http://localhost:8001",
         "https://localhost:3000",
-        "https://resumatch-15.preview.emergentagent.com",
+        "https://appliwise.preview.emergentagent.com",
         "https://job-tailor-7.emergentagent.com",
         "https://job-tailor-7.emergent.host",
         # Custom domain - all variations

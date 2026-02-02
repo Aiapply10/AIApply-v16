@@ -13,7 +13,7 @@ import uuid
 import time
 
 class LiveJobsWebScrapingTester:
-    def __init__(self, base_url="https://resumatch-15.preview.emergentagent.com"):
+    def __init__(self, base_url="https://appliwise.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.user_id = None
