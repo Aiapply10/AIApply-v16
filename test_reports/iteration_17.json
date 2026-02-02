@@ -1,0 +1,94 @@
+{
+  "summary": "Completed testing of Default Resume dropdown fix in Auto-Apply Settings. All backend API tests passed (7/7). All frontend UI tests passed - dropdown shows all 6 resume options (Original, Master, and 4 title variants) with correct badges.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "GET /api/resumes returns resume with master_resume and title_versions fields",
+    "POST /api/auto-apply/settings accepts original resume_id (no suffix)",
+    "POST /api/auto-apply/settings accepts resume_id with _master suffix",
+    "POST /api/auto-apply/settings accepts resume_id with _variant_0 suffix",
+    "POST /api/auto-apply/settings accepts resume_id with _variant_3 suffix",
+    "Auto-apply run correctly parses _master suffix and finds base resume",
+    "Auto-apply run correctly parses _variant_N suffix and finds base resume",
+    "Frontend: Default Resume dropdown shows 6 options total",
+    "Frontend: Original resume shows 'Primary' and 'ATS: 78' badges",
+    "Frontend: Master resume shows 'Master' and 'Enhanced' badges",
+    "Frontend: All 4 title variants show 'Variant' badge (Python Developer, Python Engineer, Backend Developer, Data Engineer)",
+    "Frontend: Selecting a variant updates the dropdown display",
+    "Frontend: Save Settings persists the selected resume_id correctly",
+    "Frontend: 'Settings saved!' toast notification appears after save"
+  ],
+  
+  "features_verified": {
+    "dropdown_options": {
+      "status": "PASS",
+      "details": "Dropdown shows 6 options: 1 Original (with Primary/ATS badges), 1 Master (with Master/Enhanced badges), 4 Variants (with Variant badge)"
+    },
+    "resume_id_parsing_master": {
+      "status": "PASS",
+      "details": "Backend correctly parses resume_id_master suffix to extract base_resume_id and version_type='master'"
+    },
+    "resume_id_parsing_variant": {
+      "status": "PASS",
+      "details": "Backend correctly parses resume_id_variant_N suffix to extract base_resume_id, version_type='variant', and variant_index"
+    },
+    "settings_persistence": {
+      "status": "PASS",
+      "details": "Selected resume_id (including _master and _variant_N suffixes) persists correctly via POST /api/auto-apply/settings"
+    }
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_default_resume_dropdown.py",
+    "/app/test_reports/pytest/default_resume_dropdown_results.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [
+    "Frontend flatMap correctly generates SelectItems for Original, Master, and all title_versions",
+    "Backend auto-apply run function at line 4837-4847 correctly parses _master and _variant_N suffixes",
+    "Backend process_auto_apply_for_user function at line 6393-6403 has identical parsing logic for scheduled runs",
+    "Dropdown uses data-testid='default-resume-select' for testing",
+    "Each option type has distinct badge styling (Primary=blue, Master=violet, Variant=amber)"
+  ],
+  
+  "updated_files": [
+    "/app/backend/tests/test_default_resume_dropdown.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100% (all UI tests passed)"
+  },
+  
+  "test_credentials": {
+    "email": "test_autoapply@example.com",
+    "password": "testpass123"
+  },
+  
+  "seed_data_creation": "None - used existing test user with resume_id='resume_8c4696bc3a38' that has master_resume and 4 title_versions",
+  
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Default Resume dropdown fix verified. The dropdown in Auto-Apply Settings now shows all resume versions: Original (with Primary/ATS badges), Master (with Master/Enhanced badges), and all title variants (with Variant badge). Backend correctly parses resume_id suffixes (_master, _variant_N) in both run_auto_apply and process_auto_apply_for_user functions.",
+  
+  "screenshots": {
+    "live_jobs_page": ".screenshots/02_live_jobs_page.png",
+    "settings_dialog": ".screenshots/03_settings_dialog.png",
+    "dropdown_open": ".screenshots/04_dropdown_open.png",
+    "variant_selected": ".screenshots/05_variant_selected.png",
+    "settings_saved": ".screenshots/06_settings_saved.png"
+  }
+}
