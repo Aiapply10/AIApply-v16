@@ -520,7 +520,7 @@ export function ApplicationsPage() {
             <div className="space-y-4">
               {filteredApplications.map((app, index) => (
                 <motion.div
-                  key={app.application_id}
+                  key={app.application_id || `app-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
