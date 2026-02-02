@@ -111,22 +111,47 @@ export function ProtectedRoute({ children }) {
   const location = useLocation();
   const { isAuthenticated, checkAuth, isLoading, user, token, _hasHydrated } = useAuthStore();
   const hasCheckedRef = useRef(false);
-  
-  // Compute initial state: if we have valid auth data, skip checking
-  const skipInitialCheck = location.state?.user || (isAuthenticated && token && user);
-  const [checking, setChecking] = useState(!skipInitialCheck);
+  const [checking, setChecking] = useState(true);
+  const [hydrationTimeout, setHydrationTimeout] = useState(false);
+
+  // Set a timeout for hydration - if it doesn't happen in 500ms, proceed anyway
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHydrationTimeout(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    // If user passed from AuthCallback or already have valid auth, no need to check
-    if (location.state?.user || (isAuthenticated && token && user)) {
-      if (checking) {
-        Promise.resolve().then(() => setChecking(false));
-      }
+    // If user passed from AuthCallback, skip check
+    if (location.state?.user) {
+      setChecking(false);
       return;
     }
 
-    // Wait for hydration before checking auth
-    if (!_hasHydrated) {
+    // Check if we already have valid auth data in localStorage directly
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      try {
+        const { state } = JSON.parse(authStorage);
+        if (state?.token && state?.user && state?.isAuthenticated) {
+          // We have valid auth data, no need to check
+          setChecking(false);
+          return;
+        }
+      } catch (e) {
+        // Continue with normal flow
+      }
+    }
+
+    // Wait for hydration or timeout before checking auth
+    if (!_hasHydrated && !hydrationTimeout) {
+      return;
+    }
+
+    // If already authenticated with token and user data, no need to check again
+    if (isAuthenticated && token && user) {
+      setChecking(false);
       return;
     }
 
@@ -145,15 +170,16 @@ export function ProtectedRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, location.state, _hasHydrated, isAuthenticated, token, user, checking]);
+  }, [checkAuth, navigate, location.state, _hasHydrated, isAuthenticated, token, user, hydrationTimeout]);
 
   // Reset check flag when location changes to a different path
   useEffect(() => {
     hasCheckedRef.current = false;
   }, [location.pathname]);
 
-  // Show loading while hydrating or checking
-  if (!_hasHydrated || checking || isLoading) {
+  // Show loading while waiting for hydration (with timeout) or checking
+  const isHydrating = !_hasHydrated && !hydrationTimeout;
+  if (isHydrating || checking || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
