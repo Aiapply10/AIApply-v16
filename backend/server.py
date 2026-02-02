@@ -26,6 +26,7 @@ import hashlib
 # Scheduler imports
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 # Job Scraper
 from utils.job_scraper import job_scraper
