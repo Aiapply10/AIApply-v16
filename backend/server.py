@@ -6479,7 +6479,23 @@ async def process_auto_apply_for_user(user_id: str, settings: dict):
         return
     
     applications_count = 0
-    original_content = resume.get('original_content', '')
+    
+    # Get the appropriate resume content based on version type
+    if resume_version_type == "master" and resume.get('master_resume'):
+        original_content = resume.get('master_resume')
+        logger.info(f"Using Master resume version for scheduled auto-apply (user: {user_id})")
+    elif resume_version_type == "variant" and resume.get('title_versions'):
+        title_versions = resume.get('title_versions', [])
+        if variant_index is not None and variant_index < len(title_versions):
+            original_content = title_versions[variant_index].get('content', '')
+            version_name = title_versions[variant_index].get('name', title_versions[variant_index].get('job_title', ''))
+            logger.info(f"Using Variant resume version '{version_name}' for scheduled auto-apply (user: {user_id})")
+        else:
+            original_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+            logger.warning(f"Variant index {variant_index} not found for user {user_id}, falling back to default content")
+    else:
+        original_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+        logger.info(f"Using Original/Primary resume for scheduled auto-apply (user: {user_id})")
     
     # Process each job
     for job in new_jobs:
