@@ -4944,7 +4944,23 @@ async def run_auto_apply(request: Request):
     
     # Process each job application
     applications = []
-    resume_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+    
+    # Get the appropriate resume content based on version type
+    if resume_version_type == "master" and resume.get('master_resume'):
+        resume_content = resume.get('master_resume')
+        logger.info(f"Using Master resume version for auto-apply")
+    elif resume_version_type == "variant" and resume.get('title_versions'):
+        title_versions = resume.get('title_versions', [])
+        if variant_index is not None and variant_index < len(title_versions):
+            resume_content = title_versions[variant_index].get('content', '')
+            version_name = title_versions[variant_index].get('name', title_versions[variant_index].get('job_title', ''))
+            logger.info(f"Using Variant resume version '{version_name}' for auto-apply")
+        else:
+            resume_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+            logger.warning(f"Variant index {variant_index} not found, falling back to default content")
+    else:
+        resume_content = resume.get('master_resume') or resume.get('tailored_content') or resume.get('original_content', '')
+        logger.info(f"Using Original/Primary resume for auto-apply")
     
     for job in jobs_to_apply:
         try:
