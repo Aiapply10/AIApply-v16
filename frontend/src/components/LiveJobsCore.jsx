@@ -272,7 +272,9 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
     generate_cover_letter: true,
     source_filters: [],
     schedule_time: '12:00',
-    schedule_enabled: true
+    schedule_enabled: true,
+    schedule_frequency: 'daily',
+    auto_submit_enabled: true
   });
   const [autoApplyHistory, setAutoApplyHistory] = useState([]);
   const [newKeyword, setNewKeyword] = useState('');
