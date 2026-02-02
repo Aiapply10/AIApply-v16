@@ -14,13 +14,42 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const authStorage = localStorage.getItem('auth-storage');
   if (authStorage) {
-    const { state } = JSON.parse(authStorage);
-    if (state?.token) {
-      config.headers.Authorization = `Bearer ${state.token}`;
+    try {
+      const { state } = JSON.parse(authStorage);
+      if (state?.token) {
+        config.headers.Authorization = `Bearer ${state.token}`;
+      }
+    } catch (e) {
+      console.error('Error parsing auth storage:', e);
     }
   }
   return config;
 });
+
+// Handle 401 responses - clear auth state and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth storage on 401
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage);
+          parsed.state = { ...parsed.state, token: null, user: null, isAuthenticated: false };
+          localStorage.setItem('auth-storage', JSON.stringify(parsed));
+        } catch (e) {
+          localStorage.removeItem('auth-storage');
+        }
+      }
+      // Only redirect if not already on login/register page
+      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth API
 export const authAPI = {
