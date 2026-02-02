@@ -7340,18 +7340,51 @@ async def startup_event():
     """Start the scheduler when the app starts."""
     logger.info("Starting application and scheduler...")
     
-    # Schedule the auto-apply job to run daily at 12:00 PM UTC (noon)
-    # This is the default time; users can configure their own schedule
+    # Schedule jobs for different frequencies
+    # These will check user settings and only process users with matching frequency
+    
+    # Hourly job (for users who want every 1 hour)
     scheduler.add_job(
         scheduled_auto_apply_for_all_users,
-        CronTrigger(hour=12, minute=0),  # Run at 12:00 PM UTC daily
+        IntervalTrigger(hours=1),
+        id="hourly_auto_apply",
+        name="Hourly Auto-Apply Job",
+        replace_existing=True,
+        kwargs={"frequency_filter": "1h"}
+    )
+    
+    # Every 6 hours job
+    scheduler.add_job(
+        scheduled_auto_apply_for_all_users,
+        IntervalTrigger(hours=6),
+        id="6h_auto_apply",
+        name="6-Hour Auto-Apply Job",
+        replace_existing=True,
+        kwargs={"frequency_filter": "6h"}
+    )
+    
+    # Every 12 hours job
+    scheduler.add_job(
+        scheduled_auto_apply_for_all_users,
+        IntervalTrigger(hours=12),
+        id="12h_auto_apply",
+        name="12-Hour Auto-Apply Job",
+        replace_existing=True,
+        kwargs={"frequency_filter": "12h"}
+    )
+    
+    # Daily job at 12:00 PM UTC (default)
+    scheduler.add_job(
+        scheduled_auto_apply_for_all_users,
+        CronTrigger(hour=12, minute=0),
         id="daily_auto_apply",
         name="Daily Auto-Apply Job (12:00 PM UTC)",
-        replace_existing=True
+        replace_existing=True,
+        kwargs={"frequency_filter": "daily"}
     )
     
     scheduler.start()
-    logger.info("Scheduler started. Daily auto-apply job scheduled for 12:00 PM UTC")
+    logger.info("Scheduler started with multiple frequency jobs (1h, 6h, 12h, daily)")
 
 
 @app.on_event("shutdown")
