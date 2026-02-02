@@ -171,11 +171,32 @@ export function ProtectedRoute({ children }) {
 
 export function AdminRoute({ children }) {
   const navigate = useNavigate();
-  const { user, isAuthenticated, checkAuth, isLoading } = useAuthStore();
+  const { user, isAuthenticated, checkAuth, isLoading, token, _hasHydrated } = useAuthStore();
   const [checking, setChecking] = useState(true);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) {
+      return;
+    }
+
+    // If already authenticated with token and user data, just check role
+    if (isAuthenticated && token && user) {
+      if (user?.role !== 'admin') {
+        navigate('/dashboard', { replace: true });
+      }
+      setChecking(false);
+      return;
+    }
+
+    // Prevent multiple checks
+    if (hasCheckedRef.current) {
+      return;
+    }
+
     const verify = async () => {
+      hasCheckedRef.current = true;
       const valid = await checkAuth();
       if (!valid) {
         navigate('/login', { replace: true });
@@ -186,9 +207,10 @@ export function AdminRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, user]);
+  }, [checkAuth, navigate, user, _hasHydrated, isAuthenticated, token]);
 
-  if (checking || isLoading) {
+  // Show loading while hydrating or checking
+  if (!_hasHydrated || checking || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
