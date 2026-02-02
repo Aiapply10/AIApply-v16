@@ -1578,8 +1578,13 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium">Schedule Daily Run</div>
-                    <div className="text-sm text-slate-500">Auto-run at {autoApplySettings.schedule_time}</div>
+                    <div className="font-medium">Schedule Auto-Apply</div>
+                    <div className="text-sm text-slate-500">
+                      {autoApplySettings.schedule_frequency === '1h' ? 'Runs every hour' :
+                       autoApplySettings.schedule_frequency === '6h' ? 'Runs every 6 hours' :
+                       autoApplySettings.schedule_frequency === '12h' ? 'Runs every 12 hours' :
+                       'Runs once daily at 12:00 PM UTC'}
+                    </div>
                   </div>
                   <Switch
                     checked={autoApplySettings.schedule_enabled}
@@ -1592,16 +1597,50 @@ export function LiveJobsCore({ variant = 'free', pageTitle, pageDescription }) {
               </div>
 
               {autoApplySettings.schedule_enabled && (
-                <div>
-                  <Label>Schedule Time (UTC)</Label>
-                  <Input
-                    type="time"
-                    value={autoApplySettings.schedule_time}
-                    onChange={(e) => setAutoApplySettings(prev => ({
-                      ...prev,
-                      schedule_time: e.target.value
-                    }))}
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <Label>Run Frequency</Label>
+                    <Select
+                      value={autoApplySettings.schedule_frequency || 'daily'}
+                      onValueChange={(value) => setAutoApplySettings(prev => ({
+                        ...prev,
+                        schedule_frequency: value
+                      }))}
+                    >
+                      <SelectTrigger data-testid="schedule-frequency-select">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1h">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-violet-500" />
+                            <span>Every hour</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="6h">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-blue-500" />
+                            <span>Every 6 hours</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="12h">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-emerald-500" />
+                            <span>Every 12 hours</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="daily">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-amber-500" />
+                            <span>Once daily (12:00 PM UTC)</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Choose how often the auto-apply should run
+                    </p>
+                  </div>
                 </div>
               )}
 
