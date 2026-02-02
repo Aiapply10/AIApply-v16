@@ -6564,16 +6564,54 @@ async def connect_imap_email(
     
     # Test IMAP connection
     import imaplib
+    import socket
+    
     try:
+        # Set socket timeout to prevent hanging
+        socket.setdefaulttimeout(30)
+        
         if data.use_ssl:
-            mail = imaplib.IMAP4_SSL(data.imap_host, data.imap_port)
+            mail = imaplib.IMAP4_SSL(data.imap_host, data.imap_port or 993)
         else:
-            mail = imaplib.IMAP4(data.imap_host, data.imap_port)
+            mail = imaplib.IMAP4(data.imap_host, data.imap_port or 143)
+        
+        # Try to login
         mail.login(data.email_address, data.password)
         mail.logout()
+        logger.info(f"IMAP connection successful for {data.email_address}")
+        
+    except imaplib.IMAP4.error as e:
+        error_msg = str(e)
+        logger.error(f"IMAP authentication failed: {error_msg}")
+        
+        # Provide helpful error messages
+        if "AUTHENTICATIONFAILED" in error_msg.upper() or "INVALID" in error_msg.upper():
+            if "gmail" in data.imap_host.lower():
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Gmail authentication failed. Please ensure you're using an App Password (not your regular password). Go to Google Account > Security > 2-Step Verification > App Passwords to generate one."
+                )
+            elif "outlook" in data.imap_host.lower() or "office365" in data.imap_host.lower():
+                raise HTTPException(
+                    status_code=400,
+                    detail="Outlook authentication failed. Please use an App Password if you have 2FA enabled, or check your credentials."
+                )
+            else:
+                raise HTTPException(status_code=400, detail=f"Authentication failed: {error_msg}")
+        else:
+            raise HTTPException(status_code=400, detail=f"IMAP error: {error_msg}")
+            
+    except socket.timeout:
+        raise HTTPException(status_code=400, detail="Connection timed out. Please check the server address and port.")
+    except socket.gaierror as e:
+        raise HTTPException(status_code=400, detail=f"Cannot resolve server address: {data.imap_host}")
+    except ConnectionRefusedError:
+        raise HTTPException(status_code=400, detail=f"Connection refused by server {data.imap_host}:{data.imap_port}")
     except Exception as e:
         logger.error(f"IMAP connection failed: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to connect: {str(e)}")
+    finally:
+        socket.setdefaulttimeout(None)  # Reset timeout
     
     # Check if this is the first account (make it primary)
     account_count = await db.email_accounts.count_documents({"user_id": current_user["user_id"]})
