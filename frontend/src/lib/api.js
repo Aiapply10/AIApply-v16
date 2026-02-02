@@ -26,24 +26,34 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Track if we're already handling a 401 to prevent loops
+let isHandling401 = false;
+
 // Handle 401 responses - clear auth state and redirect to login
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      // Dynamically import to avoid circular dependency
-      const { useAuthStore } = await import('../store');
+    if (error.response?.status === 401 && !isHandling401) {
+      isHandling401 = true;
       
-      // Use Zustand's clearAuth method to ensure state consistency
-      useAuthStore.getState().clearAuth();
-      
-      // Only redirect if not already on login/register page and not an auth endpoint
-      const isAuthEndpoint = error.config?.url?.includes('/auth/');
-      const isOnAuthPage = window.location.pathname.includes('/login') || 
-                           window.location.pathname.includes('/register');
-      
-      if (!isOnAuthPage && !isAuthEndpoint) {
-        window.location.href = '/login';
+      try {
+        // Dynamically import to avoid circular dependency
+        const { useAuthStore } = await import('../store');
+        
+        // Use Zustand's clearAuth method to ensure state consistency
+        useAuthStore.getState().clearAuth();
+        
+        // Only redirect if not already on login/register page and not an auth endpoint
+        const isAuthEndpoint = error.config?.url?.includes('/auth/');
+        const isOnAuthPage = window.location.pathname.includes('/login') || 
+                             window.location.pathname.includes('/register');
+        
+        if (!isOnAuthPage && !isAuthEndpoint) {
+          window.location.href = '/login';
+        }
+      } finally {
+        // Reset after a short delay to allow for multiple 401s from same page load
+        setTimeout(() => { isHandling401 = false; }, 1000);
       }
     }
     return Promise.reject(error);
