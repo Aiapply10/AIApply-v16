@@ -6278,25 +6278,45 @@ logger = logging.getLogger(__name__)
 
 # ============ SCHEDULER FUNCTIONS ============
 
-async def scheduled_auto_apply_for_all_users():
+async def scheduled_auto_apply_for_all_users(frequency_filter: str = "daily"):
     """
-    Scheduled task that runs daily to auto-apply for all users with enabled auto-apply.
-    This function processes each user who has auto-apply enabled.
+    Scheduled task that runs to auto-apply for all users with enabled auto-apply.
+    This function processes each user who has auto-apply enabled AND matches the frequency filter.
+    
+    Args:
+        frequency_filter: The frequency to filter users by ("1h", "6h", "12h", "daily")
     """
-    logger.info("Starting scheduled auto-apply job for all users...")
+    logger.info(f"Starting scheduled auto-apply job for frequency: {frequency_filter}...")
     
     try:
-        # Find all users with auto-apply enabled
+        # Find all users with auto-apply enabled and matching frequency
+        # Users with no schedule_frequency or schedule_frequency="daily" are included in daily runs
+        if frequency_filter == "daily":
+            # Include users with "daily" frequency or no frequency set (default)
+            query = {
+                "enabled": True,
+                "$or": [
+                    {"schedule_frequency": "daily"},
+                    {"schedule_frequency": {"$exists": False}},
+                    {"schedule_frequency": None}
+                ]
+            }
+        else:
+            query = {
+                "enabled": True,
+                "schedule_frequency": frequency_filter
+            }
+        
         enabled_settings = await db.auto_apply_settings.find(
-            {"enabled": True},
+            query,
             {"_id": 0}
         ).to_list(1000)
         
         if not enabled_settings:
-            logger.info("No users have auto-apply enabled. Skipping.")
+            logger.info(f"No users have auto-apply enabled with frequency '{frequency_filter}'. Skipping.")
             return
         
-        logger.info(f"Found {len(enabled_settings)} users with auto-apply enabled")
+        logger.info(f"Found {len(enabled_settings)} users with auto-apply enabled (frequency: {frequency_filter})")
         
         for settings in enabled_settings:
             user_id = settings.get("user_id")
@@ -6309,10 +6329,10 @@ async def scheduled_auto_apply_for_all_users():
                 logger.error(f"Error processing auto-apply for user {user_id}: {str(e)}")
                 continue
                 
-        logger.info("Scheduled auto-apply job completed")
+        logger.info(f"Scheduled auto-apply job completed for frequency: {frequency_filter}")
         
     except Exception as e:
-        logger.error(f"Error in scheduled auto-apply job: {str(e)}")
+        logger.error(f"Error in scheduled auto-apply job (frequency: {frequency_filter}): {str(e)}")
 
 
 async def process_auto_apply_for_user(user_id: str, settings: dict):
