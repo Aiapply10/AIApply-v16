@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { authAPI } from '../lib/api';
@@ -109,8 +109,9 @@ export function AuthCallback() {
 export function ProtectedRoute({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, checkAuth, isLoading, user } = useAuthStore();
+  const { isAuthenticated, checkAuth, isLoading, user, token, _hasHydrated } = useAuthStore();
   const [checking, setChecking] = useState(true);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
     // If user passed from AuthCallback, skip check
@@ -119,7 +120,24 @@ export function ProtectedRoute({ children }) {
       return;
     }
 
+    // Wait for hydration before checking auth
+    if (!_hasHydrated) {
+      return;
+    }
+
+    // If already authenticated with token and user data, no need to check again
+    if (isAuthenticated && token && user) {
+      setChecking(false);
+      return;
+    }
+
+    // Prevent multiple checks on the same route
+    if (hasCheckedRef.current) {
+      return;
+    }
+
     const verify = async () => {
+      hasCheckedRef.current = true;
       const valid = await checkAuth();
       if (!valid) {
         navigate('/login', { replace: true });
@@ -128,9 +146,15 @@ export function ProtectedRoute({ children }) {
     };
 
     verify();
-  }, [checkAuth, navigate, location.state]);
+  }, [checkAuth, navigate, location.state, _hasHydrated, isAuthenticated, token, user]);
 
-  if (checking || isLoading) {
+  // Reset check flag when location changes to a different path
+  useEffect(() => {
+    hasCheckedRef.current = false;
+  }, [location.pathname]);
+
+  // Show loading while hydrating or checking
+  if (!_hasHydrated || checking || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
