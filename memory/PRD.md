@@ -146,13 +146,27 @@ Build a website where a job seeker can:
 - [x] **Session Survives Refresh**: User data persisted in localStorage prevents unnecessary re-fetches
 - [x] **5-Minute Auth Cache**: Skips auth check if validated within last 5 minutes
 
+### Bug Fixes (Feb 2, 2026) - AUTH STABILITY IMPROVEMENTS
+- [x] **Zustand Hydration Tracking**: Added `_hasHydrated` state and `onRehydrateStorage` callback
+- [x] **clearAuth Method**: 401 interceptor now uses Zustand's store method instead of direct localStorage manipulation
+- [x] **ProtectedRoute Optimization**: Skips auth checks when already authenticated (isAuthenticated && token && user)
+- [x] **Extended Auth Cache**: Increased from 5 to 10 minutes for fewer unnecessary API calls
+- [x] **Race Condition Prevention**: Added `hasCheckedRef` to prevent multiple concurrent auth checks
+
+### Scheduler Frequency Feature (Feb 2, 2026) - NEW
+- [x] **User-Configurable Frequency**: Users can choose how often auto-apply runs
+- [x] **4 Frequency Options**: Every hour, Every 6 hours, Every 12 hours, Once daily (12:00 PM UTC)
+- [x] **Backend APScheduler**: 4 jobs created at startup (hourly, 6h, 12h, daily) that filter users by frequency
+- [x] **Frontend Dropdown**: Schedule Frequency selector in Auto-Apply Settings dialog
+- [x] **Settings Persistence**: `schedule_frequency` field saved to `auto_apply_settings` collection
+
 ### Backend Refactoring (Started)
 - [x] Created modular routes structure: `/app/backend/routes/`
 - [x] Auth helper functions extracted to `/app/backend/routes/auth.py`
 - [ ] TODO: Continue splitting server.py into modular services
 
 ### Infrastructure
-- [x] APScheduler for background jobs
+- [x] APScheduler for background jobs with multiple frequency support
 - [x] Sample job data fallback when scraping fails
 - [x] Hot reload development environment
 
