@@ -554,12 +554,13 @@ class JobScraper:
                 "location": job["location"],
                 "description": f"Exciting opportunity for a {job['title']} at {job['company']}. Join our team to work on cutting-edge projects.",
                 "salary_info": f"${100000 + i * 15000:,} - ${130000 + i * 15000:,}",
-                "apply_link": f"https://www.dice.com/jobs?q={urllib.parse.quote(query)}",
+                "apply_link": f"https://www.dice.com/job-detail/{uuid.uuid4().hex[:12]}?q={urllib.parse.quote(query)}",
                 "posted_at": datetime.now(timezone.utc).isoformat(),
                 "is_remote": "remote" in job["location"].lower(),
                 "employment_type": "Full-time",
                 "source": "Dice",
-                "matched_technology": query
+                "matched_technology": query,
+                "is_sample": True  # Flag to indicate this is sample data
             })
         
         return jobs
