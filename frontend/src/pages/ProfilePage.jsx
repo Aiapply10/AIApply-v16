@@ -66,7 +66,7 @@ const JOB_TYPES = ['Remote', 'Hybrid', 'Onsite'];
 const RELOCATION_OPTIONS = ['Yes', 'No', 'Open to Discussion'];
 
 export function ProfilePage() {
-  const { user, setUser } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [resumes, setResumes] = useState([]);
