@@ -5273,9 +5273,15 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                     logger.warning(f"Skipping {app['job_title']} - no apply link")
                     continue
                 
+                # Skip sample/fallback jobs (they have fake URLs that can't be applied to)
+                if app.get("is_sample"):
+                    logger.warning(f"Skipping {app['job_title']} - sample job data, not a real posting")
+                    continue
+                
                 # Skip generic search URLs (they can't be applied to)
-                if '?q=' in apply_link or '/jobs?q=' in apply_link or '/search?' in apply_link:
-                    logger.warning(f"Skipping {app['job_title']} - generic search URL, not a specific job")
+                generic_patterns = ['?q=', '/jobs?', '/search?', '/search/', 'job-search', 'careers.google.com/jobs']
+                if any(pattern in apply_link for pattern in generic_patterns) and 'job-detail' not in apply_link and '/job/' not in apply_link:
+                    logger.warning(f"Skipping {app['job_title']} - generic search URL, not a specific job posting")
                     continue
                     
                 logger.info(f"Auto-submitting: {app['job_title']} at {app['company']} using {tool}")
