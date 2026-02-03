@@ -169,6 +169,12 @@ Build a website where a job seeker can:
 - [x] **Frontend Dropdown**: Schedule Frequency selector in Auto-Apply Settings dialog
 - [x] **Settings Persistence**: `schedule_frequency` field saved to `auto_apply_settings` collection
 
+### Bug Fixes (Feb 3, 2026) - PROFILE SAVE LOGOUT FIX
+- [x] **CRITICAL: Profile Save No Longer Causes Logout**: Changed `setUser` to `updateUser` in ProfilePage.jsx
+- [x] **Root Cause**: `setUser` requires both user AND token, but profile update only has user data. This caused token to be overwritten with undefined, triggering logout.
+- [x] **Fix**: Use `updateUser` method which only updates user data while preserving the token
+- [x] **Verified**: User stays logged in after profile save
+
 ### Backend Refactoring (Started)
 - [x] Created modular routes structure: `/app/backend/routes/`
 - [x] Auth helper functions extracted to `/app/backend/routes/auth.py`
