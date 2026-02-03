@@ -175,6 +175,14 @@ Build a website where a job seeker can:
 - [x] **Fix**: Use `updateUser` method which only updates user data while preserving the token
 - [x] **Verified**: User stays logged in after profile save
 
+### Browser Automation Improvements (Feb 3, 2026)
+- [x] **Multi-Tool Support**: Added Selenium as fallback if Playwright fails
+- [x] **Unified Bot Interface**: Created `/app/backend/utils/browser_automation.py` with `UnifiedApplicationBot`
+- [x] **Platform Detection**: Auto-detects Greenhouse, Lever, Workday, LinkedIn, Indeed, etc.
+- [x] **Smart URL Filtering**: Skips generic search URLs (e.g., `/jobs?q=`) that can't be applied to
+- [x] **Screenshot Capture**: Saves screenshots at each stage (initial, filled, submitted)
+- [x] **Installed Playwright Browsers**: Chromium browser now available for automation
+
 ### Backend Refactoring (Started)
 - [x] Created modular routes structure: `/app/backend/routes/`
 - [x] Auth helper functions extracted to `/app/backend/routes/auth.py`
