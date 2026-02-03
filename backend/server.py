@@ -5233,51 +5233,67 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
     auto_submit_enabled = settings.get("auto_submit_enabled", True)  # Default to enabled
     
     if auto_submit_enabled and applications:
-        # Check if Playwright is available for browser automation
-        from utils.job_application_bot import is_playwright_available
+        # Check if any browser automation is available (Playwright or Selenium)
+        from utils.browser_automation import is_automation_available, apply_to_job_with_fallback, get_available_automation_tool
         
-        if not is_playwright_available():
-            logger.warning("Playwright not available - skipping auto-submission. Applications are ready for manual review.")
-            # Still return success but note that auto-submit was skipped
+        if not is_automation_available():
+            logger.warning("No browser automation available - skipping auto-submission. Applications are ready for manual review.")
             return {
-                "message": f"Created {len(applications)} applications. Auto-submit unavailable in production - please apply manually.",
+                "message": f"Created {len(applications)} applications. Browser automation unavailable - please apply manually from Applications page.",
                 "applied_count": len(applications),
                 "applications": applications,
                 "auto_submit_skipped": True,
-                "reason": "Browser automation requires Playwright which is not available in production environment"
+                "reason": "No browser automation tools available (neither Playwright nor Selenium)"
             }
         
-        logger.info(f"Auto-submitting {len(applications)} applications...")
-        
-        from utils.job_application_bot import apply_to_job_automated
+        tool = get_available_automation_tool()
+        logger.info(f"Auto-submitting {len(applications)} applications using {tool}...")
         
         # Get user profile data for form filling
         user_profile = await db.users.find_one({"user_id": user_id}, {"_id": 0})
         user_data = {
+            "name": user_profile.get("full_name", ""),
             "full_name": user_profile.get("full_name", ""),
             "first_name": user_profile.get("full_name", "").split()[0] if user_profile.get("full_name") else "",
             "last_name": user_profile.get("full_name", "").split()[-1] if user_profile.get("full_name") and len(user_profile.get("full_name", "").split()) > 1 else "",
             "email": user_profile.get("email", ""),
             "phone": user_profile.get("phone", ""),
             "location": user_profile.get("location", ""),
+            "linkedin_profile": user_profile.get("linkedin_profile", user_profile.get("linkedin_url", "")),
             "linkedin_url": user_profile.get("linkedin_url", user_profile.get("linkedin_profile", "")),
             "current_company": user_profile.get("current_company", ""),
             "job_title": user_profile.get("job_title", user_profile.get("primary_technology", ""))
         }
         
-        # Submit each application using Playwright
+        # Submit each application using browser automation
         for app in applications[:5]:  # Limit to 5 auto-submissions per batch to avoid overload
             try:
                 apply_link = app.get("apply_link")
                 if not apply_link:
+                    logger.warning(f"Skipping {app['job_title']} - no apply link")
+                    continue
+                
+                # Skip generic search URLs (they can't be applied to)
+                if '?q=' in apply_link or '/jobs?q=' in apply_link or '/search?' in apply_link:
+                    logger.warning(f"Skipping {app['job_title']} - generic search URL, not a specific job")
                     continue
                     
-                logger.info(f"Auto-submitting: {app['job_title']} at {app['company']}")
+                logger.info(f"Auto-submitting: {app['job_title']} at {app['company']} using {tool}")
                 
-                # Get the tailored resume content for this application
+                # Get the cover letter for this application
                 app_record = await db.auto_applications.find_one(
                     {"application_id": app["application_id"]},
                     {"_id": 0}
+                )
+                cover_letter = app_record.get("cover_letter", "") if app_record else ""
+                
+                # Apply using unified browser automation
+                result = await apply_to_job_with_fallback(
+                    apply_url=apply_link,
+                    user_data=user_data,
+                    resume_content=resume_content,
+                    cover_letter=cover_letter
+                )
                 )
                 
                 resume_content = app_record.get("tailored_content", "") if app_record else ""
