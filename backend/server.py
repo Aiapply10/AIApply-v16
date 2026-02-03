@@ -5294,18 +5294,6 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                     resume_content=resume_content,
                     cover_letter=cover_letter
                 )
-                )
-                
-                resume_content = app_record.get("tailored_content", "") if app_record else ""
-                cover_letter = app_record.get("cover_letter", "") if app_record else ""
-                
-                # Submit using Playwright bot
-                result = await apply_to_job_automated(
-                    apply_url=apply_link,
-                    user_data=user_data,
-                    resume_path=None,  # Use form filling instead of file upload for now
-                    cover_letter=cover_letter
-                )
                 
                 # Update application status based on result
                 new_status = "applied" if result.get("success") else "submission_failed"
@@ -5315,10 +5303,10 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                     {"$set": {
                         "status": new_status,
                         "submission_result": result.get("status"),
-                        "submission_error": result.get("error"),
+                        "submission_error": result.get("message"),
+                        "submission_tool": result.get("tool_used"),
                         "submission_screenshots": result.get("screenshots", []),
-                        "submitted_at": datetime.now(timezone.utc).isoformat() if result.get("success") else None,
-                        "platform_detected": result.get("platform")
+                        "submitted_at": datetime.now(timezone.utc).isoformat() if result.get("success") else None
                     }}
                 )
                 
@@ -5335,11 +5323,11 @@ Return ONLY JSON: {{"score": number between 85-98, "grade": "A or B"}}"""
                     "job_title": app["job_title"],
                     "company": app["company"],
                     "status": new_status,
-                    "platform": result.get("platform"),
+                    "tool_used": result.get("tool_used"),
                     "success": result.get("success", False)
                 })
                 
-                logger.info(f"Submission result for {app['job_title']}: {new_status}")
+                logger.info(f"Submission result for {app['job_title']}: {new_status} (using {result.get('tool_used')})")
                 
             except Exception as e:
                 logger.error(f"Auto-submit error for {app['application_id']}: {str(e)}")
