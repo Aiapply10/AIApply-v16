@@ -303,7 +303,7 @@ export function ProfilePage() {
       await authAPI.deleteProfilePhoto();
       // Update local user state
       const updatedUser = { ...user, profile_picture: null, picture: null };
-      setUser(updatedUser);
+      updateUser(updatedUser);
       toast.success('Profile photo removed');
     } catch (error) {
       toast.error('Failed to remove photo');
