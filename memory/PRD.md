@@ -278,6 +278,8 @@ Build a website where a job seeker can:
 ---
 
 ## Test Reports
+- `/app/test_reports/iteration_19.json` - Profile save logout fix verified (100% passed) - Feb 3, 2026
+- `/app/test_reports/iteration_18.json` - Resume dropdown complete flow (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_17.json` - Default Resume dropdown fix (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_16.json` - Scheduler frequency feature (100% passed) - Feb 2, 2026
 - `/app/test_reports/iteration_15.json` - Auth stability improvements (100% passed) - Feb 2, 2026
