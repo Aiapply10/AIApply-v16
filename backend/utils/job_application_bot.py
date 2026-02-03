@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, List, Tuple
 
 # Playwright is optional - may not be available in production
-PLAYWRIGHT_AVAILABLE = False
+PLAYWRIGHT_AVAILABLE = True
 try:
     from playwright.async_api import async_playwright, Page, Browser, TimeoutError as PlaywrightTimeout
     PLAYWRIGHT_AVAILABLE = True
