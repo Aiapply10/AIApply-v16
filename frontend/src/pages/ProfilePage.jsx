@@ -283,7 +283,7 @@ export function ProfilePage() {
     try {
       const response = await authAPI.uploadProfilePhoto(file);
       if (response.data.user) {
-        setUser(response.data.user);
+        updateUser(response.data.user);
       }
       toast.success('Profile photo updated!');
     } catch (error) {
@@ -324,7 +324,7 @@ export function ProfilePage() {
       
       // Update local user state
       if (response.data.user) {
-        setUser(response.data.user);
+        updateUser(response.data.user);
       }
       
       toast.success('Profile updated successfully!');
